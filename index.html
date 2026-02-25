@@ -26,7 +26,6 @@
             --success-soft: rgba(52, 199, 89, 0.1);
             --danger-soft: rgba(255, 59, 48, 0.1);
             --warning-soft: rgba(255, 149, 0, 0.1);
-            --purple-soft: rgba(175, 82, 222, 0.1);
             --gray-soft: rgba(142, 142, 147, 0.1);
         }
 
@@ -137,7 +136,7 @@
         th:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         th:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
         
-        .pay-input { width: 85px; padding: 10px; margin-right: 8px; border-width: 1px; text-align: center; font-weight: bold;}
+        .pay-input { width: 85px; padding: 10px; margin-right: 8px; border: 2px solid var(--border); border-radius: 8px; font-weight: bold; color: var(--primary);}
         .inline-edit-input { width: 100%; padding: 8px 12px; border: 2px solid var(--primary); border-radius: 8px; font-size: 1em; font-family: inherit; box-sizing: border-box; background: white;}
         .inline-edit-input.short { width: 80px; }
         
@@ -172,7 +171,6 @@
         .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
-
         #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
     </style>
 </head>
@@ -276,6 +274,7 @@
     <div class="modal-content">
         <div class="modal-header">📝 編輯公佈欄</div>
         <div class="modal-body">
+            <p style="color:var(--gray); font-size:0.9em; margin-top:0;">直接填寫或上傳照片，系統自動為您排版：</p>
             <div class="editor-group"><label>📢 公告內容：</label><textarea id="bulletin-text-input" placeholder="今天吃悟饕，請在 11:30 前點完！"></textarea></div>
             <div class="editor-group"><label>🔗 店家或菜單連結：</label><input type="url" id="bulletin-link-input" placeholder="https://..."></div>
             <div class="editor-group"><label>🖼️ 匯入菜單圖片：</label>
@@ -351,8 +350,8 @@
     let lastTypingName = "";
     let countdownInterval;
     let globalLockTime = 0;
-
-    // 🚀 全域儲存：保護團主輸入到一半的結帳金額不被覆蓋
+    
+    // 儲存結帳輸入框的暫存值
     window.payInputValues = window.payInputValues || {};
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -414,56 +413,54 @@
         }, 10 * 60 * 1000);
 
         onlineRef.on('value', (snap) => {
-            requestAnimationFrame(() => {
-                let userMap = {}; 
-                const NOW = Date.now();
+            let userMap = {}; 
+            const NOW = Date.now();
 
-                snap.forEach(child => {
-                    const u = child.val();
-                    if (!u || !u.name) return;
+            snap.forEach(child => {
+                const u = child.val();
+                if (!u || !u.name) return;
 
-                    if (u.timestamp && (NOW - u.timestamp > 2 * 60 * 60 * 1000)) {
-                        if (isAdmin) db.ref('online-presence/' + child.key).remove(); 
-                        return; 
-                    }
-
-                    if (!userMap[u.name] || u.status === 'typing' || (u.status === 'done' && userMap[u.name].status === 'browsing') || u.isAdmin) {
-                        if (userMap[u.name] && userMap[u.name].isAdmin && !u.isAdmin) return;
-                        userMap[u.name] = u; 
-                    }
-                });
-
-                let adminHtml = "";
-                let normalHtml = "";
-                let count = 0;
-                
-                for (let name in userMap) {
-                    count++;
-                    const u = userMap[name];
-                    let statusHtml = "";
-                    if(u.status === 'typing') statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
-                    else if(u.status === 'done') statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
-                    else statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
-
-                    const isBoss = u.isAdmin ? '<span title="團主" style="margin-left:5px;">👑</span>' : '';
-                    const adminClass = u.isAdmin ? 'is-admin' : '';
-                    
-                    const itemHtml = `
-                        <div class="online-user-item ${adminClass}">
-                            <div class="user-avatar">${u.name.charAt(0)}</div>
-                            <div class="user-info">
-                                <div class="user-name">${u.name} ${isBoss}</div>
-                                <div class="user-status">${statusHtml}</div>
-                            </div>
-                        </div>`;
-                    
-                    if (u.isAdmin) adminHtml += itemHtml;
-                    else normalHtml += itemHtml;
+                if (u.timestamp && (NOW - u.timestamp > 2 * 60 * 60 * 1000)) {
+                    if (isAdmin) db.ref('online-presence/' + child.key).remove(); 
+                    return; 
                 }
-                
-                document.getElementById('online-users-list').innerHTML = adminHtml + normalHtml;
-                document.getElementById('online-count-sidebar').innerText = count;
+
+                if (!userMap[u.name] || u.status === 'typing' || (u.status === 'done' && userMap[u.name].status === 'browsing') || u.isAdmin) {
+                    if (userMap[u.name] && userMap[u.name].isAdmin && !u.isAdmin) return;
+                    userMap[u.name] = u; 
+                }
             });
+
+            let adminHtml = "";
+            let normalHtml = "";
+            let count = 0;
+            
+            for (let name in userMap) {
+                count++;
+                const u = userMap[name];
+                let statusHtml = "";
+                if(u.status === 'typing') statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
+                else if(u.status === 'done') statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
+                else statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
+
+                const isBoss = u.isAdmin ? '<span title="團主" style="margin-left:5px;">👑</span>' : '';
+                const adminClass = u.isAdmin ? 'is-admin' : '';
+                
+                const itemHtml = `
+                    <div class="online-user-item ${adminClass}">
+                        <div class="user-avatar">${u.name.charAt(0)}</div>
+                        <div class="user-info">
+                            <div class="user-name">${u.name} ${isBoss}</div>
+                            <div class="user-status">${statusHtml}</div>
+                        </div>
+                    </div>`;
+                
+                if (u.isAdmin) adminHtml += itemHtml;
+                else normalHtml += itemHtml;
+            }
+            
+            document.getElementById('online-users-list').innerHTML = adminHtml + normalHtml;
+            document.getElementById('online-count-sidebar').innerText = count;
         });
     }
 
@@ -666,17 +663,15 @@
     }
 
     ordersRef.on('value', (snapshot) => { 
-        requestAnimationFrame(() => {
-            orders = []; 
-            snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); 
-            
-            let currentName = document.getElementById('name').value.trim();
-            if (currentName && myCurrentStatus === 'done') {
-                let hasMyOrder = orders.some(o => o.name === currentName);
-                if (!hasMyOrder) updateMyStatus('browsing');
-            }
-            if(!editingOrderId) render(); 
-        });
+        orders = []; 
+        snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); 
+        
+        let currentName = document.getElementById('name').value.trim();
+        if (currentName && myCurrentStatus === 'done') {
+            let hasMyOrder = orders.some(o => o.name === currentName);
+            if (!hasMyOrder) updateMyStatus('browsing');
+        }
+        if(!editingOrderId) render(); 
     });
 
     function showFloatingNumber(btn, amount) {
@@ -702,11 +697,12 @@
         orders.forEach(order => {
             total += order.price; 
             
+            // 🐛 修復：精確的「實際現金」計算，原為 undefined 變數導致整個程式卡死！
             if (order.isPaid) {
                 if (order.change > 0 && !order.changeGiven) {
-                    paidTotal += order.paidAmount; 
+                    actualCollectedCash += order.paidAmount; 
                 } else {
-                    paidTotal += order.price; 
+                    actualCollectedCash += order.price; 
                 }
             } else {
                 unpaidTotal += order.price; 
@@ -715,8 +711,8 @@
             if (!isAdmin && !myNames.includes(order.name)) return; 
             
             let isEditing = (editingOrderId === order.id);
-            // 防止品項名稱含有引號破壞 HTML
-            let safeItem = order.item.replace(/"/g, '&quot;'); 
+            // 🐛 修復：避免品項內含有 " 雙引號導致 HTML 破版
+            let safeItem = order.item ? order.item.replace(/"/g, '&quot;') : '';
 
             if (order.isPaid) {
                 visiblePaidCount++;
@@ -748,7 +744,6 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    // 🚀 修正：對齊標題與內容
                     let paidAmountTd = isAdmin ? `<td><span class="price-tag" style="color:var(--success);">$${order.paidAmount}</span></td>` : `<td style="display:none;"></td>`;
                     let adminFields = isAdmin ? `<td style="white-space:nowrap;">${accountStatusUI}</td><td style="white-space:nowrap;"><button class="btn-edit" onclick="editOrderInline('${order.id}')">修改</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td>`;
                     paidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${paidAmountTd}${adminFields}</tr>`; 
@@ -767,7 +762,7 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    // 🚀 修正：自動記憶團主打到一半的結帳金額
+                    // 🐛 修復：結帳框自動預設帶入應付金額，且不會被別人的動作洗掉
                     let currentPayVal = window.payInputValues[order.id] !== undefined ? window.payInputValues[order.id] : order.price;
                     let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" value="${currentPayVal}" oninput="window.payInputValues['${order.id}'] = this.value"></td>` : `<td style="display:none;"></td>`;
                     
@@ -826,6 +821,7 @@
         editingOrderId = id; render(); 
     }
 
+    // 🐛 修復：儲存時強制解除編輯狀態並更新畫面
     window.saveOrderInline = function(id, isPaid) {
         const order = orders.find(o => o.id === id); if (!order) return;
         let itemInput = document.getElementById(`edit-item-${id}`).value.trim();
@@ -844,14 +840,17 @@
             if (paidInput < priceInput) { alert("⚠️ 實收金額不能小於應付金額！請確認後再儲存。"); return; }
             updates.paidAmount = paidInput;
             updates.change = paidInput - priceInput; 
-            if (updates.change > 0 && paidInput !== order.paidAmount) { updates.changeGiven = false; }
+            
+            if (updates.change > 0 && paidInput !== order.paidAmount) {
+                updates.changeGiven = false;
+            }
         }
 
         editingOrderId = null; 
         if (updates.item !== order.item || updates.price !== order.price || (isPaid && updates.paidAmount !== order.paidAmount)) {
             db.ref('lunch-orders/' + id).update(updates);
         }
-        render(); // 🚀 修正：強制立刻渲染畫面，秒收輸入框不卡頓
+        render(); 
     }
 
     window.cancelEditInline = function() { editingOrderId = null; render(); }
@@ -862,7 +861,7 @@
         const rawValue = inputEl.value.trim();
         
         if (rawValue === "") {
-            alert('⚠️ 結帳前請先輸入對方給您的【實付金額】！\n(如果對方給的剛好是應付金額，也請輸入)'); 
+            alert('⚠️ 結帳前請先確認【實付金額】！\n(系統已為您自動帶入應付金額，若不同請修改)'); 
             inputEl.focus(); return; 
         }
 
@@ -871,7 +870,7 @@
             alert('❌ 實付金額不能小於應付金額喔！'); inputEl.focus(); return; 
         }
 
-        delete window.payInputValues[id]; // 清除這筆訂單的實付記憶
+        delete window.payInputValues[id]; 
         chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
         db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price, changeGiven: false });
     }
@@ -883,7 +882,7 @@
     
     window.clearAllOrders = function() { 
         if(confirm('🚨 確定清空今天「所有」訂單與線上名單嗎？')) {
-            window.payInputValues = {}; // 清空輸入記憶
+            window.payInputValues = {}; 
             db.ref('lunch-orders').remove(); 
             db.ref('online-presence').remove(); 
             setTimeout(() => {
