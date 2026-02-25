@@ -16,7 +16,7 @@
         }
         body { font-family: 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); margin: 0; padding: 20px 10px; color: var(--dark); min-height: 100vh; overflow-x: hidden;}
         
-        /* 版面配置：主內容 + 右側欄 */
+        /* 版面配置 */
         .layout-wrapper { max-width: 1200px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
         .main-content { flex: 1; width: 100%; transition: 0.3s; }
         
@@ -28,7 +28,6 @@
             transition: transform 0.3s ease;
         }
         
-        /* 手機版側欄控制 */
         .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
 
         @media (max-width: 900px) {
@@ -44,25 +43,19 @@
         .online-user-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #F8FAFC; animation: slideIn 0.3s ease;}
         .user-avatar { width: 35px; height: 35px; background: #E0E7FF; color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0;}
         .user-info { display: flex; flex-direction: column; width: 100%; overflow: hidden;}
-        .user-name { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .user-name { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px;}
         .user-status { font-size: 0.8em; color: var(--gray); display: flex; align-items: center; gap: 4px;}
         
-        /* 狀態燈號 */
         .status-dot { width: 6px; height: 6px; border-radius: 50%; }
-        .status-browsing { color: var(--gray); } 
-        .dot-browsing { background: var(--gray); }
-        
-        .status-typing { color: var(--warning); font-weight: bold; animation: pulseText 1.5s infinite;} 
-        .dot-typing { background: var(--warning); animation: blink 1s infinite; }
-        
-        .status-done { color: var(--success); font-weight: bold; } 
-        .dot-done { background: var(--success); }
+        .status-browsing { color: var(--gray); } .dot-browsing { background: var(--gray); }
+        .status-typing { color: var(--warning); font-weight: bold; animation: pulseText 1.5s infinite;} .dot-typing { background: var(--warning); animation: blink 1s infinite; }
+        .status-done { color: var(--success); font-weight: bold; } .dot-done { background: var(--success); }
 
         @keyframes blink { 50% { opacity: 0.4; } }
         @keyframes pulseText { 50% { opacity: 0.7; } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
-        /* 原有樣式保留 */
+        /* UI 元件 */
         .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 25px; }
         h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.6em; display: flex; align-items: center; gap: 10px;}
         
@@ -76,6 +69,7 @@
         .btn-export { background: #F3E8FF; color: #9333EA; }
         .btn-clear { background: #F1F5F9; color: var(--gray); box-shadow: none;}
         .btn-broadcast { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; animation: pulse 2s infinite; font-size: 1.05em;}
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
         
         .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; }
         .bulletin { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-left: 6px solid var(--warning); position: relative; }
@@ -123,9 +117,13 @@
         .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
-        
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000;}
+
+        /* 預覽圖片 */
+        .preview-container { display: none; position: relative; margin-top: 10px; border-radius: 8px; overflow: hidden; border: 2px dashed #bdc3c7; padding: 5px;}
+        .preview-container img { width: 100%; height: auto; display: block; border-radius: 4px;}
+        .btn-remove-img { position: absolute; top: 10px; right: 10px; background: rgba(231, 76, 60, 0.9); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; cursor: pointer;}
     </style>
 </head>
 <body>
@@ -215,7 +213,10 @@
         <h3 style="margin-top:0;">📝 編輯公佈欄</h3>
         <div class="editor-group"><label>📢 公告內容：</label><textarea id="bulletin-text-input"></textarea></div>
         <div class="editor-group"><label>🔗 連結：</label><input type="url" id="bulletin-link-input"></div>
-        <div class="editor-group"><label>🖼️ 圖片：</label><input type="file" id="bulletin-file-input" accept="image/*"></div>
+        <div class="editor-group"><label>🖼️ 圖片：</label>
+            <input type="file" id="bulletin-file-input" accept="image/*">
+            <div id="image-preview-container" class="preview-container"><img id="image-preview" src=""><button class="btn-remove-img" onclick="clearImage()">X</button></div>
+        </div>
         <div class="flex" style="justify-content:flex-end;">
             <button style="background:#F1F5F9; color:var(--gray); box-shadow:none;" onclick="document.getElementById('bulletin-modal').style.display='none'">取消</button>
             <button style="background:var(--primary); color:white;" onclick="saveBulletin()">💾 儲存</button>
@@ -258,15 +259,13 @@
     const db = firebase.database();
     const ordersRef = db.ref('lunch-orders');
     const settingsRef = db.ref('lunch-settings');
-    const onlineRef = db.ref('online-presence'); // 新的 Presence 節點
+    const onlineRef = db.ref('online-presence');
 
     const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
     const bellSound = new Audio('https://actions.google.com/sounds/v1/alarms/dinner_bell.ogg');
 
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
-    
-    // 我的 Presence 參考
     let myPresenceRef = null;
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -280,16 +279,14 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
-    // 🟢 初始化線上狀態與即時名單
     function initPresence() {
         myPresenceRef = onlineRef.push();
         myPresenceRef.onDisconnect().remove();
         
-        // 初始狀態
         let currentName = document.getElementById('name').value || "神秘訪客";
-        myPresenceRef.set({ name: currentName, status: "browsing", timestamp: Date.now() });
+        // 加入 isAdmin 屬性
+        myPresenceRef.set({ name: currentName, status: "browsing", isAdmin: isAdmin, timestamp: Date.now() });
 
-        // 監聽線上名單變化
         onlineRef.on('value', (snap) => {
             const list = document.getElementById('online-users-list');
             list.innerHTML = "";
@@ -299,22 +296,20 @@
                 count++;
                 const u = child.val();
                 let statusHtml = "";
-                let statusClass = "";
 
-                if(u.status === 'typing') {
-                    statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
-                } else if(u.status === 'done') {
-                    statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
-                } else {
-                    statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
-                }
+                if(u.status === 'typing') statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
+                else if(u.status === 'done') statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
+                else statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
+
+                // 👑 皇冠邏輯
+                const isBoss = u.isAdmin ? '<span title="團主" style="margin-left:5px;">👑</span>' : '';
 
                 const div = document.createElement('div');
                 div.className = "online-user-item";
                 div.innerHTML = `
                     <div class="user-avatar">${u.name.charAt(0)}</div>
                     <div class="user-info">
-                        <div class="user-name">${u.name}</div>
+                        <div class="user-name">${u.name} ${isBoss}</div>
                         <div class="user-status">${statusHtml}</div>
                     </div>
                 `;
@@ -324,13 +319,12 @@
         });
     }
 
-    // 🟢 更新我的狀態 (typing / done / browsing)
+    // 更新狀態時也要帶上 isAdmin
     window.updateMyStatus = function(status) {
         let currentName = document.getElementById('name').value || "神秘訪客";
-        myPresenceRef.update({ name: currentName, status: status, timestamp: Date.now() });
+        myPresenceRef.update({ name: currentName, status: status, isAdmin: isAdmin, timestamp: Date.now() });
     }
 
-    // 手機版側欄切換
     window.toggleSidebar = function() {
         document.querySelector('.sidebar').classList.toggle('active');
         document.querySelector('.sidebar-overlay').classList.toggle('active');
@@ -393,7 +387,7 @@
                 let btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-tag'; btn.innerText = `${f.item} ($${f.price})`;
                 btn.onclick = () => { 
                     document.getElementById('item').value = f.item; document.getElementById('price').value = f.price; 
-                    updateMyStatus('typing'); // 點標籤也算正在輸入
+                    updateMyStatus('typing'); 
                 };
                 container.appendChild(btn);
             });
@@ -407,10 +401,18 @@
 
     window.toggleAdmin = function() {
         if (isAdmin) { 
-            if(confirm("確定要關閉團主模式嗎？")) { isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateAdminUI(); render(); } 
+            if(confirm("確定要關閉團主模式嗎？")) { 
+                isAdmin = false; localStorage.removeItem('lunchAdminToken'); 
+                updateMyStatus(myPresenceRef.status); // 更新 Firebase 上的狀態移除皇冠
+                updateAdminUI(); render(); 
+            } 
         } else { 
             const pwd = prompt("請輸入團主密碼 (預設 888)：");
-            if (pwd === "888") { isAdmin = true; localStorage.setItem('lunchAdminToken', 'boss'); updateAdminUI(); render(); }
+            if (pwd === "888") { 
+                isAdmin = true; localStorage.setItem('lunchAdminToken', 'boss'); 
+                updateMyStatus(myPresenceRef.status); // 更新 Firebase 上的狀態加上皇冠
+                updateAdminUI(); render(); 
+            }
             else if (pwd !== null) alert("密碼錯誤");
         }
     }
@@ -498,18 +500,12 @@
     document.getElementById('order-form').addEventListener('submit', function(e) {
         e.preventDefault(); if (globalLocked) { alert("⚠️ 已結單！"); return; }
         const inputName = document.getElementById('name').value.trim(); const inputItem = document.getElementById('item').value.trim(); const inputPrice = parseInt(document.getElementById('price').value);
-        
         if(confirm(`👉 請確認：\n👤 姓名：${inputName}\n🍱 品項：${inputItem}\n💰 價格：$${inputPrice}`)) {
             let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
             if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
             saveToQuickTags(inputItem, inputPrice);
-            
-            // 🟢 送出後更新狀態為「已完成」
             updateMyStatus('done');
-
-            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 }).then(() => { 
-                document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); 
-            });
+            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
         }
     });
 
