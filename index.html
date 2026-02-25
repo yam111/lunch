@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍱午餐系統🍱</title>
+    <title>🍱 午餐系統 🍱</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        /* 全域設定 */
+        /* 全域變數設定 */
         :root {
             --primary: #4F46E5;
             --primary-hover: #4338CA;
@@ -34,23 +34,16 @@
             min-height: 100vh;
         }
         
-        .container { 
-            max-width: 900px; margin: auto; 
-            padding: 30px; 
-        }
-
+        .container { max-width: 900px; margin: auto; padding: 30px; }
         .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         
         /* 標題與按鈕區 */
         .header-area { 
-            justify-content: space-between; 
-            background: var(--surface);
-            padding: 20px 25px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
+            justify-content: space-between; background: var(--surface);
+            padding: 20px 25px; border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 25px;
         }
-        h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.8em;}
+        h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.8em; display: flex; align-items: center;}
         
         button { 
             padding: 10px 18px; border: none; border-radius: 12px; 
@@ -68,54 +61,34 @@
         .btn-export { background: #F3E8FF; color: #9333EA; } .btn-export:hover { background: #9333EA; color: white;}
         .btn-clear { background: #F1F5F9; color: var(--gray); box-shadow: none;} .btn-clear:hover { background: var(--dark); color: white;}
         
+        /* 廣播按鈕特效 */
         .btn-broadcast { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; animation: pulse 2s infinite; font-size: 1.05em;}
-
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
         
         /* 區塊共同卡片風格 */
-        .card {
-            background: var(--surface);
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-            padding: 25px;
-            margin-bottom: 25px;
-        }
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; }
 
         /* 公佈欄區塊 */
-        .bulletin { 
-            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); 
-            border-left: 6px solid var(--warning); 
-            position: relative; 
-        }
+        .bulletin { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-left: 6px solid var(--warning); position: relative; }
         .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
         .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block;}
         .bulletin-content a { color: #B45309; font-weight: 700; text-decoration: none; background: #FDE68A; padding: 4px 10px; border-radius: 8px; display: inline-block; margin-top: 8px;}
         .bulletin-content a:hover { background: #FCD34D; }
         .btn-edit-small { position: absolute; top: 15px; right: 20px; background: white; color: var(--warning); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         
-        /* 統計區塊 (變身為現代儀表板) */
+        /* 統計區塊 (儀表板風格) */
         .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
-        .stat-box { 
-            flex: 1; padding: 20px; border-radius: 20px; color: white;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            position: relative; overflow: hidden;
-        }
+        .stat-box { flex: 1; padding: 20px; border-radius: 20px; color: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); position: relative; overflow: hidden; min-width: 150px;}
         .stat-box::after { content: ''; position: absolute; top: -50%; right: -20%; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; }
-        
         .box-total { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
         .box-paid { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
         .box-unpaid { background: linear-gradient(135deg, #F87171 0%, #EF4444 100%); }
-        
         .stat-title { font-size: 0.95em; opacity: 0.9; font-weight: 500; margin-bottom: 5px;}
         .stat-value { font-size: 2em; font-weight: 900; }
         
-        /* 表單 */
+        /* 表單與一鍵回購 */
         form { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;}
-        input { 
-            padding: 14px 18px; border: 2px solid #E2E8F0; border-radius: 12px; 
-            flex: 1; min-width: 120px; font-size: 1.05em; font-family: inherit;
-            transition: all 0.3s ease; outline: none; background: #F8FAFC;
-        }
+        input { padding: 14px 18px; border: 2px solid #E2E8F0; border-radius: 12px; flex: 1; min-width: 120px; font-size: 1.05em; font-family: inherit; transition: all 0.3s ease; outline: none; background: #F8FAFC; }
         input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
         .btn-submit { background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; min-width: 140px; font-size: 1.1em; }
         .btn-submit:disabled { background: #CBD5E1; color: #94A3B8; cursor: not-allowed; transform: none; box-shadow: none;}
@@ -178,7 +151,7 @@
 
 <div class="container">
     <div class="flex header-area">
-        <h1>🍱 午餐系統 🍱 <span id="admin-badge" style="font-size:0.5em; background:var(--danger); color:white; padding:4px 10px; border-radius:12px; display:none; vertical-align: middle; margin-left: 5px;">👑 團主解鎖</span></h1>
+        <h1>🍱 午餐系統 🍱 <span id="admin-badge" style="font-size:0.5em; background:var(--danger); color:white; padding:4px 10px; border-radius:12px; display:none; vertical-align: middle; margin-left: 8px;">👑 團主解鎖</span></h1>
         <div class="flex">
             <button id="btn-admin" onclick="toggleAdmin()" class="btn-admin">一般身分</button>
             <button onclick="triggerBroadcast()" class="btn-broadcast admin-only">🔔 通知取餐</button>
@@ -192,7 +165,7 @@
     <div class="broadcast-overlay" id="broadcast-screen">
         <div class="broadcast-icon">🍱</div>
         <h1 class="broadcast-title">餐點送達啦！</h1>
-        <div class="broadcast-subtitle">請速至領餐區領取午餐，並準備好您的餐費 💰</div>
+        <div class="broadcast-subtitle">請速至領餐區領取午餐 </div>
         <button class="btn-close-broadcast" onclick="document.getElementById('broadcast-screen').style.display='none'">我知道了！</button>
     </div>
 
@@ -237,4 +210,252 @@
             <table id="paid-table">
                 <thead>
                     <tr>
-                        <th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零</th><th class="admin-
+                        <th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零</th><th class="admin-only-th">操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="bulletin-modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:var(--dark); font-weight:900;">📝 編輯公佈欄</h3>
+        <p style="color:var(--gray); font-size:0.9em; margin-top:-10px;">直接填寫或上傳照片，系統自動為您排版：</p>
+        <div class="editor-group"><label>📢 公告內容：</label><textarea id="bulletin-text-input" placeholder="今天吃悟饕，請在 11:30 前點完！"></textarea></div>
+        <div class="editor-group"><label>🔗 店家或菜單連結：</label><input type="url" id="bulletin-link-input" placeholder="https://..."></div>
+        <div class="editor-group"><label>🖼️ 匯入菜單圖片：</label>
+            <input type="file" id="bulletin-file-input" accept="image/*">
+            <div id="image-preview-container" class="preview-container"><img id="image-preview" src=""><button class="btn-remove-img" onclick="clearImage()">X</button></div>
+        </div>
+        <div class="flex" style="justify-content:flex-end; margin-top: 25px;">
+            <button style="background:#F1F5F9; color:var(--gray); box-shadow:none;" onclick="document.getElementById('bulletin-modal').style.display='none'">取消</button>
+            <button style="background:var(--primary); color:white;" onclick="saveBulletin()">💾 儲存發布</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="summary-modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:var(--primary); font-weight:900;">📞 打電話叫餐統計</h3>
+        <pre id="summary-content" style="font-size:1.1em; font-family:monospace; background:#F8FAFC; padding:20px; border-radius:12px; line-height:1.6; color:var(--dark); border:1px solid #E2E8F0;"></pre>
+        <div style="text-align:right; margin-top:20px;"><button style="background:var(--gray); color:white;" onclick="document.getElementById('summary-modal').style.display='none'">關閉</button></div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
+      authDomain: "lunch-f0895.firebaseapp.com",
+      databaseURL: "https://lunch-f0895-default-rtdb.firebaseio.com",
+      projectId: "lunch-f0895",
+      storageBucket: "lunch-f0895.firebasestorage.app",
+      messagingSenderId: "942714581747",
+      appId: "1:942714581747:web:c9b888b08a740842fb7d86"
+    };
+    // ==========================================
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const ordersRef = db.ref('lunch-orders');
+    const settingsRef = db.ref('lunch-settings');
+    const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
+    const bellSound = new Audio('https://actions.google.com/sounds/v1/alarms/dinner_bell.ogg');
+
+    let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
+    let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
+
+    document.addEventListener('DOMContentLoaded', () => {
+        let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
+        if (myNames.length > 0) { document.getElementById('name').value = myNames[myNames.length - 1]; document.getElementById('item').focus(); }
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('role') === 'boss' || localStorage.getItem('lunchAdminToken') === 'boss') {
+            isAdmin = true; localStorage.setItem('lunchAdminToken', 'boss'); window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        updateAdminUI(); renderQuickTags(); 
+    });
+
+    settingsRef.on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+        globalLocked = data.isLocked || false;
+        bText = data.bulletinText !== undefined ? data.bulletinText : "📢 歡迎點餐！請填寫下方表單。";
+        bLink = data.bulletinLink || ""; uploadedImageBase64 = data.bulletinImage || "";
+
+        if (data.broadcastTime && data.broadcastTime > lastBroadcastTime) {
+            lastBroadcastTime = data.broadcastTime;
+            if(Date.now() - data.broadcastTime < 60000) showBroadcast();
+        }
+
+        let displayHtml = bText.replace(/\n/g, '<br>');
+        if (bLink) displayHtml += `<br><a href="${bLink}" target="_blank">👉 點擊查看店家菜單</a>`;
+        if (uploadedImageBase64) displayHtml += `<br><img src="${uploadedImageBase64}">`;
+        document.getElementById('bulletin-text').innerHTML = displayHtml;
+
+        const submitBtn = document.getElementById('submit-btn');
+        const inputs = document.querySelectorAll('#order-form input');
+        const lockBtn = document.getElementById('btn-lock');
+
+        if (globalLocked) {
+            submitBtn.innerText = "🚫 今日已結單"; submitBtn.disabled = true; inputs.forEach(input => input.disabled = true);
+            lockBtn.innerText = "🟢 開放收單"; lockBtn.style.background = "var(--success)";
+        } else {
+            submitBtn.innerText = "✅ 送出訂單"; submitBtn.disabled = false; inputs.forEach(input => input.disabled = false);
+            lockBtn.innerText = "🛑 停止收單"; lockBtn.style.background = "var(--danger)";
+        }
+        render(); 
+    });
+
+    function showBroadcast() { bellSound.currentTime = 0; bellSound.play().catch(e => console.log("音效遭阻擋", e)); document.getElementById('broadcast-screen').style.display = 'flex'; }
+    window.triggerBroadcast = function() { if(confirm("發送「餐點送達」廣播？")) settingsRef.update({ broadcastTime: Date.now() }); }
+
+    function renderQuickTags() {
+        let favs = JSON.parse(localStorage.getItem('myFavOrders') || '[]');
+        let container = document.getElementById('quick-tags-container'); container.innerHTML = '';
+        if(favs.length > 0) {
+            let label = document.createElement('span'); label.className = 'quick-tag-label'; label.innerText = '⚡️ 快速點：'; container.appendChild(label);
+            favs.forEach(f => {
+                let btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-tag'; btn.innerText = `${f.item} ($${f.price})`;
+                btn.onclick = () => { document.getElementById('item').value = f.item; document.getElementById('price').value = f.price; };
+                container.appendChild(btn);
+            });
+        }
+    }
+    function saveToQuickTags(item, price) {
+        let favs = JSON.parse(localStorage.getItem('myFavOrders') || '[]');
+        favs = favs.filter(f => f.item !== item); favs.unshift({ item: item, price: price });
+        if(favs.length > 3) favs.pop(); localStorage.setItem('myFavOrders', JSON.stringify(favs)); renderQuickTags();
+    }
+
+    // 🌟 回歸：使用專屬網址解鎖
+    window.toggleAdmin = function() {
+        if (isAdmin) { 
+            if(confirm("確定要關閉團主模式嗎？\n關閉後您將只能看到自己的訂單。")) { 
+                isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateAdminUI(); render(); 
+            } 
+        } else { 
+            alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。");
+        }
+    }
+
+    function updateAdminUI() {
+        document.getElementById('btn-admin').innerText = isAdmin ? "🔓 關閉團主" : "一般身分";
+        document.getElementById('admin-badge').style.display = isAdmin ? "inline-block" : "none";
+        document.getElementById('admin-stats').style.display = isAdmin ? "flex" : "none";
+        document.getElementById('unpaid-title').innerHTML = isAdmin ? "📝 所有未付款區" : "📝 您的未付款訂單";
+        document.getElementById('paid-title').innerHTML = isAdmin ? "✅ 所有已付款區" : "✅ 您的已付款訂單";
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? "inline-block" : "none");
+        document.querySelectorAll('.admin-only-th').forEach(th => th.style.display = isAdmin ? "table-cell" : "none");
+    }
+
+    document.getElementById('bulletin-file-input').addEventListener('change', function(e) {
+        const file = e.target.files[0]; if (!file) return; if (!file.type.match('image.*')) { alert("請選擇圖片！"); return; }
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas'); let width = img.width, height = img.height;
+                if (width > 800) { height *= 800 / width; width = 800; }
+                canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'block';
+            }; img.src = event.target.result;
+        }; reader.readAsDataURL(file);
+    });
+
+    window.clearImage = function() { uploadedImageBase64 = ""; document.getElementById('bulletin-file-input').value = ""; document.getElementById('image-preview-container').style.display = 'none'; }
+    window.openBulletinEditor = function() {
+        document.getElementById('bulletin-text-input').value = bText; document.getElementById('bulletin-link-input').value = bLink;
+        if (uploadedImageBase64) { document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'block'; } else { document.getElementById('image-preview-container').style.display = 'none'; }
+        document.getElementById('bulletin-file-input').value = ""; document.getElementById('bulletin-modal').style.display = "flex";
+    }
+    window.saveBulletin = function() { settingsRef.update({ bulletinText: document.getElementById('bulletin-text-input').value, bulletinLink: document.getElementById('bulletin-link-input').value, bulletinImage: uploadedImageBase64 }).then(() => { document.getElementById('bulletin-modal').style.display = "none"; }); }
+    window.toggleLock = function() { if(confirm(globalLocked ? "開放點餐？" : "停止收單？")) settingsRef.update({ isLocked: !globalLocked }); }
+
+    window.showSummary = function() {
+        let counts = {}; let totalQty = 0;
+        orders.forEach(o => { counts[o.item] = (counts[o.item] || 0) + 1; totalQty++; });
+        let txt = `總計：${totalQty} 份\n════════════════════\n`;
+        for(let item in counts) { txt += `🍱 ${item.padEnd(10, ' ')} ✖ ${counts[item]}\n`; }
+        document.getElementById('summary-content').innerText = txt; document.getElementById('summary-modal').style.display = "flex";
+    }
+
+    ordersRef.on('value', (snapshot) => { orders = []; snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); render(); });
+
+    function showFloatingNumber(btn, amount) {
+        const floater = document.createElement('div'); floater.className = 'floating-num'; floater.innerText = `+$${amount}`;
+        const rect = btn.getBoundingClientRect(); floater.style.left = `${rect.left + window.scrollX}px`; floater.style.top = `${rect.top + window.scrollY - 20}px`;
+        document.body.appendChild(floater); setTimeout(() => floater.remove(), 1000);
+    }
+
+    function render() {
+        const unpaidTbody = document.querySelector('#unpaid-table tbody'); const paidTbody = document.querySelector('#paid-table tbody');
+        unpaidTbody.innerHTML = ''; paidTbody.innerHTML = '';
+        let total = 0, paidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
+        let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
+
+        orders.forEach(order => {
+            total += order.price; if (order.isPaid) paidTotal += order.price; 
+            if (!isAdmin && !myNames.includes(order.name)) return; 
+
+            if (order.isPaid) {
+                visiblePaidCount++; const tr = document.createElement('tr');
+                let adminFields = isAdmin ? `<td><span class="price-tag">$${order.paidAmount}</span></td><td><span class="change-tag">$${order.change}</span></td><td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
+                tr.innerHTML = `<td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${adminFields}`; paidTbody.appendChild(tr);
+            } else {
+                visibleUnpaidCount++; const tr = document.createElement('tr');
+                let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" id="pay-${order.id}" min="${order.price}" placeholder="$"></td>` : `<td style="display:none;"></td>`;
+                let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this, ${order.price})">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
+                let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrder('${order.id}')">✏️ 修改</button>` : `<span style="color:var(--gray); font-size:0.9em; font-weight:bold;">🔒 已鎖定</span>`;
+                tr.innerHTML = `<td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${payInputTd}<td>${editBtn}${adminBtns}</td>`; unpaidTbody.appendChild(tr);
+            }
+        });
+
+        let unpaidColspan = isAdmin ? 5 : 4; let paidColspan = isAdmin ? 6 : 3;
+        if(visibleUnpaidCount === 0) unpaidTbody.innerHTML = `<tr><td colspan="${unpaidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有未付款訂單":"太棒了！您目前沒有未付款的訂單"}</td></tr>`;
+        if(visiblePaidCount === 0) paidTbody.innerHTML = `<tr><td colspan="${paidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有已付款訂單":"您目前沒有已付款的記錄"}</td></tr>`;
+        
+        document.getElementById('total-price').innerText = total; document.getElementById('total-paid').innerText = paidTotal; document.getElementById('total-unpaid').innerText = total - paidTotal;
+    }
+
+    document.getElementById('order-form').addEventListener('submit', function(e) {
+        e.preventDefault(); if (globalLocked) { alert("⚠️ 已結單！"); return; }
+        const inputName = document.getElementById('name').value.trim(); const inputItem = document.getElementById('item').value.trim(); const inputPrice = parseInt(document.getElementById('price').value);
+        if(confirm(`👉 請確認：\n👤 姓名：${inputName}\n🍱 品項：${inputItem}\n💰 價格：$${inputPrice}`)) {
+            let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
+            if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
+            saveToQuickTags(inputItem, inputPrice);
+            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
+        }
+    });
+
+    window.editOrder = function(id) {
+        if (globalLocked && !isAdmin) { alert("⚠️ 已結單無法修改！"); return; }
+        const order = orders.find(o => o.id === id); if(!order) return;
+        const newItem = prompt(`修改品項：`, order.item); if (!newItem) return;
+        const newPriceStr = prompt(`修改價格：`, order.price); if (!newPriceStr) return; 
+        const newPrice = parseInt(newPriceStr); if (isNaN(newPrice) || newPrice <= 0) return;
+        db.ref('lunch-orders/' + id).update({ item: newItem.trim(), price: newPrice });
+    }
+
+    window.processPayment = function(id, btnElement, price) {
+        const order = orders.find(o => o.id === id); let paidAmount = parseInt(document.getElementById('pay-' + id).value);
+        if (isNaN(paidAmount)) paidAmount = order.price; if (paidAmount < order.price) { alert('實付金額不足！'); return; }
+        chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
+        db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price });
+    }
+
+    window.deleteOrder = function(id) { if(confirm('⚠️ 確定刪除嗎？')) db.ref('lunch-orders/' + id).remove(); }
+    window.clearAllOrders = function() { if(confirm('🚨 確定清空今天「所有」訂單嗎？')) db.ref('lunch-orders').remove(); }
+    window.exportToExcel = function() {
+        if (orders.length === 0) { alert("沒有訂單可匯出！"); return; }
+        let excelData = [["姓名", "餐點品項", "應付金額", "付款狀態", "實付金額", "找零"]];
+        orders.forEach(order => { excelData.push([order.name, order.item, order.price, order.isPaid ? "✅ 已付款" : "❌ 未付款", order.paidAmount, order.change]); });
+        let worksheet = XLSX.utils.aoa_to_sheet(excelData); let workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "今日午餐"); XLSX.writeFile(workbook, `午餐對帳單_${new Date().toLocaleDateString()}.xlsx`);
+    }
+</script>
+
+</body>
+</html>
