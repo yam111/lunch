@@ -58,7 +58,6 @@
 
         .online-header { font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary); border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 10px;}
         .online-user-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.02); animation: slideIn 0.3s ease;}
-        /* 👑 團主專屬特別底色 */
         .online-user-item.is-admin { background: rgba(245, 158, 11, 0.05); border-radius: 12px; border-bottom: none; margin-bottom: 5px; border: 1px solid rgba(245, 158, 11, 0.2);}
         
         .user-avatar { width: 35px; height: 35px; background: #E0E7FF; color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0;}
@@ -159,7 +158,7 @@
         .preview-container img { max-width: 100%; max-height: 200px; object-fit: contain; display: inline-block; border-radius: 8px;}
         .btn-remove-img { position: absolute; top: 10px; right: 10px; background: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 36px; height: 36px; font-weight: 900; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer;}
         
-        .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
+        .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
     </style>
@@ -244,7 +243,8 @@
         <div class="online-header">
             👥 目前線上人員 (<span id="online-count-sidebar">0</span>)
         </div>
-        <div id="online-users-list"></div>
+        <div id="online-users-list">
+            </div>
     </div>
 </div>
 
@@ -337,24 +337,36 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
-    // 🚀 修正：過濾重複使用者並將「團主」置頂
+    // 🚀 核心優化：絕對精準不殘留的線上名單追蹤
     function initPresence() {
-        let deviceId = localStorage.getItem('lunchDeviceId');
-        if (!deviceId) { deviceId = 'device_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('lunchDeviceId', deviceId); }
+        const connectedRef = db.ref('.info/connected');
         
-        myPresenceRef = onlineRef.child(deviceId);
-        myPresenceRef.onDisconnect().remove();
-        
-        let currentName = document.getElementById('name').value || "神秘訪客";
-        myCurrentStatus = 'browsing';
-        myPresenceRef.set({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
+        connectedRef.on('value', (snap) => {
+            if (snap.val() === true) {
+                // 每當重新連線時，創建一個全新的專屬節點，斷線時自動銷毀
+                myPresenceRef = onlineRef.push();
+                myPresenceRef.onDisconnect().remove();
+                
+                let currentName = document.getElementById('name').value.trim() || "神秘訪客";
+                myCurrentStatus = 'browsing';
+                myPresenceRef.set({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
+            }
+        });
+
+        // 確保網頁關閉或重新整理瞬間立刻移除節點
+        window.addEventListener('beforeunload', () => { if (myPresenceRef) myPresenceRef.remove(); });
+        window.addEventListener('pagehide', () => { if (myPresenceRef) myPresenceRef.remove(); });
 
         onlineRef.on('value', (snap) => {
             requestAnimationFrame(() => {
                 let userMap = {}; 
+                // 排除重複名字，並保留最新/最高權重狀態
                 snap.forEach(child => {
                     const u = child.val();
-                    if (!userMap[u.name] || u.status === 'typing' || (u.status === 'done' && userMap[u.name].status === 'browsing')) {
+                    if (!u || !u.name) return;
+                    if (!userMap[u.name] || u.status === 'typing' || (u.status === 'done' && userMap[u.name].status === 'browsing') || u.isAdmin) {
+                        // 若同一名字有人是 isAdmin，則強制覆蓋為 admin 狀態
+                        if (userMap[u.name] && userMap[u.name].isAdmin && !u.isAdmin) return;
                         userMap[u.name] = u; 
                     }
                 });
@@ -383,6 +395,7 @@
                             </div>
                         </div>`;
                     
+                    // 👑 團主優先置頂排版
                     if (u.isAdmin) adminHtml += itemHtml;
                     else normalHtml += itemHtml;
                 }
@@ -394,7 +407,7 @@
     }
 
     window.handleTyping = function() {
-        const currentName = document.getElementById('name').value.trim() || "神秘訪客";
+        let currentName = document.getElementById('name').value.trim() || "神秘訪客";
         if (!isTyping || lastTypingName !== currentName) {
             isTyping = true; lastTypingName = currentName; myCurrentStatus = 'typing';
             if(myPresenceRef) myPresenceRef.update({ name: currentName, status: 'typing', isAdmin: isAdmin, timestamp: Date.now() });
@@ -411,7 +424,7 @@
 
     window.updateMyStatus = function(status) {
         myCurrentStatus = status;
-        let currentName = document.getElementById('name').value || "神秘訪客";
+        let currentName = document.getElementById('name').value.trim() || "神秘訪客";
         if(myPresenceRef) myPresenceRef.update({ name: currentName, status: status, isAdmin: isAdmin, timestamp: Date.now() });
     }
 
@@ -573,7 +586,6 @@
         db.ref('lunch-orders/' + id).update({ changeGiven: true });
     }
 
-    // 🚀 修正：極度精準的會計邏輯
     function render() {
         let unpaidHTML = ''; let paidHTML = '';
         let total = 0, paidTotal = 0, unpaidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
@@ -582,14 +594,12 @@
         orders.forEach(order => {
             total += order.price; 
             
-            // 💰 關鍵修正：準確反映團主「手上的現金」
+            // 💰 已收金額精準追蹤邏輯：反映真實手上現金
             if (order.isPaid) {
-                // 如果需要找零，且「還沒找」，手上的錢就是他付的整鈔 (paidAmount)
-                // 如果已經找零了，手上的錢就只剩下便當錢 (price)
                 if (order.change > 0 && !order.changeGiven) {
-                    paidTotal += order.paidAmount; 
+                    paidTotal += order.paidAmount; // 還沒找零，手上的錢是收到的全額
                 } else {
-                    paidTotal += order.price; 
+                    paidTotal += order.price; // 已經找零，或剛好付清，手上的錢只剩便當錢
                 }
             } else {
                 unpaidTotal += order.price;
@@ -601,6 +611,7 @@
 
             if (order.isPaid) {
                 visiblePaidCount++;
+                
                 let changeStatusUI = '';
                 if (order.change > 0) {
                     if (order.changeGiven) {
@@ -631,7 +642,7 @@
             } else {
                 visibleUnpaidCount++; 
                 if (isEditing && (!globalLocked || isAdmin)) {
-                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳請用按鈕</span></td>` : `<td style="display:none;"></td>`;
+                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳前不可改實收</span></td>` : `<td style="display:none;"></td>`;
                     unpaidHTML += `<tr>
                         <td><strong>${order.name}</strong></td>
                         <td><input type="text" id="edit-item-${order.id}" value="${order.item}" class="inline-edit-input"></td>
@@ -706,7 +717,7 @@
 
     window.cancelEditInline = function() { editingOrderId = null; render(); }
 
-    // 🚀 修正：強制要求輸入實付金額
+    // 🚀 修正：結帳時沒有輸入金額會自動擋下
     window.processPayment = function(id, btnElement) {
         const order = orders.find(o => o.id === id); if (!order) return;
         const inputEl = btnElement.closest('tr').querySelector('.pay-input');
