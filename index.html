@@ -30,7 +30,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 🚀 效能優化：移除極耗效能的全螢幕毛玻璃，改用輕量半透明遮罩 */
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(248, 250, 252, 0.65); 
@@ -59,7 +58,12 @@
 
         .online-header { font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary); border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 10px;}
         .online-user-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.02); animation: slideIn 0.3s ease;}
+        /* 👑 團主專屬特別底色 */
+        .online-user-item.is-admin { background: rgba(245, 158, 11, 0.05); border-radius: 12px; border-bottom: none; margin-bottom: 5px; border: 1px solid rgba(245, 158, 11, 0.2);}
+        
         .user-avatar { width: 35px; height: 35px; background: #E0E7FF; color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0;}
+        .online-user-item.is-admin .user-avatar { background: #FEF3C7; color: #D97706; }
+        
         .user-info { display: flex; flex-direction: column; width: 100%; overflow: hidden;}
         .user-name { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px;}
         .user-status { font-size: 0.8em; color: var(--gray); display: flex; align-items: center; gap: 4px;}
@@ -93,10 +97,12 @@
         .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
         .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block;}
         .bulletin-content a { background: #FDE68A; padding: 4px 10px; border-radius: 8px; color: #B45309; text-decoration: none; font-weight: 700; margin-top: 5px; display: inline-block;}
+        .bulletin-content a:hover { background: #FCD34D; }
         .btn-edit-small { position: absolute; top: 15px; right: 20px; background: white; color: var(--warning); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
 
         .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
         .stat-box { flex: 1; padding: 20px; border-radius: 20px; color: white; box-shadow: 0 10px 20px -3px rgba(0,0,0,0.15); position: relative; overflow: hidden; min-width: 150px;}
+        .stat-box::after { content: ''; position: absolute; top: -50%; right: -20%; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; }
         .box-total { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
         .box-paid { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
         .box-unpaid { background: linear-gradient(135deg, #F87171 0%, #EF4444 100%); }
@@ -133,7 +139,6 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000; text-shadow: 0 2px 4px rgba(0,0,0,0.1);}
 
-        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; animation: scaleUp 0.2s ease-out;}
         .modal-header { padding: 20px 25px; font-weight: 900; font-size: 1.2em; border-bottom: 1px solid #E2E8F0; color: var(--dark); background: white; z-index: 10; display: flex; align-items: center; gap: 10px;}
@@ -195,9 +200,9 @@
         </div>
 
         <div class="flex stats" id="admin-stats">
-            <div class="stat-box box-total"><div class="stat-title">總金額</div><div class="stat-value">$<span id="total-price">0</span></div></div>
-            <div class="stat-box box-paid"><div class="stat-title">已收金額</div><div class="stat-value">$<span id="total-paid">0</span></div></div>
-            <div class="stat-box box-unpaid"><div class="stat-title">未收金額</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
+            <div class="stat-box box-total"><div class="stat-title">總金額 (應付加總)</div><div class="stat-value">$<span id="total-price">0</span></div></div>
+            <div class="stat-box box-paid"><div class="stat-title">已收金額 (實際拿到的現金)</div><div class="stat-value">$<span id="total-paid">0</span></div></div>
+            <div class="stat-box box-unpaid"><div class="stat-title">未收金額 (未結帳總額)</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
         </div>
 
         <div class="card">
@@ -332,7 +337,7 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
-    // 🚀 修正：利用 localStorage 給每個裝置綁定專屬 ID，並利用名字進行群組去重
+    // 🚀 修正：過濾重複使用者並將「團主」置頂
     function initPresence() {
         let deviceId = localStorage.getItem('lunchDeviceId');
         if (!deviceId) { deviceId = 'device_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('lunchDeviceId', deviceId); }
@@ -347,7 +352,6 @@
         onlineRef.on('value', (snap) => {
             requestAnimationFrame(() => {
                 let userMap = {}; 
-                // 將同名字的使用者狀態合併，只保留最活躍的狀態
                 snap.forEach(child => {
                     const u = child.val();
                     if (!userMap[u.name] || u.status === 'typing' || (u.status === 'done' && userMap[u.name].status === 'browsing')) {
@@ -355,8 +359,10 @@
                     }
                 });
 
-                let listHtml = "";
+                let adminHtml = "";
+                let normalHtml = "";
                 let count = 0;
+                
                 for (let name in userMap) {
                     count++;
                     const u = userMap[name];
@@ -366,17 +372,22 @@
                     else statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
 
                     const isBoss = u.isAdmin ? '<span title="團主" style="margin-left:5px;">👑</span>' : '';
-                    listHtml += `
-                        <div class="online-user-item">
+                    const adminClass = u.isAdmin ? 'is-admin' : '';
+                    
+                    const itemHtml = `
+                        <div class="online-user-item ${adminClass}">
                             <div class="user-avatar">${u.name.charAt(0)}</div>
                             <div class="user-info">
                                 <div class="user-name">${u.name} ${isBoss}</div>
                                 <div class="user-status">${statusHtml}</div>
                             </div>
                         </div>`;
+                    
+                    if (u.isAdmin) adminHtml += itemHtml;
+                    else normalHtml += itemHtml;
                 }
                 
-                document.getElementById('online-users-list').innerHTML = listHtml;
+                document.getElementById('online-users-list').innerHTML = adminHtml + normalHtml;
                 document.getElementById('online-count-sidebar').innerText = count;
             });
         });
@@ -488,7 +499,8 @@
         if (isAdmin) { 
             if(confirm("確定要關閉團主模式嗎？")) { 
                 isAdmin = false; localStorage.removeItem('lunchAdminToken'); 
-                updateMyStatus(myCurrentStatus); updateAdminUI(); render(); 
+                updateMyStatus(myCurrentStatus); 
+                updateAdminUI(); render(); 
             } 
         } else { 
             alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。");
@@ -557,26 +569,38 @@
         document.body.appendChild(floater); setTimeout(() => floater.remove(), 1000);
     }
 
-    // 🚀 新增：找零狀態切換功能
     window.markChangeGiven = function(id) {
         db.ref('lunch-orders/' + id).update({ changeGiven: true });
     }
 
+    // 🚀 修正：極度精準的會計邏輯
     function render() {
         let unpaidHTML = ''; let paidHTML = '';
-        let total = 0, paidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
+        let total = 0, paidTotal = 0, unpaidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
 
         orders.forEach(order => {
-            total += order.price; if (order.isPaid) paidTotal += order.price; 
+            total += order.price; 
+            
+            // 💰 關鍵修正：準確反映團主「手上的現金」
+            if (order.isPaid) {
+                // 如果需要找零，且「還沒找」，手上的錢就是他付的整鈔 (paidAmount)
+                // 如果已經找零了，手上的錢就只剩下便當錢 (price)
+                if (order.change > 0 && !order.changeGiven) {
+                    paidTotal += order.paidAmount; 
+                } else {
+                    paidTotal += order.price; 
+                }
+            } else {
+                unpaidTotal += order.price;
+            }
+
             if (!isAdmin && !myNames.includes(order.name)) return; 
             
             let isEditing = (editingOrderId === order.id);
 
             if (order.isPaid) {
                 visiblePaidCount++;
-                
-                // 🚀 已付款區 UI 處理 (包含找零狀態)
                 let changeStatusUI = '';
                 if (order.change > 0) {
                     if (order.changeGiven) {
@@ -607,7 +631,7 @@
             } else {
                 visibleUnpaidCount++; 
                 if (isEditing && (!globalLocked || isAdmin)) {
-                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳前不可改實收</span></td>` : `<td style="display:none;"></td>`;
+                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳請用按鈕</span></td>` : `<td style="display:none;"></td>`;
                     unpaidHTML += `<tr>
                         <td><strong>${order.name}</strong></td>
                         <td><input type="text" id="edit-item-${order.id}" value="${order.item}" class="inline-edit-input"></td>
@@ -618,7 +642,7 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" min="${order.price}" placeholder="$"></td>` : `<td style="display:none;"></td>`;
+                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" placeholder="輸入金額"></td>` : `<td style="display:none;"></td>`;
                     let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this)">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
                     let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrderInline('${order.id}')">✏️ 修改</button>` : `<span style="color:var(--gray); font-size:0.9em; font-weight:bold;">🔒 已鎖定</span>`;
                     unpaidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${payInputTd}<td>${editBtn}${adminBtns}</td></tr>`; 
@@ -630,7 +654,9 @@
         document.querySelector('#unpaid-table tbody').innerHTML = unpaidHTML || `<tr><td colspan="${unpaidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有未付款訂單":"太棒了！您目前沒有未付款的訂單"}</td></tr>`;
         document.querySelector('#paid-table tbody').innerHTML = paidHTML || `<tr><td colspan="${paidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有已付款訂單":"您目前沒有已付款的記錄"}</td></tr>`;
         
-        document.getElementById('total-price').innerText = total; document.getElementById('total-paid').innerText = paidTotal; document.getElementById('total-unpaid').innerText = total - paidTotal;
+        document.getElementById('total-price').innerText = total; 
+        document.getElementById('total-paid').innerText = paidTotal; 
+        document.getElementById('total-unpaid').innerText = unpaidTotal;
     }
 
     document.getElementById('order-form').addEventListener('submit', function(e) {
@@ -665,7 +691,6 @@
             updates.paidAmount = paidInput;
             updates.change = paidInput - priceInput; 
             
-            // 若價格有變更導致找零產生，重置為「未找零」狀態
             if (updates.change > 0 && paidInput !== order.paidAmount) {
                 updates.changeGiven = false;
             }
@@ -681,12 +706,12 @@
 
     window.cancelEditInline = function() { editingOrderId = null; render(); }
 
+    // 🚀 修正：強制要求輸入實付金額
     window.processPayment = function(id, btnElement) {
         const order = orders.find(o => o.id === id); if (!order) return;
         const inputEl = btnElement.closest('tr').querySelector('.pay-input');
         const rawValue = inputEl.value.trim();
         
-        // 🚀 強制驗證：沒有輸入內容就不准結帳
         if (rawValue === "") {
             alert('⚠️ 結帳前請輸入對方給您的【實付金額】！\n(如果對方剛好給應付金額，請輸入對應數字)'); 
             inputEl.focus(); 
