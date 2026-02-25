@@ -14,21 +14,58 @@
             --primary: #4F46E5; --success: #10B981; --danger: #EF4444; --warning: #F59E0B;
             --dark: #1E293B; --gray: #64748B; --bg: #F8FAFC; --surface: #FFFFFF;
         }
-        body { font-family: 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); margin: 0; padding: 20px 10px; color: var(--dark); min-height: 100vh; }
-        .container { max-width: 900px; margin: auto; padding: 30px; }
-        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        body { font-family: 'Noto Sans TC', sans-serif; background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); margin: 0; padding: 20px 10px; color: var(--dark); min-height: 100vh; overflow-x: hidden;}
         
-        /* 標題區與線上人數 */
+        /* 版面配置：主內容 + 右側欄 */
+        .layout-wrapper { max-width: 1200px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
+        .main-content { flex: 1; width: 100%; transition: 0.3s; }
+        
+        /* 右側欄樣式 */
+        .sidebar { 
+            width: 280px; background: var(--surface); border-radius: 20px; 
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); padding: 20px; 
+            position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        /* 手機版側欄控制 */
+        .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
+
+        @media (max-width: 900px) {
+            .sidebar { position: fixed; top: 0; right: 0; height: 100vh; z-index: 1500; transform: translateX(110%); width: 80%; max-width: 300px; border-radius: 20px 0 0 20px;}
+            .sidebar.active { transform: translateX(0); }
+            .toggle-sidebar-btn { display: block; }
+            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1400; }
+            .sidebar-overlay.active { display: block; }
+        }
+
+        /* 線上使用者列表 */
+        .online-header { font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary); border-bottom: 2px solid #F1F5F9; padding-bottom: 10px;}
+        .online-user-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid #F8FAFC; animation: slideIn 0.3s ease;}
+        .user-avatar { width: 35px; height: 35px; background: #E0E7FF; color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0;}
+        .user-info { display: flex; flex-direction: column; width: 100%; overflow: hidden;}
+        .user-name { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .user-status { font-size: 0.8em; color: var(--gray); display: flex; align-items: center; gap: 4px;}
+        
+        /* 狀態燈號 */
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .status-browsing { color: var(--gray); } 
+        .dot-browsing { background: var(--gray); }
+        
+        .status-typing { color: var(--warning); font-weight: bold; animation: pulseText 1.5s infinite;} 
+        .dot-typing { background: var(--warning); animation: blink 1s infinite; }
+        
+        .status-done { color: var(--success); font-weight: bold; } 
+        .dot-done { background: var(--success); }
+
+        @keyframes blink { 50% { opacity: 0.4; } }
+        @keyframes pulseText { 50% { opacity: 0.7; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* 原有樣式保留 */
         .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 25px; }
         h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.6em; display: flex; align-items: center; gap: 10px;}
         
-        .online-badge { 
-            font-size: 0.5em; background: #DEF7EC; color: #03543F; padding: 5px 12px; border-radius: 20px; 
-            display: flex; align-items: center; gap: 6px; border: 1px solid #BCF0DA; font-weight: 700; vertical-align: middle;
-        }
-        .online-dot { width: 8px; height: 8px; background: #0E9F6E; border-radius: 50%; animation: blink 2s infinite; }
-        @keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
-
         button { padding: 10px 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-family: inherit; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         button:hover { transform: translateY(-2px); }
         .admin-only { display: none; }
@@ -39,18 +76,14 @@
         .btn-export { background: #F3E8FF; color: #9333EA; }
         .btn-clear { background: #F1F5F9; color: var(--gray); box-shadow: none;}
         .btn-broadcast { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; animation: pulse 2s infinite; font-size: 1.05em;}
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
         
         .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; }
-        
-        /* 公佈欄 */
         .bulletin { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-left: 6px solid var(--warning); position: relative; }
         .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
         .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; }
         .bulletin-content a { background: #FDE68A; padding: 4px 10px; border-radius: 8px; color: #B45309; text-decoration: none; font-weight: 700; margin-top: 5px; display: inline-block;}
         .btn-edit-small { position: absolute; top: 15px; right: 20px; background: white; color: var(--warning); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
 
-        /* 統計 */
         .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
         .stat-box { flex: 1; padding: 20px; border-radius: 20px; color: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); position: relative; overflow: hidden; min-width: 150px;}
         .box-total { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
@@ -58,7 +91,6 @@
         .box-unpaid { background: linear-gradient(135deg, #F87171 0%, #EF4444 100%); }
         .stat-value { font-size: 2em; font-weight: 900; }
 
-        /* 表單 */
         form { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 15px;}
         input { padding: 14px 18px; border: 2px solid #E2E8F0; border-radius: 12px; flex: 1; min-width: 120px; font-size: 1.05em; background: #F8FAFC; outline: none; transition: 0.3s; }
         input:focus { border-color: var(--primary); background: white; }
@@ -69,7 +101,6 @@
         .quick-tag { background: #F1F5F9; color: var(--dark); border: 1px solid #E2E8F0; padding: 6px 14px; border-radius: 20px; font-size: 0.95em; box-shadow: none;}
         .quick-tag:hover { background: #E2E8F0; transform: scale(1.05); }
 
-        /* 表格 */
         h2 { color: var(--dark); margin-top: 0; font-size: 1.4em; font-weight: 900; }
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; min-width: 600px;}
         th, td { padding: 15px 18px; text-align: left; border-bottom: 1px solid #F1F5F9; }
@@ -83,17 +114,15 @@
         .btn-del { background: #FEE2E2; color: var(--danger); padding: 8px 14px; box-shadow: none;}
         .price-tag { font-family: monospace; font-size: 1.1em; font-weight: 700; color: var(--dark); }
 
-        /* 模態框 & 特效 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 30px; border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         .editor-group { margin-bottom: 20px; }
-        .editor-group textarea { width: 100%; height: 100px; padding: 15px; border: 2px solid #E2E8F0; border-radius: 12px; resize: vertical; }
-        .editor-group input { width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 12px; }
+        .editor-group textarea { width: 100%; height: 100px; padding: 15px; border: 2px solid #E2E8F0; border-radius: 12px; resize: vertical; box-sizing: border-box;}
+        .editor-group input { width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 12px; box-sizing: border-box;}
         
         .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
-        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
         
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000;}
@@ -101,77 +130,83 @@
 </head>
 <body>
 
-<div class="container">
-    <div class="flex header-area">
-        <h1>
-            🍱 午餐系統 🍱
-            <div class="online-badge">
-                <div class="online-dot"></div>
-                <span id="online-count">1</span> 人在線
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<button class="toggle-sidebar-btn" onclick="toggleSidebar()">👥</button>
+
+<div class="layout-wrapper">
+    <div class="main-content">
+        <div class="flex header-area">
+            <h1>🍱 午餐系統 🍱 <span id="admin-badge" style="font-size:0.5em; background:var(--danger); color:white; padding:4px 10px; border-radius:12px; display:none; vertical-align: middle; margin-left: 8px;">👑 團主</span></h1>
+            <div class="flex">
+                <button id="btn-admin" onclick="toggleAdmin()" class="btn-admin">一般身分</button>
+                <button onclick="triggerBroadcast()" class="btn-broadcast admin-only">🔔 通知取餐</button>
+                <button id="btn-lock" onclick="toggleLock()" class="btn-lock admin-only">🛑 停止收單</button>
+                <button onclick="openSplitModal()" class="btn-split admin-only">💰 分攤運費</button>
+                <button onclick="showSummary()" class="btn-summary admin-only">📋 叫餐統計</button>
+                <button onclick="clearAllOrders()" class="btn-clear admin-only">🗑️ 淨空</button>
+                <button onclick="exportToExcel()" class="btn-export admin-only">📊 匯出 Excel</button>
             </div>
-            <span id="admin-badge" style="font-size:0.5em; background:var(--danger); color:white; padding:4px 10px; border-radius:12px; display:none; vertical-align: middle;">👑 團主</span>
-        </h1>
-        <div class="flex">
-            <button id="btn-admin" onclick="toggleAdmin()" class="btn-admin">一般身分</button>
-            <button onclick="triggerBroadcast()" class="btn-broadcast admin-only">🔔 通知取餐</button>
-            <button id="btn-lock" onclick="toggleLock()" class="btn-lock admin-only">🛑 停止收單</button>
-            <button onclick="openSplitModal()" class="btn-split admin-only">💰 分攤運費</button>
-            <button onclick="showSummary()" class="btn-summary admin-only">📋 叫餐統計</button>
-            <button onclick="clearAllOrders()" class="btn-clear admin-only">🗑️ 淨空</button>
-            <button onclick="exportToExcel()" class="btn-export admin-only">📊 匯出 Excel</button>
+        </div>
+
+        <div class="broadcast-overlay" id="broadcast-screen">
+            <div class="broadcast-icon">🍱</div>
+            <h1 style="color:white; font-size:3.5em;">餐點送達啦！</h1>
+            <div style="font-size:1.5em; margin-top:15px; opacity:0.9;">請速至領餐區領取午餐。</div>
+            <button style="margin-top:40px; background:white; color:var(--success); font-size:1.2em; padding:15px 40px; border-radius:50px;" onclick="document.getElementById('broadcast-screen').style.display='none'">我知道了！</button>
+        </div>
+
+        <div class="card bulletin">
+            <div class="bulletin-content" id="bulletin-text">📢 歡迎點餐！</div>
+            <button class="btn-edit-small admin-only" onclick="openBulletinEditor()">✏️ 編輯</button>
+        </div>
+
+        <div class="flex stats" id="admin-stats">
+            <div class="stat-box box-total"><div style="font-size:0.95em; opacity:0.9;">總金額</div><div class="stat-value">$<span id="total-price">0</span></div></div>
+            <div class="stat-box box-paid"><div style="font-size:0.95em; opacity:0.9;">已收金額</div><div class="stat-value">$<span id="total-paid">0</span></div></div>
+            <div class="stat-box box-unpaid"><div style="font-size:0.95em; opacity:0.9;">未收金額</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
+        </div>
+
+        <div class="card">
+            <form id="order-form">
+                <input type="text" id="name" placeholder="您的姓名" required oninput="updateMyStatus('typing')">
+                <input type="text" id="item" placeholder="餐點品項 (如: 排骨飯)" required oninput="updateMyStatus('typing')">
+                <input type="number" id="price" placeholder="價格" required min="1" oninput="updateMyStatus('typing')">
+                <button type="submit" id="submit-btn" class="btn-submit">✅ 送出訂單</button>
+            </form>
+            <div class="quick-tags-area" id="quick-tags-container"></div>
+        </div>
+
+        <div class="card">
+            <h2 id="unpaid-title">📝 您的未付款訂單</h2>
+            <div style="overflow-x:auto;">
+                <table id="unpaid-table">
+                    <thead>
+                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">輸入實付</th><th>操作</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 id="paid-title">✅ 您的已付款訂單</h2>
+            <div style="overflow-x:auto;">
+                <table id="paid-table">
+                    <thead>
+                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零</th><th class="admin-only-th">操作</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div class="broadcast-overlay" id="broadcast-screen">
-        <div class="broadcast-icon">🍱</div>
-        <h1 style="color:white; font-size:3.5em;">餐點送達啦！</h1>
-        <div style="font-size:1.5em; margin-top:15px; opacity:0.9;">請速至領餐區領取午餐，並準備好您的餐費 💰</div>
-        <button style="margin-top:40px; background:white; color:var(--success); font-size:1.2em; padding:15px 40px; border-radius:50px;" onclick="document.getElementById('broadcast-screen').style.display='none'">我知道了！</button>
-    </div>
-
-    <div class="card bulletin">
-        <div class="bulletin-content" id="bulletin-text">📢 歡迎點餐！</div>
-        <button class="btn-edit-small admin-only" onclick="openBulletinEditor()">✏️ 編輯公佈欄</button>
-    </div>
-
-    <div class="flex stats" id="admin-stats">
-        <div class="stat-box box-total"><div style="font-size:0.95em; opacity:0.9;">總金額</div><div class="stat-value">$<span id="total-price">0</span></div></div>
-        <div class="stat-box box-paid"><div style="font-size:0.95em; opacity:0.9;">已收金額</div><div class="stat-value">$<span id="total-paid">0</span></div></div>
-        <div class="stat-box box-unpaid"><div style="font-size:0.95em; opacity:0.9;">未收金額</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
-    </div>
-
-    <div class="card">
-        <form id="order-form">
-            <input type="text" id="name" placeholder="您的姓名" required>
-            <input type="text" id="item" placeholder="餐點品項 (如: 排骨飯)" required>
-            <input type="number" id="price" placeholder="價格" required min="1">
-            <button type="submit" id="submit-btn" class="btn-submit">✅ 送出訂單</button>
-        </form>
-        <div class="quick-tags-area" id="quick-tags-container"></div>
-    </div>
-
-    <div class="card">
-        <h2 id="unpaid-title">📝 您的未付款訂單</h2>
-        <div style="overflow-x:auto;">
-            <table id="unpaid-table">
-                <thead>
-                    <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">輸入實付</th><th>操作</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+    <div class="sidebar" id="sidebar">
+        <div class="online-header">
+            👥 目前線上人員 (<span id="online-count-sidebar">0</span>)
         </div>
-    </div>
-
-    <div class="card">
-        <h2 id="paid-title">✅ 您的已付款訂單</h2>
-        <div style="overflow-x:auto;">
-            <table id="paid-table">
-                <thead>
-                    <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零</th><th class="admin-only-th">操作</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+        <div id="online-users-list">
+            </div>
     </div>
 </div>
 
@@ -191,14 +226,11 @@
 <div class="modal" id="split-modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:var(--success);">💰 運費/折扣 自動分攤</h3>
-        <p style="color:var(--gray);">請輸入總運費（正數）或總折扣（負數），系統將自動平分給所有訂單。</p>
-        <div class="editor-group">
-            <label>輸入金額：</label>
-            <input type="number" id="split-amount" placeholder="例如：58 (運費) 或 -100 (折扣)">
-        </div>
+        <p style="color:var(--gray);">輸入總運費(正數)或總折扣(負數)，系統將自動平分。</p>
+        <div class="editor-group"><input type="number" id="split-amount" placeholder="例如：58"></div>
         <div class="flex" style="justify-content:flex-end;">
             <button style="background:#F1F5F9; color:var(--gray); box-shadow:none;" onclick="document.getElementById('split-modal').style.display='none'">取消</button>
-            <button style="background:var(--success); color:white;" onclick="calculateSplit()">🚀 開始分攤</button>
+            <button style="background:var(--success); color:white;" onclick="calculateSplit()">🚀 開始</button>
         </div>
     </div>
 </div>
@@ -226,18 +258,21 @@
     const db = firebase.database();
     const ordersRef = db.ref('lunch-orders');
     const settingsRef = db.ref('lunch-settings');
-    // 🟢 線上人數統計參考點
-    const onlineRef = db.ref('online-users'); 
+    const onlineRef = db.ref('online-presence'); // 新的 Presence 節點
 
     const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
     const bellSound = new Audio('https://actions.google.com/sounds/v1/alarms/dinner_bell.ogg');
 
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
+    
+    // 我的 Presence 參考
+    let myPresenceRef = null;
 
     document.addEventListener('DOMContentLoaded', () => {
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
-        if (myNames.length > 0) { document.getElementById('name').value = myNames[myNames.length - 1]; document.getElementById('item').focus(); }
+        if (myNames.length > 0) { document.getElementById('name').value = myNames[myNames.length - 1]; }
+        
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('role') === 'boss' || localStorage.getItem('lunchAdminToken') === 'boss') {
             isAdmin = true; localStorage.setItem('lunchAdminToken', 'boss'); window.history.replaceState({}, document.title, window.location.pathname);
@@ -245,47 +280,81 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
-    // 🟢 初始化線上人數偵測
+    // 🟢 初始化線上狀態與即時名單
     function initPresence() {
-        const myCon = onlineRef.push(); // 產生一個新的連線 ID
-        myCon.onDisconnect().remove(); // 斷線時自動移除
-        myCon.set(true); // 設定為在線
+        myPresenceRef = onlineRef.push();
+        myPresenceRef.onDisconnect().remove();
+        
+        // 初始狀態
+        let currentName = document.getElementById('name').value || "神秘訪客";
+        myPresenceRef.set({ name: currentName, status: "browsing", timestamp: Date.now() });
 
+        // 監聽線上名單變化
         onlineRef.on('value', (snap) => {
-            const count = snap.numChildren();
-            document.getElementById('online-count').innerText = count;
+            const list = document.getElementById('online-users-list');
+            list.innerHTML = "";
+            let count = 0;
+            
+            snap.forEach(child => {
+                count++;
+                const u = child.val();
+                let statusHtml = "";
+                let statusClass = "";
+
+                if(u.status === 'typing') {
+                    statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
+                } else if(u.status === 'done') {
+                    statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
+                } else {
+                    statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
+                }
+
+                const div = document.createElement('div');
+                div.className = "online-user-item";
+                div.innerHTML = `
+                    <div class="user-avatar">${u.name.charAt(0)}</div>
+                    <div class="user-info">
+                        <div class="user-name">${u.name}</div>
+                        <div class="user-status">${statusHtml}</div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            document.getElementById('online-count-sidebar').innerText = count;
         });
     }
 
-    // 💰 運費分攤邏輯
+    // 🟢 更新我的狀態 (typing / done / browsing)
+    window.updateMyStatus = function(status) {
+        let currentName = document.getElementById('name').value || "神秘訪客";
+        myPresenceRef.update({ name: currentName, status: status, timestamp: Date.now() });
+    }
+
+    // 手機版側欄切換
+    window.toggleSidebar = function() {
+        document.querySelector('.sidebar').classList.toggle('active');
+        document.querySelector('.sidebar-overlay').classList.toggle('active');
+    }
+
     window.openSplitModal = function() { document.getElementById('split-modal').style.display = 'flex'; }
     window.calculateSplit = function() {
         const amount = parseInt(document.getElementById('split-amount').value);
         if (isNaN(amount) || amount === 0) return alert("請輸入有效金額");
-        if (orders.length === 0) return alert("目前沒有訂單可分攤");
-
-        // 計算每人分攤金額 (無條件進位，保護團主)
+        if (orders.length === 0) return alert("沒有訂單");
         const perPerson = Math.ceil(amount / orders.length);
         const typeText = amount > 0 ? `運+${perPerson}` : `折${perPerson}`;
-
-        if(confirm(`總金額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n\n確定要更新所有訂單嗎？`)) {
+        if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
-                const newPrice = order.price + perPerson;
-                const newItemName = `${order.item} (${typeText})`;
-                db.ref('lunch-orders/' + order.id).update({
-                    price: newPrice,
-                    item: newItemName
-                });
+                db.ref('lunch-orders/' + order.id).update({ price: order.price + perPerson, item: `${order.item} (${typeText})` });
             });
             document.getElementById('split-modal').style.display = 'none';
-            alert("✅ 分攤完成！所有訂單已更新。");
         }
     }
 
     settingsRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
         globalLocked = data.isLocked || false;
-        bText = data.bulletinText || "📢 歡迎點餐！請填寫下方表單。";
+        bText = data.bulletinText || "📢 歡迎點餐！";
         bLink = data.bulletinLink || ""; uploadedImageBase64 = data.bulletinImage || "";
 
         if (data.broadcastTime && data.broadcastTime > lastBroadcastTime) {
@@ -313,7 +382,7 @@
     });
 
     function showBroadcast() { bellSound.currentTime = 0; bellSound.play().catch(e => console.log(e)); document.getElementById('broadcast-screen').style.display = 'flex'; }
-    window.triggerBroadcast = function() { if(confirm("發送「餐點送達」廣播？")) settingsRef.update({ broadcastTime: Date.now() }); }
+    window.triggerBroadcast = function() { if(confirm("發送廣播？")) settingsRef.update({ broadcastTime: Date.now() }); }
 
     function renderQuickTags() {
         let favs = JSON.parse(localStorage.getItem('myFavOrders') || '[]');
@@ -322,7 +391,10 @@
             let label = document.createElement('span'); label.className = 'quick-tag-label'; label.innerText = '⚡️ 快速點：'; container.appendChild(label);
             favs.forEach(f => {
                 let btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-tag'; btn.innerText = `${f.item} ($${f.price})`;
-                btn.onclick = () => { document.getElementById('item').value = f.item; document.getElementById('price').value = f.price; };
+                btn.onclick = () => { 
+                    document.getElementById('item').value = f.item; document.getElementById('price').value = f.price; 
+                    updateMyStatus('typing'); // 點標籤也算正在輸入
+                };
                 container.appendChild(btn);
             });
         }
@@ -337,7 +409,9 @@
         if (isAdmin) { 
             if(confirm("確定要關閉團主模式嗎？")) { isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateAdminUI(); render(); } 
         } else { 
-            alert("💡 您是一般身分。若您是團主，請使用專屬網址進入。");
+            const pwd = prompt("請輸入團主密碼 (預設 888)：");
+            if (pwd === "888") { isAdmin = true; localStorage.setItem('lunchAdminToken', 'boss'); updateAdminUI(); render(); }
+            else if (pwd !== null) alert("密碼錯誤");
         }
     }
 
@@ -361,12 +435,15 @@
                 if (width > 800) { height *= 800 / width; width = 800; }
                 canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                 uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'block';
             }; img.src = event.target.result;
         }; reader.readAsDataURL(file);
     });
-
+    
+    window.clearImage = function() { uploadedImageBase64 = ""; document.getElementById('bulletin-file-input').value = ""; document.getElementById('image-preview-container').style.display = 'none'; }
     window.openBulletinEditor = function() {
         document.getElementById('bulletin-text-input').value = bText; document.getElementById('bulletin-link-input').value = bLink;
+        if (uploadedImageBase64) { document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'block'; } else { document.getElementById('image-preview-container').style.display = 'none'; }
         document.getElementById('bulletin-file-input').value = ""; document.getElementById('bulletin-modal').style.display = "flex";
     }
     window.saveBulletin = function() { settingsRef.update({ bulletinText: document.getElementById('bulletin-text-input').value, bulletinLink: document.getElementById('bulletin-link-input').value, bulletinImage: uploadedImageBase64 }).then(() => { document.getElementById('bulletin-modal').style.display = "none"; }); }
@@ -421,11 +498,18 @@
     document.getElementById('order-form').addEventListener('submit', function(e) {
         e.preventDefault(); if (globalLocked) { alert("⚠️ 已結單！"); return; }
         const inputName = document.getElementById('name').value.trim(); const inputItem = document.getElementById('item').value.trim(); const inputPrice = parseInt(document.getElementById('price').value);
+        
         if(confirm(`👉 請確認：\n👤 姓名：${inputName}\n🍱 品項：${inputItem}\n💰 價格：$${inputPrice}`)) {
             let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
             if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
             saveToQuickTags(inputItem, inputPrice);
-            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
+            
+            // 🟢 送出後更新狀態為「已完成」
+            updateMyStatus('done');
+
+            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 }).then(() => { 
+                document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); 
+            });
         }
     });
 
