@@ -13,15 +13,18 @@
         .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
         /* 標題與按鈕區 */
-        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 20px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         h1 { color: #2c3e50; margin: 0; }
+        .header-buttons { display: flex; gap: 10px; }
         .btn-export { background: #8e44ad; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-export:hover { background: #732d91; }
+        .btn-clear { background: #e74c3c; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-clear:hover { background: #c0392b; }
         h2 { color: #34495e; margin-top: 30px; border-left: 5px solid #3498db; padding-left: 10px; }
         
         /* 統計區塊 */
-        .stats { display: flex; gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
-        .stat-box { flex: 1; text-align: center; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stats { display: flex; gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px; flex-wrap: wrap; }
+        .stat-box { flex: 1; text-align: center; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 150px; }
         .stat-title { font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px;}
         .stat-value { font-size: 1.5em; font-weight: bold; }
         .total .stat-value { color: #2980b9; }
@@ -34,13 +37,16 @@
         button { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-submit { background: #3498db; color: white; min-width: 100px; padding: 12px 20px; }
         .btn-submit:hover { background: #2980b9; }
-        table { width: 100%; border-collapse: collapse; background: white; }
+        
+        /* 表格響應式設定 */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 500px; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; color: #2c3e50; }
-        .pay-input { width: 90px; padding: 8px; margin-right: 5px; }
-        .btn-pay { background: #2ecc71; color: white; }
+        th { background-color: #f8f9fa; color: #2c3e50; white-space: nowrap; }
+        .pay-input { width: 80px; padding: 8px; margin-right: 5px; }
+        .btn-pay { background: #2ecc71; color: white; white-space: nowrap; }
         .btn-pay:hover { background: #27ae60; }
-        .btn-del { background: #e74c3c; color: white; margin-left: 5px;}
+        .btn-del { background: #e74c3c; color: white; margin-left: 5px; white-space: nowrap;}
         .btn-del:hover { background: #c0392b; }
         .empty-msg { text-align: center; color: #95a5a6; padding: 20px; font-style: italic; }
 
@@ -49,15 +55,7 @@
             0% { opacity: 1; transform: translateY(0) scale(1); }
             100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
         }
-        .floating-num {
-            position: absolute;
-            color: #27ae60;
-            font-weight: bold;
-            font-size: 20px;
-            pointer-events: none;
-            animation: floatUp 1s ease-out forwards;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        }
+        .floating-num { position: absolute; color: #27ae60; font-weight: bold; font-size: 20px; pointer-events: none; animation: floatUp 1s ease-out forwards; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
     </style>
 </head>
 <body>
@@ -65,7 +63,10 @@
 <div class="container">
     <div class="header-area">
         <h1>🍱午餐🍱</h1>
-        <button onclick="exportToExcel()" class="btn-export">📊 匯出 Excel</button>
+        <div class="header-buttons">
+            <button onclick="clearAllOrders()" class="btn-clear">🗑️ 淨空訂單</button>
+            <button onclick="exportToExcel()" class="btn-export">📊 匯出 Excel</button>
+        </div>
     </div>
 
     <div class="stats">
@@ -91,48 +92,48 @@
     </form>
 
     <h2>📝 未付款區 (等待收錢)</h2>
-    <table id="unpaid-table">
-        <thead>
-            <tr><th>姓名</th><th>品項</th><th>應付金額</th><th>輸入實付金額</th><th>操作</th></tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="table-responsive">
+        <table id="unpaid-table">
+            <thead>
+                <tr><th>姓名</th><th>品項</th><th>應付金額</th><th>輸入實付金額</th><th>操作</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
     <h2>✅ 已付款區 (結帳完畢)</h2>
-    <table id="paid-table">
-        <thead>
-            <tr><th>姓名</th><th>品項</th><th>應付金額</th><th>對方給的錢</th><th>找零</th><th>操作</th></tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+    <div class="table-responsive">
+        <table id="paid-table">
+            <thead>
+                <tr><th>姓名</th><th>品項</th><th>應付金額</th><th>對方給的錢</th><th>找零</th><th>操作</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
     // ==========================================
-    // ⬇️ 請將這裡替換成你在 Firebase 拿到的設定碼 ⬇️
+    // ⬇️ 再次確認！請將這裡換成你的 Firebase 金鑰 ⬇️
     // ==========================================
     const firebaseConfig = {
-  apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
-  authDomain: "lunch-f0895.firebaseapp.com",
-  databaseURL: "https://lunch-f0895-default-rtdb.firebaseio.com",
-  projectId: "lunch-f0895",
-  storageBucket: "lunch-f0895.firebasestorage.app",
-  messagingSenderId: "942714581747",
-  appId: "1:942714581747:web:c9b888b08a740842fb7d86"
-};
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
     // ==========================================
 
-    // 初始化 Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const ordersRef = db.ref('lunch-orders');
-
-    // 載入音效 (Google 提供之免費版權音效)
     const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
 
     let orders = [];
 
-    // 網頁載入時，檢查是否有記憶的姓名
     document.addEventListener('DOMContentLoaded', () => {
         const savedName = localStorage.getItem('myLunchName');
         if (savedName) {
@@ -141,11 +142,133 @@
         }
     });
 
-    // 監聽 Firebase 資料庫變化
+    // 監聽 Firebase，加入錯誤處理，如果被擋住會在 Console 顯示
     ordersRef.on('value', (snapshot) => {
         orders = [];
         snapshot.forEach((childSnapshot) => {
-            orders.push({
-                id: childSnapshot.key,
-                ...childSnapshot.val()
+            orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        });
+        render();
+    }, (error) => {
+        console.error("Firebase 連線錯誤: ", error);
+        alert("無法讀取資料庫，請檢查 Firebase 規則設定！\n錯誤代碼：" + error.code);
+    });
 
+    function render() {
+        const unpaidTbody = document.querySelector('#unpaid-table tbody');
+        const paidTbody = document.querySelector('#paid-table tbody');
+        unpaidTbody.innerHTML = ''; paidTbody.innerHTML = '';
+        let total = 0, paidTotal = 0, unpaidCount = 0, paidCount = 0;
+
+        orders.forEach(order => {
+            total += order.price;
+            if (order.isPaid) {
+                paidTotal += order.price; 
+                paidCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td><td>$${order.paidAmount}</td><td style="color:#e67e22; font-weight:bold;">$${order.change}</td><td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>`;
+                paidTbody.appendChild(tr);
+            } else {
+                unpaidCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td><td><input type="number" class="pay-input" id="pay-${order.id}" min="${order.price}" placeholder="給多少錢?"></td><td><button class="btn-pay" onclick="processPayment('${order.id}', this, ${order.price})">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>`;
+                unpaidTbody.appendChild(tr);
+            }
+        });
+
+        if(unpaidCount === 0) unpaidTbody.innerHTML = `<tr><td colspan="5" class="empty-msg">目前沒有未付款的訂單</td></tr>`;
+        if(paidCount === 0) paidTbody.innerHTML = `<tr><td colspan="6" class="empty-msg">目前沒有已付款的訂單</td></tr>`;
+        document.getElementById('total-price').innerText = total;
+        document.getElementById('total-paid').innerText = paidTotal;
+        document.getElementById('total-unpaid').innerText = total - paidTotal;
+    }
+
+    // 新增訂單（加入錯誤攔截提醒）
+    document.getElementById('order-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const inputName = document.getElementById('name').value;
+        localStorage.setItem('myLunchName', inputName);
+
+        ordersRef.push({
+            name: inputName,
+            item: document.getElementById('item').value,
+            price: parseInt(document.getElementById('price').value),
+            isPaid: false,
+            paidAmount: 0,
+            change: 0
+        }).then(() => {
+            // 寫入成功才清空欄位
+            document.getElementById('item').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('item').focus();
+        }).catch(error => {
+            // 如果被 Firebase 擋住，會跳出這個警告
+            alert("新增失敗！請確認 Firebase 的「規則 (Rules)」是否已設定為公開讀寫 (true)。\n錯誤訊息：" + error.message);
+        });
+    });
+
+    function showFloatingNumber(buttonElement, amount) {
+        const floater = document.createElement('div');
+        floater.className = 'floating-num';
+        floater.innerText = `+$${amount}`;
+        const rect = buttonElement.getBoundingClientRect();
+        floater.style.left = `${rect.left + window.scrollX - 10}px`;
+        floater.style.top = `${rect.top + window.scrollY - 20}px`;
+        document.body.appendChild(floater);
+        setTimeout(() => floater.remove(), 1000);
+    }
+
+    window.processPayment = function(id, btnElement, price) {
+        const order = orders.find(o => o.id === id);
+        let paidAmount = parseInt(document.getElementById('pay-' + id).value);
+        if (isNaN(paidAmount)) paidAmount = order.price;
+        if (paidAmount < order.price) { alert('實付金額不能小於應付金額喔！'); return; }
+
+        chaChingSound.currentTime = 0; 
+        chaChingSound.play().catch(e => console.log("音效遭阻擋", e));
+        showFloatingNumber(btnElement, order.price); 
+
+        db.ref('lunch-orders/' + id).update({
+            isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price
+        });
+    }
+
+    window.deleteOrder = function(id) {
+        if(confirm('確定要刪除這筆訂單嗎？')) {
+            db.ref('lunch-orders/' + id).remove();
+        }
+    }
+
+    // 【新增】一鍵清空所有訂單
+    window.clearAllOrders = function() {
+        if(orders.length === 0) {
+            alert("目前沒有任何訂單需要清空喔！");
+            return;
+        }
+        if(confirm('⚠️ 警告：確定要清空今天的「所有」訂單嗎？\n(建議先匯出 Excel 備份後再清空)')) {
+            db.ref('lunch-orders').remove().then(() => {
+                alert("訂單已全部清空！");
+            }).catch(error => {
+                alert("清空失敗，請檢查權限設定：" + error.message);
+            });
+        }
+    }
+
+    window.exportToExcel = function() {
+        if (orders.length === 0) { alert("目前沒有訂單可以匯出喔！"); return; }
+        let excelData = [["姓名", "餐點品項", "應付金額", "付款狀態", "實付金額", "找零"]];
+        orders.forEach(order => {
+            let status = order.isPaid ? "✅ 已付款" : "❌ 未付款";
+            excelData.push([order.name, order.item, order.price, status, order.paidAmount, order.change]);
+        });
+        let worksheet = XLSX.utils.aoa_to_sheet(excelData);
+        let workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "今日午餐訂單");
+        let today = new Date();
+        let dateString = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
+        XLSX.writeFile(workbook, `午餐對帳單_${dateString}.xlsx`);
+    }
+</script>
+
+</body>
+</html>
