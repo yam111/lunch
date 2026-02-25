@@ -10,131 +10,155 @@
     
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        h1 { color: #2c3e50; margin: 0; display: flex; align-items: center; gap: 10px; }
-        .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .header-area { justify-content: space-between; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 15px; }
+        h1 { color: #2c3e50; margin: 0; }
         
-        /* 團主專用按鈕群 - 預設隱藏 */
+        /* 團主按鈕區 (預設隱藏) */
         .admin-only { display: none; }
-        .btn-export { background: #8e44ad; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-export:hover { background: #732d91; }
-        .btn-clear { background: #e74c3c; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-clear:hover { background: #c0392b; }
-        .btn-lock { background: #e74c3c; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        
-        .btn-admin { background: #bdc3c7; color: #2c3e50; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-admin:hover { background: #95a5a6; }
-        .admin-badge { font-size: 0.5em; background: #e74c3c; color: white; padding: 4px 10px; border-radius: 12px; vertical-align: middle; display: none; }
+        button { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-admin { background: #bdc3c7; color: #2c3e50; } .btn-admin:hover { background: #95a5a6; }
+        .btn-lock { background: #e74c3c; color: white; }
+        .btn-summary { background: #2980b9; color: white; } .btn-summary:hover { background: #1f618d; }
+        .btn-export { background: #8e44ad; color: white; } .btn-export:hover { background: #732d91; }
+        .btn-clear { background: #e74c3c; color: white; }
         
         /* 公佈欄區塊 */
-        .bulletin-board { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px 20px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .bulletin-content { color: #856404; font-size: 1.1em; font-weight: bold; }
-        .btn-edit-small { background: #ffc107; color: #856404; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-left: 10px; font-weight: bold; }
-        .btn-edit-small:hover { background: #e0a800; }
-
-        h2 { color: #34495e; margin-top: 30px; border-left: 5px solid #3498db; padding-left: 10px; }
-        .stats { display: flex; gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px; flex-wrap: wrap; }
-        .stat-box { flex: 1; text-align: center; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-width: 150px; }
-        .stat-title { font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px;}
-        .stat-value { font-size: 1.5em; font-weight: bold; }
-        .total .stat-value { color: #2980b9; }
-        .paid .stat-value { color: #27ae60; }
-        .unpaid .stat-value { color: #e74c3c; }
+        .bulletin { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; border-radius: 6px; margin-bottom: 20px; position: relative; }
+        .bulletin-content { color: #856404; font-size: 1.1em; line-height: 1.6; }
+        .bulletin-content img { max-width: 100%; border-radius: 8px; margin-top: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .bulletin-content a { color: #d35400; font-weight: bold; text-decoration: underline; }
+        .btn-edit-small { position: absolute; top: 15px; right: 20px; background: #ffc107; color: #856404; }
         
-        /* 表單區塊 */
-        form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #eaf2f8; padding: 20px; border-radius: 8px; border: 2px dashed #bdc3c7;}
-        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; min-width: 120px; font-size: 1em; }
-        .btn-submit { background: #2980b9; color: white; min-width: 140px; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 1em; }
-        .btn-submit:hover:not(:disabled) { background: #1f618d; transform: scale(1.02); }
+        /* 統計區塊 */
+        .stats { display: none; gap: 15px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; }
+        .stat-box { flex: 1; text-align: center; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stat-value { font-size: 1.5em; font-weight: bold; margin-top: 5px; }
+        .total-val { color: #2980b9; } .paid-val { color: #27ae60; } .unpaid-val { color: #e74c3c; }
+        
+        /* 表單 */
+        form { background: #eaf2f8; padding: 20px; border-radius: 8px; border: 2px dashed #bdc3c7; margin-bottom: 20px;}
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; flex: 1; min-width: 120px; font-size: 1em; }
+        .btn-submit { background: #2980b9; color: white; min-width: 140px; padding: 12px; }
         .btn-submit:disabled { background: #95a5a6; cursor: not-allowed; }
-        input:disabled { background: #ecf0f1; cursor: not-allowed; }
+        input:disabled { background: #ecf0f1; }
 
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: white; min-width: 500px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background-color: #f8f9fa; color: #2c3e50; white-space: nowrap; }
-        .pay-input { width: 80px; padding: 8px; margin-right: 5px; }
-        .btn-pay { background: #2ecc71; color: white; white-space: nowrap; margin-right: 5px; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer;}
-        .btn-pay:hover { background: #27ae60; }
-        .btn-del { background: #e74c3c; color: white; white-space: nowrap; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer;}
-        .btn-del:hover { background: #c0392b; }
-        .btn-edit { background: #34495e; color: white; white-space: nowrap; margin-right: 5px; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer;}
-        .btn-edit:hover { background: #2c3e50; }
-        .empty-msg { text-align: center; color: #95a5a6; padding: 20px; font-style: italic; }
+        /* 表格 */
+        table { width: 100%; border-collapse: collapse; background: white; margin-top: 10px; min-width: 600px;}
+        th, td { padding: 10px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; white-space: nowrap; color: #2c3e50;}
         
+        /* 結帳與操作按鈕 */
+        .pay-input { width: 80px; padding: 8px; margin-right: 5px; }
+        .btn-pay { background: #2ecc71; color: white; margin-right: 5px;}
+        .btn-pay:hover { background: #27ae60; }
+        .btn-edit { background: #34495e; color: white; margin-right: 5px;}
+        .btn-del { background: #e74c3c; color: white; }
+
+        /* 彈跳數字特效 */
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
-        .floating-num { position: absolute; color: #27ae60; font-weight: bold; font-size: 20px; pointer-events: none; animation: floatUp 1s ease-out forwards; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); }
+        .floating-num { position: absolute; color: #27ae60; font-weight: bold; font-size: 20px; pointer-events: none; animation: floatUp 1s ease-out forwards; text-shadow: 1px 1px 2px rgba(255,255,255,0.8); z-index: 1000;}
+
+        /* 彈跳視窗 Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);}
+        textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin: 10px 0; font-family: monospace; resize: vertical; box-sizing: border-box;}
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-area">
-        <h1>🍱午餐🍱 <span id="admin-badge" class="admin-badge">👑 你現在是團長了!</span></h1>
-        <div class="header-buttons">
-            <button id="btn-admin" onclick="toggleAdmin()" class="btn-admin">一般點餐身分</button>
+    <div class="flex header-area">
+        <h1>🍱午餐🍱 <span id="admin-badge" style="font-size:0.5em; background:#e74c3c; color:white; padding:4px 8px; border-radius:12px; display:none;">👑 團主</span></h1>
+        <div class="flex">
+            <button id="btn-admin" onclick="toggleAdmin()" class="btn-admin">一般身分</button>
             <button id="btn-lock" onclick="toggleLock()" class="btn-lock admin-only">🛑 停止收單</button>
-            <button id="btn-clear" onclick="clearAllOrders()" class="btn-clear admin-only">🗑️ 淨空訂單</button>
-            <button id="btn-export" onclick="exportToExcel()" class="btn-export admin-only">📊 匯出 Excel</button>
+            <button onclick="showSummary()" class="btn-summary admin-only">📋 叫餐統計</button>
+            <button onclick="clearAllOrders()" class="btn-clear admin-only">🗑️ 淨空</button>
+            <button onclick="exportToExcel()" class="btn-export admin-only">📊 匯出 Excel</button>
         </div>
     </div>
 
-    <div class="bulletin-board">
-        <div class="bulletin-content">
-            📢 <span id="bulletin-text">歡迎點餐！</span>
-            <button class="btn-edit-small admin-only" onclick="editBulletin()">✏️ 編輯</button>
-        </div>
+    <div class="bulletin">
+        <div class="bulletin-content" id="bulletin-text">📢 歡迎點餐！</div>
+        <button class="btn-edit-small admin-only" onclick="openBulletinEditor()">✏️ 編輯公佈欄</button>
     </div>
 
-    <div class="stats">
-        <div class="stat-box total">
-            <div class="stat-title">總訂購金額</div>
-            <div class="stat-value">$<span id="total-price">0</span></div>
-        </div>
-        <div class="stat-box paid">
-            <div class="stat-title">已收金額</div>
-            <div class="stat-value">$<span id="total-paid">0</span></div>
-        </div>
-        <div class="stat-box unpaid">
-            <div class="stat-title">尚未收取</div>
-            <div class="stat-value">$<span id="total-unpaid">0</span></div>
-        </div>
+    <div class="flex stats" id="admin-stats">
+        <div class="stat-box"><div style="color:#7f8c8d; font-size:0.9em;">總金額</div><div class="stat-value total-val">$<span id="total-price">0</span></div></div>
+        <div class="stat-box"><div style="color:#7f8c8d; font-size:0.9em;">已收金額</div><div class="stat-value paid-val">$<span id="total-paid">0</span></div></div>
+        <div class="stat-box"><div style="color:#7f8c8d; font-size:0.9em;">未收金額</div><div class="stat-value unpaid-val">$<span id="total-unpaid">0</span></div></div>
     </div>
 
-    <form id="order-form">
-        <input type="text" id="name" placeholder="訂購人姓名" required>
+    <form id="order-form" class="flex">
+        <input type="text" id="name" placeholder="姓名" required>
         <input type="text" id="item" placeholder="餐點品項 (如: 排骨飯)" required>
-        <input type="number" id="price" placeholder="餐點價格" required min="1">
+        <input type="number" id="price" placeholder="價格" required min="1">
         <button type="submit" id="submit-btn" class="btn-submit">✅ 送出訂單確認</button>
     </form>
 
     <h2>📝 未付款區 (等待收錢)</h2>
-    <div class="table-responsive">
+    <div style="overflow-x:auto;">
         <table id="unpaid-table">
             <thead>
-                <tr><th>姓名</th><th>品項</th><th>應付金額</th><th class="admin-only-th">輸入實付金額</th><th>操作</th></tr>
+                <tr>
+                    <th>姓名</th>
+                    <th>品項</th>
+                    <th>應付金額</th>
+                    <th class="admin-only-th">輸入實付金額</th>
+                    <th>操作</th>
+                </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
 
     <h2>✅ 已付款區 (結帳完畢)</h2>
-    <div class="table-responsive">
+    <div style="overflow-x:auto;">
         <table id="paid-table">
             <thead>
-                <tr><th>姓名</th><th>品項</th><th>應付金額</th><th>對方給的錢</th><th>找零</th><th class="admin-only-th">操作</th></tr>
+                <tr>
+                    <th>姓名</th>
+                    <th>品項</th>
+                    <th>應付金額</th>
+                    <th class="admin-only-th">實收金額</th>
+                    <th class="admin-only-th">找零</th>
+                    <th class="admin-only-th">操作</th>
+                </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
 </div>
 
+<div class="modal" id="bulletin-modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0;">📝 編輯公佈欄</h3>
+        <div class="flex" style="gap:5px;">
+            <button style="background:#34495e; color:white;" onclick="insertTag('<a href=\'這裡貼網址\' target=\'_blank\'>點我看菜單</a>')">🔗 +插入網址</button>
+            <button style="background:#2ecc71; color:white;" onclick="insertTag('<br><img src=\'這裡貼圖片網址\'>')">🖼️ +插入圖片</button>
+        </div>
+        <textarea id="bulletin-editor-text"></textarea>
+        <div class="flex" style="justify-content:flex-end;">
+            <button style="background:#95a5a6; color:white;" onclick="document.getElementById('bulletin-modal').style.display='none'">取消</button>
+            <button style="background:#e67e22; color:white;" onclick="saveBulletin()">💾 儲存發布</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="summary-modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:#2980b9;">📞 打電話叫餐統計</h3>
+        <pre id="summary-content" style="font-size:1.1em; font-family:sans-serif; background:#f8f9fa; padding:15px; border-radius:8px; line-height:1.5;"></pre>
+        <div style="text-align:right; margin-top:10px;">
+            <button style="background:#95a5a6; color:white;" onclick="document.getElementById('summary-modal').style.display='none'">關閉</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ==========================================
-    const ADMIN_PASSWORD = "888"; 
-    
-    // 🔥 已自動帶入您專屬的 Firebase 金鑰
     const firebaseConfig = {
       apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
       authDomain: "lunch-f0895.firebaseapp.com",
@@ -149,8 +173,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const ordersRef = db.ref('lunch-orders');
-    const settingsRef = db.ref('lunch-settings'); // 新增：用來存公佈欄跟鎖單狀態
-    
+    const settingsRef = db.ref('lunch-settings');
     const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
 
     let orders = [];
@@ -160,10 +183,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         const savedName = localStorage.getItem('myLunchName');
-        if (savedName) {
-            document.getElementById('name').value = savedName;
-            document.getElementById('item').focus(); 
-        }
+        if (savedName) { document.getElementById('name').value = savedName; document.getElementById('item').focus(); }
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('role') === 'boss' || localStorage.getItem('lunchAdminToken') === 'boss') {
@@ -174,16 +194,13 @@
         updateAdminUI(); 
     });
 
-    // 監聽全局設定 (鎖單 & 公佈欄)
     settingsRef.on('value', (snapshot) => {
-        const data = snapshot.val() || { isLocked: false, bulletin: "歡迎點餐！請填寫下方表單。" };
+        const data = snapshot.val() || { isLocked: false, bulletin: "📢 歡迎點餐！請填寫下方表單。" };
         globalLocked = data.isLocked;
         bulletinMsg = data.bulletin;
 
-        // 更新公佈欄文字
-        document.getElementById('bulletin-text').innerText = bulletinMsg;
+        document.getElementById('bulletin-text').innerHTML = bulletinMsg;
 
-        // 更新鎖單介面狀態
         const submitBtn = document.getElementById('submit-btn');
         const inputs = document.querySelectorAll('#order-form input');
         const lockBtn = document.getElementById('btn-lock');
@@ -192,56 +209,50 @@
             submitBtn.innerText = "🚫 今日已結單";
             submitBtn.disabled = true;
             inputs.forEach(input => input.disabled = true);
-            lockBtn.innerText = "🟢 開放收單";
-            lockBtn.style.background = "#27ae60";
+            lockBtn.innerText = "🟢 開放收單"; lockBtn.style.background = "#27ae60";
         } else {
             submitBtn.innerText = "✅ 送出訂單確認";
             submitBtn.disabled = false;
             inputs.forEach(input => input.disabled = false);
-            lockBtn.innerText = "🛑 停止收單";
-            lockBtn.style.background = "#e74c3c";
+            lockBtn.innerText = "🛑 停止收單"; lockBtn.style.background = "#e74c3c";
         }
-        
-        render(); // 重新渲染表格，鎖單時隱藏一般人的修改按鈕
+        render(); 
     });
 
     window.toggleAdmin = function() {
         if (isAdmin) {
             if(confirm("確定要關閉團主模式嗎？\n關閉後若需再次開啟，請重新使用專屬管理員網址進入。")) {
-                isAdmin = false;
-                localStorage.removeItem('lunchAdminToken');
-                updateAdminUI();
-                render(); 
+                isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateAdminUI(); render(); 
             }
-        } else {
-            alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。");
-        }
+        } else { alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。"); }
     }
 
     function updateAdminUI() {
         document.getElementById('btn-admin').innerText = isAdmin ? "🔓 關閉團主模式" : "一般點餐身分";
-        document.getElementById('btn-admin').style.background = isAdmin ? "#7f8c8d" : "#bdc3c7";
         document.getElementById('admin-badge').style.display = isAdmin ? "inline" : "none";
+        document.getElementById('admin-stats').style.display = isAdmin ? "flex" : "none";
         
-        // 顯示所有含有 admin-only 類別的元素
-        document.querySelectorAll('.admin-only').forEach(el => {
-            el.style.display = isAdmin ? "inline-block" : "none";
-        });
-        
-        document.querySelectorAll('.admin-only-th').forEach(th => {
-            th.style.display = isAdmin ? "table-cell" : "none";
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? "inline-block" : "none");
+        document.querySelectorAll('.admin-only-th').forEach(th => th.style.display = isAdmin ? "table-cell" : "none");
+    }
+
+    // 公佈欄編輯功能
+    window.openBulletinEditor = function() {
+        document.getElementById('bulletin-editor-text').value = bulletinMsg;
+        document.getElementById('bulletin-modal').style.display = "flex";
+    }
+    window.insertTag = function(tag) {
+        const txtArea = document.getElementById('bulletin-editor-text');
+        txtArea.value += tag + "\n";
+        txtArea.focus();
+    }
+    window.saveBulletin = function() {
+        const newText = document.getElementById('bulletin-editor-text').value;
+        settingsRef.update({ bulletin: newText }).then(() => {
+            document.getElementById('bulletin-modal').style.display = "none";
         });
     }
 
-    // 編輯公佈欄
-    window.editBulletin = function() {
-        const newText = prompt("請輸入今日公告 (例如：今天吃悟饕，請在 11:30 前點完)：", bulletinMsg);
-        if (newText !== null && newText.trim() !== "") {
-            settingsRef.update({ bulletin: newText.trim() });
-        }
-    }
-
-    // 鎖單 / 開放切換
     window.toggleLock = function() {
         const confirmMsg = globalLocked ? "確定要「開放」大家繼續點餐與修改嗎？" : "確定要「停止收單」嗎？\n(鎖單後，大家將無法新增或修改訂單)";
         if(confirm(confirmMsg)) {
@@ -249,13 +260,36 @@
         }
     }
 
+    // 叫餐統計
+    window.showSummary = function() {
+        let counts = {};
+        let totalQty = 0;
+        orders.forEach(o => {
+            counts[o.item] = (counts[o.item] || 0) + 1;
+            totalQty++;
+        });
+        let txt = `總共：${totalQty} 份\n------------------------\n`;
+        for(let item in counts) { txt += `🍱 ${item}  x  ${counts[item]}\n`; }
+        document.getElementById('summary-content').innerText = txt;
+        document.getElementById('summary-modal').style.display = "flex";
+    }
+
     ordersRef.on('value', (snapshot) => {
         orders = [];
-        snapshot.forEach((childSnapshot) => {
-            orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
-        });
+        snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); });
         render();
     });
+
+    function showFloatingNumber(buttonElement, amount) {
+        const floater = document.createElement('div');
+        floater.className = 'floating-num';
+        floater.innerText = `+$${amount}`;
+        const rect = buttonElement.getBoundingClientRect();
+        floater.style.left = `${rect.left + window.scrollX - 10}px`;
+        floater.style.top = `${rect.top + window.scrollY - 20}px`;
+        document.body.appendChild(floater);
+        setTimeout(() => floater.remove(), 1000);
+    }
 
     function render() {
         const unpaidTbody = document.querySelector('#unpaid-table tbody');
@@ -269,25 +303,29 @@
                 paidTotal += order.price; 
                 paidCount++;
                 const tr = document.createElement('tr');
-                let adminAction = isAdmin ? `<td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td>`;
-                tr.innerHTML = `<td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td><td>$${order.paidAmount}</td><td style="color:#e67e22; font-weight:bold;">$${order.change}</td>${adminAction}`;
+                
+                let adminFields = isAdmin ? `<td>$${order.paidAmount}</td><td style="color:#e67e22; font-weight:bold;">$${order.change}</td><td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
+                tr.innerHTML = `<td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td>${adminFields}`;
                 paidTbody.appendChild(tr);
             } else {
                 unpaidCount++;
                 const tr = document.createElement('tr');
+                
                 let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" id="pay-${order.id}" min="${order.price}" placeholder="金額?"></td>` : `<td style="display:none;"></td>`;
                 let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this, ${order.price})">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
                 
-                // 📝 權限判定：如果「鎖單了」且「不是團主」，就隱藏修改按鈕
-                let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrder('${order.id}')">✏️ 修改</button>` : ``;
+                let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrder('${order.id}')">✏️ 修改</button>` : `🔒`;
 
                 tr.innerHTML = `<td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td>${payInputTd}<td>${editBtn}${adminBtns}</td>`;
                 unpaidTbody.appendChild(tr);
             }
         });
 
-        if(unpaidCount === 0) unpaidTbody.innerHTML = `<tr><td colspan="${isAdmin?5:4}" class="empty-msg">目前沒有未付款的訂單</td></tr>`;
-        if(paidCount === 0) paidTbody.innerHTML = `<tr><td colspan="${isAdmin?6:5}" class="empty-msg">目前沒有已付款的訂單</td></tr>`;
+        let unpaidColspan = isAdmin ? 5 : 4;
+        let paidColspan = isAdmin ? 6 : 3;
+        
+        if(unpaidCount === 0) unpaidTbody.innerHTML = `<tr><td colspan="${unpaidColspan}" class="empty-msg">目前沒有未付款的訂單</td></tr>`;
+        if(paidCount === 0) paidTbody.innerHTML = `<tr><td colspan="${paidColspan}" class="empty-msg">目前沒有已付款的訂單</td></tr>`;
         
         document.getElementById('total-price').innerText = total;
         document.getElementById('total-paid').innerText = paidTotal;
@@ -296,22 +334,15 @@
 
     document.getElementById('order-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        if (globalLocked) {
-            alert("⚠️ 抱歉，目前已結單，無法新增訂單！");
-            return;
-        }
-
+        if (globalLocked) { alert("⚠️ 抱歉，目前已結單，無法新增訂單！"); return; }
         const inputName = document.getElementById('name').value.trim();
         const inputItem = document.getElementById('item').value.trim();
         const inputPrice = parseInt(document.getElementById('price').value);
 
-        const isConfirmed = confirm(`👉 請確認您的訂餐資訊：\n\n👤 姓名：${inputName}\n🍱 品項：${inputItem}\n💰 價格：$${inputPrice}\n\n按下「確定」送出訂單！`);
-
-        if(isConfirmed) {
+        if(confirm(`👉 請確認您的訂餐資訊：\n\n👤 姓名：${inputName}\n🍱 品項：${inputItem}\n💰 價格：$${inputPrice}\n\n按下「確定」送出訂單！`)) {
             localStorage.setItem('myLunchName', inputName);
-            ordersRef.push({
-                name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0
-            }).then(() => {
+            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 })
+            .then(() => {
                 alert("✅ 點餐成功！");
                 document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus();
             });
@@ -319,11 +350,7 @@
     });
 
     window.editOrder = function(id) {
-        if (globalLocked && !isAdmin) {
-            alert("⚠️ 抱歉，目前已結單，無法修改訂單！若需修改請聯絡團主。");
-            return;
-        }
-
+        if (globalLocked && !isAdmin) { alert("⚠️ 抱歉，目前已結單，無法修改訂單！若需修改請聯絡團主。"); return; }
         const order = orders.find(o => o.id === id);
         if(!order) return;
         const newItem = prompt(`請修改 ${order.name} 的餐點品項：`, order.item);
@@ -336,17 +363,7 @@
         db.ref('lunch-orders/' + id).update({ item: newItem.trim(), price: newPrice });
     }
 
-    function showFloatingNumber(buttonElement, amount) {
-        const floater = document.createElement('div');
-        floater.className = 'floating-num';
-        floater.innerText = `+$${amount}`;
-        const rect = buttonElement.getBoundingClientRect();
-        floater.style.left = `${rect.left + window.scrollX - 10}px`;
-        floater.style.top = `${rect.top + window.scrollY - 20}px`;
-        document.body.appendChild(floater);
-        setTimeout(() => floater.remove(), 1000);
-    }
-
+    // 恢復單純的結帳邏輯
     window.processPayment = function(id, btnElement, price) {
         const order = orders.find(o => o.id === id);
         let paidAmount = parseInt(document.getElementById('pay-' + id).value);
@@ -360,16 +377,11 @@
         db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price });
     }
 
-    window.deleteOrder = function(id) {
-        if(confirm('⚠️ 確定要刪除這筆訂單嗎？')) { db.ref('lunch-orders/' + id).remove(); }
-    }
-
+    window.deleteOrder = function(id) { if(confirm('⚠️ 確定要刪除這筆訂單嗎？')) { db.ref('lunch-orders/' + id).remove(); } }
+    
     window.clearAllOrders = function() {
         if(orders.length === 0) { alert("目前沒有訂單喔！"); return; }
-        if(confirm('🚨 嚴重警告：確定要清空今天的「所有」訂單嗎？\n(操作後無法復原)')) { 
-            // 這裡只會清空訂單，不會清空公佈欄跟鎖單設定
-            db.ref('lunch-orders').remove(); 
-        }
+        if(confirm('🚨 嚴重警告：確定要清空今天的「所有」訂單嗎？\n(操作後無法復原)')) { db.ref('lunch-orders').remove(); }
     }
 
     window.exportToExcel = function() {
@@ -382,9 +394,7 @@
         let worksheet = XLSX.utils.aoa_to_sheet(excelData);
         let workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "今日午餐訂單");
-        let today = new Date();
-        let dateString = today.getFullYear() + "-" + (today.getMonth()+1) + "-" + today.getDate();
-        XLSX.writeFile(workbook, `午餐對帳單_${dateString}.xlsx`);
+        XLSX.writeFile(workbook, `午餐對帳單_${new Date().toLocaleDateString()}.xlsx`);
     }
 </script>
 
