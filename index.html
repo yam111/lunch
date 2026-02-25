@@ -137,7 +137,7 @@
         th:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         th:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
         
-        .pay-input { width: 85px; padding: 10px; margin-right: 8px; border-width: 1px;}
+        .pay-input { width: 85px; padding: 10px; margin-right: 8px; border-width: 1px; text-align: center; font-weight: bold;}
         .inline-edit-input { width: 100%; padding: 8px 12px; border: 2px solid var(--primary); border-radius: 8px; font-size: 1em; font-family: inherit; box-sizing: border-box; background: white;}
         .inline-edit-input.short { width: 80px; }
         
@@ -276,7 +276,6 @@
     <div class="modal-content">
         <div class="modal-header">📝 編輯公佈欄</div>
         <div class="modal-body">
-            <p style="color:var(--gray); font-size:0.9em; margin-top:0;">直接填寫或上傳照片，系統自動為您排版：</p>
             <div class="editor-group"><label>📢 公告內容：</label><textarea id="bulletin-text-input" placeholder="今天吃悟饕，請在 11:30 前點完！"></textarea></div>
             <div class="editor-group"><label>🔗 店家或菜單連結：</label><input type="url" id="bulletin-link-input" placeholder="https://..."></div>
             <div class="editor-group"><label>🖼️ 匯入菜單圖片：</label>
@@ -353,6 +352,9 @@
     let countdownInterval;
     let globalLockTime = 0;
 
+    // 🚀 全域儲存：保護團主輸入到一半的結帳金額不被覆蓋
+    window.payInputValues = window.payInputValues || {};
+
     document.addEventListener('DOMContentLoaded', () => {
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
         if (myNames.length > 0) { document.getElementById('name').value = myNames[myNames.length - 1]; }
@@ -364,7 +366,6 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
-    // 🚀 動態新增一列品項輸入框
     window.addOrderItemRow = function(defaultItem = '', defaultPrice = '') {
         const container = document.getElementById('order-items-container');
         const row = document.createElement('div');
@@ -502,11 +503,10 @@
         
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
-                let newPrice = order.price + perPerson;
-                let updates = { price: newPrice };
+                let updates = { price: order.price + perPerson };
                 if (order.isPaid) {
-                    updates.change = order.paidAmount - newPrice;
-                    if (updates.change > 0 && order.paidAmount !== newPrice) updates.changeGiven = false; 
+                    updates.change = order.paidAmount - updates.price;
+                    if (updates.change > 0 && order.paidAmount !== updates.price) updates.changeGiven = false; 
                 }
                 db.ref('lunch-orders/' + order.id).update(updates);
             });
@@ -584,7 +584,6 @@
             favs.forEach(f => {
                 let btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-tag'; btn.innerText = `${f.item} ($${f.price})`;
                 btn.onclick = () => { 
-                    // 點擊常點時，還原為單一列並自動填入
                     document.getElementById('order-items-container').innerHTML = `
                         <div class="order-item-row">
                             <input type="text" class="item-input" placeholder="餐點品項 (如: 肉燥飯)" required oninput="handleTyping()" value="${f.item}">
@@ -716,6 +715,8 @@
             if (!isAdmin && !myNames.includes(order.name)) return; 
             
             let isEditing = (editingOrderId === order.id);
+            // 防止品項名稱含有引號破壞 HTML
+            let safeItem = order.item.replace(/"/g, '&quot;'); 
 
             if (order.isPaid) {
                 visiblePaidCount++;
@@ -738,7 +739,7 @@
                 if (isEditing && isAdmin) {
                     paidHTML += `<tr>
                         <td><strong>${order.name}</strong></td>
-                        <td><input type="text" id="edit-item-${order.id}" value="${order.item}" class="inline-edit-input"></td>
+                        <td><input type="text" id="edit-item-${order.id}" value="${safeItem}" class="inline-edit-input"></td>
                         <td>$<input type="number" id="edit-price-${order.id}" value="${order.price}" class="inline-edit-input short"></td>
                         <td>$<input type="number" id="edit-paid-${order.id}" value="${order.paidAmount}" class="inline-edit-input short"></td>
                         <td>-</td>
@@ -747,8 +748,10 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
+                    // 🚀 修正：對齊標題與內容
+                    let paidAmountTd = isAdmin ? `<td><span class="price-tag" style="color:var(--success);">$${order.paidAmount}</span></td>` : `<td style="display:none;"></td>`;
                     let adminFields = isAdmin ? `<td style="white-space:nowrap;">${accountStatusUI}</td><td style="white-space:nowrap;"><button class="btn-edit" onclick="editOrderInline('${order.id}')">修改</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td>`;
-                    paidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td><td><span class="price-tag" style="color:var(--success);">$${order.paidAmount}</span></td>${adminFields}</tr>`; 
+                    paidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${paidAmountTd}${adminFields}</tr>`; 
                 }
             } else {
                 visibleUnpaidCount++; 
@@ -756,7 +759,7 @@
                     let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳請用按鈕</span></td>` : `<td style="display:none;"></td>`;
                     unpaidHTML += `<tr>
                         <td><strong>${order.name}</strong></td>
-                        <td><input type="text" id="edit-item-${order.id}" value="${order.item}" class="inline-edit-input"></td>
+                        <td><input type="text" id="edit-item-${order.id}" value="${safeItem}" class="inline-edit-input"></td>
                         <td>$<input type="number" id="edit-price-${order.id}" value="${order.price}" class="inline-edit-input short"></td>
                         ${payTd}
                         <td style="white-space:nowrap;">
@@ -764,7 +767,9 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" placeholder="實付金額"></td>` : `<td style="display:none;"></td>`;
+                    // 🚀 修正：自動記憶團主打到一半的結帳金額
+                    let currentPayVal = window.payInputValues[order.id] !== undefined ? window.payInputValues[order.id] : order.price;
+                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" value="${currentPayVal}" oninput="window.payInputValues['${order.id}'] = this.value"></td>` : `<td style="display:none;"></td>`;
                     
                     let payBtn = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this)">結帳</button>` : ``;
                     let delBtn = (!globalLocked || isAdmin) ? `<button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
@@ -775,7 +780,7 @@
             }
         });
 
-        let unpaidColspan = isAdmin ? 5 : 4; let paidColspan = isAdmin ? 6 : 4;
+        let unpaidColspan = isAdmin ? 5 : 4; let paidColspan = isAdmin ? 6 : 3;
         document.querySelector('#unpaid-table tbody').innerHTML = unpaidHTML || `<tr><td colspan="${unpaidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有未付款訂單":"太棒了！您目前沒有未付款的訂單"}</td></tr>`;
         document.querySelector('#paid-table tbody').innerHTML = paidHTML || `<tr><td colspan="${paidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有已付款訂單":"您目前沒有已付款的記錄"}</td></tr>`;
         
@@ -791,29 +796,19 @@
         const itemInputs = document.querySelectorAll('.item-input');
         const priceInputs = document.querySelectorAll('.price-input');
         
-        let itemsArr = [];
-        let totalPrice = 0;
-        
+        let itemsArr = []; let totalPrice = 0;
         for(let i=0; i<itemInputs.length; i++){
-            let it = itemInputs[i].value.trim();
-            let pr = parseInt(priceInputs[i].value);
-            if(it && !isNaN(pr)) {
-                itemsArr.push(it);
-                totalPrice += pr;
-            }
+            let it = itemInputs[i].value.trim(); let pr = parseInt(priceInputs[i].value);
+            if(it && !isNaN(pr)) { itemsArr.push(it); totalPrice += pr; }
         }
         
         if(itemsArr.length === 0) return alert("請輸入餐點品項與價格！");
-        
         const combinedItem = itemsArr.join(' + ');
 
         if(confirm(`👉 請確認您的訂單：\n\n👤 姓名：${inputName}\n🍱 品項：${combinedItem}\n💰 總價：$${totalPrice}`)) {
             let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
             if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
-            
-            saveToQuickTags(combinedItem, totalPrice); 
-            updateMyStatus('done');
-            
+            saveToQuickTags(combinedItem, totalPrice); updateMyStatus('done');
             ordersRef.push({ name: inputName, item: combinedItem, price: totalPrice, isPaid: false, paidAmount: 0, change: 0, changeGiven: false }).then(() => { 
                 document.getElementById('order-items-container').innerHTML = `
                     <div class="order-item-row">
@@ -828,8 +823,7 @@
 
     window.editOrderInline = function(id) { 
         if (globalLocked && !isAdmin) return alert("⚠️ 已結單，無法修改！請聯繫團主。");
-        editingOrderId = id; 
-        render(); 
+        editingOrderId = id; render(); 
     }
 
     window.saveOrderInline = function(id, isPaid) {
@@ -850,18 +844,14 @@
             if (paidInput < priceInput) { alert("⚠️ 實收金額不能小於應付金額！請確認後再儲存。"); return; }
             updates.paidAmount = paidInput;
             updates.change = paidInput - priceInput; 
-            
-            if (updates.change > 0 && paidInput !== order.paidAmount) {
-                updates.changeGiven = false;
-            }
+            if (updates.change > 0 && paidInput !== order.paidAmount) { updates.changeGiven = false; }
         }
 
         editingOrderId = null; 
         if (updates.item !== order.item || updates.price !== order.price || (isPaid && updates.paidAmount !== order.paidAmount)) {
             db.ref('lunch-orders/' + id).update(updates);
-        } else {
-            render();
         }
+        render(); // 🚀 修正：強制立刻渲染畫面，秒收輸入框不卡頓
     }
 
     window.cancelEditInline = function() { editingOrderId = null; render(); }
@@ -873,8 +863,7 @@
         
         if (rawValue === "") {
             alert('⚠️ 結帳前請先輸入對方給您的【實付金額】！\n(如果對方給的剛好是應付金額，也請輸入)'); 
-            inputEl.focus(); 
-            return; 
+            inputEl.focus(); return; 
         }
 
         let paidAmount = parseInt(rawValue, 10);
@@ -882,6 +871,7 @@
             alert('❌ 實付金額不能小於應付金額喔！'); inputEl.focus(); return; 
         }
 
+        delete window.payInputValues[id]; // 清除這筆訂單的實付記憶
         chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
         db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price, changeGiven: false });
     }
@@ -893,6 +883,7 @@
     
     window.clearAllOrders = function() { 
         if(confirm('🚨 確定清空今天「所有」訂單與線上名單嗎？')) {
+            window.payInputValues = {}; // 清空輸入記憶
             db.ref('lunch-orders').remove(); 
             db.ref('online-presence').remove(); 
             setTimeout(() => {
