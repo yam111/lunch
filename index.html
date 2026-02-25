@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>午餐系統</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,33 +19,23 @@
             --primary: #4F46E5; --primary-hover: #4338CA;
             --success: #10B981; --danger: #EF4444; --warning: #F59E0B;
             --dark: #1E293B; --gray: #64748B; --bg: #F8FAFC; 
-            --surface: rgba(255, 255, 255, 0.95); /* 讓卡片也帶有一點點微透感 */
+            --surface: rgba(255, 255, 255, 0.95);
         }
 
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
             margin: 0; padding: 20px 10px; color: var(--dark); 
             min-height: 100vh; overflow-x: hidden;
-            
-            /* ✨ 清新美食背景圖 */
             background-image: url('https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2500&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-size: cover; background-position: center; background-attachment: fixed;
         }
 
-        /* ✨ 全域毛玻璃遮罩 (保護閱讀性，透出柔和背景色) */
+        /* 全域毛玻璃遮罩 */
         body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(248, 250, 252, 0.75); 
-            backdrop-filter: blur(15px); 
-            -webkit-backdrop-filter: blur(15px); 
-            z-index: -1;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(248, 250, 252, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: -1;
         }
         
-        /* 版面配置 */
         .layout-wrapper { max-width: 1200px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
         .main-content { flex: 1; width: 100%; transition: 0.3s; }
         
@@ -54,8 +44,7 @@
             width: 280px; background: var(--surface); border-radius: 20px; 
             box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 20px; 
             position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto;
-            transition: transform 0.3s ease;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
         
         .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
@@ -151,7 +140,7 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000; text-shadow: 0 2px 4px rgba(0,0,0,0.1);}
 
-        /* 完美結構 Modal：固定按鈕、內部滑動 */
+        /* Modal 結構修復：固定按鈕、內部滑動 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; animation: scaleUp 0.2s ease-out;}
         
@@ -404,15 +393,27 @@
     }
 
     window.openSplitModal = function() { document.getElementById('split-modal').style.display = 'flex'; }
+    
+    // 🚀 修正運費分攤邏輯：自動校正已付款訂單的找零
     window.calculateSplit = function() {
         const amount = parseInt(document.getElementById('split-amount').value);
         if (isNaN(amount) || amount === 0) return alert("請輸入有效金額");
         if (orders.length === 0) return alert("沒有訂單");
+        
         const perPerson = Math.ceil(amount / orders.length);
         const typeText = amount > 0 ? `運+${perPerson}` : `折${perPerson}`;
+        
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
-                db.ref('lunch-orders/' + order.id).update({ price: order.price + perPerson, item: `${order.item} (${typeText})` });
+                let newPrice = order.price + perPerson;
+                let updates = { price: newPrice, item: `${order.item} (${typeText})` };
+                
+                // 🔥 如果訂單已經結帳，自動重新計算找零！
+                if (order.isPaid) {
+                    updates.change = order.paidAmount - newPrice;
+                }
+                
+                db.ref('lunch-orders/' + order.id).update(updates);
             });
             document.getElementById('split-modal').style.display = 'none';
         }
@@ -526,20 +527,15 @@
         document.getElementById('summary-content').innerText = txt; document.getElementById('summary-modal').style.display = "flex";
     }
 
-    // 🟢 當訂單資料變動時的處理邏輯
     ordersRef.on('value', (snapshot) => { 
         orders = []; 
         snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); 
         
-        // 💡 智慧防呆：如果我的餐點被刪除了，自動將狀態還原為「瀏覽中」
         let currentName = document.getElementById('name').value.trim();
         if (currentName && myCurrentStatus === 'done') {
             let hasMyOrder = orders.some(o => o.name === currentName);
-            if (!hasMyOrder) {
-                updateMyStatus('browsing');
-            }
+            if (!hasMyOrder) updateMyStatus('browsing');
         }
-        
         render(); 
     });
 
@@ -561,7 +557,9 @@
 
             if (order.isPaid) {
                 visiblePaidCount++; const tr = document.createElement('tr');
-                let adminFields = isAdmin ? `<td><span class="price-tag">$${order.paidAmount}</span></td><td><span class="change-tag">$${order.change}</span></td><td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
+                
+                // 🚀 修正：為已付款區加入「修改」按鈕 (僅團主可見)
+                let adminFields = isAdmin ? `<td><span class="price-tag">$${order.paidAmount}</span></td><td><span class="change-tag">$${order.change}</span></td><td style="white-space:nowrap;"><button class="btn-edit" onclick="editOrder('${order.id}')">✏️ 修改</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
                 tr.innerHTML = `<td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${adminFields}`; paidTbody.appendChild(tr);
             } else {
                 visibleUnpaidCount++; const tr = document.createElement('tr');
@@ -586,38 +584,39 @@
             let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
             if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
             saveToQuickTags(inputItem, inputPrice);
-            
-            // 🟢 送出後更新狀態為「已完成」
             updateMyStatus('done');
-            
             ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
         }
     });
 
+    // 🚀 修正：修改訂單時，如果已經結帳，會自動重新計算找零！支援修改姓名
     window.editOrder = function(id) {
         if (globalLocked && !isAdmin) return alert("已結單無法修改！");
         const order = orders.find(o => o.id === id); if(!order) return;
-        const newItem = prompt(`修改品項：`, order.item); if (!newItem) return;
-        const newPriceStr = prompt(`修改價格：`, order.price); if (!newPriceStr) return; 
-        const newPrice = parseInt(newPriceStr); if (isNaN(newPrice) || newPrice <= 0) return;
-        db.ref('lunch-orders/' + id).update({ item: newItem.trim(), price: newPrice });
+        
+        const newName = prompt(`修改姓名：`, order.name); if (newName === null || newName.trim() === '') return;
+        const newItem = prompt(`修改品項：`, order.item); if (newItem === null || newItem.trim() === '') return;
+        const newPriceStr = prompt(`修改價格：`, order.price); if (newPriceStr === null) return; 
+        const newPrice = parseInt(newPriceStr); if (isNaN(newPrice) || newPrice <= 0) return alert('價格無效！');
+        
+        let updates = { name: newName.trim(), item: newItem.trim(), price: newPrice };
+        
+        // 🔥 如果訂單已經結帳，自動重新計算找零！
+        if (order.isPaid) {
+            updates.change = order.paidAmount - newPrice;
+        }
+        db.ref('lunch-orders/' + id).update(updates);
     }
 
-    // 🚀 修正結帳邏輯：鎖定同一列輸入框的值
+    // 🚀 修正：輸入框讀取數值絕對鎖定（解決 120 變 110 的問題）
     window.processPayment = function(id, btnElement) {
-        const order = orders.find(o => o.id === id); 
-        if (!order) return;
+        const order = orders.find(o => o.id === id); if (!order) return;
         
-        // 絕對鎖定：從按鈕往上找到 <tr>，再往下找到輸入框
+        // 從按鈕定位同一列的 input
         const inputEl = btnElement.closest('tr').querySelector('.pay-input');
         const rawValue = inputEl.value.trim();
         
-        let paidAmount;
-        if (rawValue === "") {
-            paidAmount = order.price; // 如果留空，預設為剛剛好
-        } else {
-            paidAmount = parseInt(rawValue, 10);
-        }
+        let paidAmount = rawValue === "" ? order.price : parseInt(rawValue, 10);
 
         if (isNaN(paidAmount) || paidAmount < order.price) {
             alert('❌ 實付金額不能小於應付金額喔！');
@@ -625,15 +624,8 @@
             return; 
         }
 
-        chaChingSound.currentTime = 0; 
-        chaChingSound.play().catch(e => console.log(e)); 
-        showFloatingNumber(btnElement, order.price); 
-        
-        db.ref('lunch-orders/' + id).update({ 
-            isPaid: true, 
-            paidAmount: paidAmount, 
-            change: paidAmount - order.price 
-        });
+        chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
+        db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price });
     }
 
     window.deleteOrder = function(id) { if(confirm('⚠️ 確定刪除嗎？')) db.ref('lunch-orders/' + id).remove(); }
