@@ -17,40 +17,34 @@
         :root {
             --primary: #4F46E5; --primary-hover: #4338CA;
             --success: #10B981; --danger: #EF4444; --warning: #F59E0B;
-            --dark: #1E293B; --gray: #64748B; --bg: #F8FAFC; 
+            --dark: #1E293B; --gray: #8E8E93; --bg: #F2F2F7; 
             --surface: rgba(255, 255, 255, 0.95);
         }
 
         body { 
-            font-family: 'Noto Sans TC', sans-serif; 
+            font-family: 'Noto Sans TC', -apple-system, sans-serif; 
             margin: 0; padding: 20px 10px; color: var(--dark); 
             min-height: 100vh; overflow-x: hidden;
             background-image: url('https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2500&auto=format&fit=crop');
             background-size: cover; background-position: center; background-attachment: fixed;
-            -webkit-font-smoothing: antialiased; /* 讓字體更平滑 */
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* 🚀 效能優化：強制硬體加速毛玻璃 */
+        /* 🚀 效能優化：移除極耗效能的全螢幕毛玻璃，改用輕量半透明遮罩 */
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(248, 250, 252, 0.75); 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            background: rgba(248, 250, 252, 0.65); 
             z-index: -1;
-            transform: translateZ(0); 
-            backface-visibility: hidden;
-            will-change: transform; 
         }
         
-        .layout-wrapper { max-width: 1200px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
+        .layout-wrapper { max-width: 1250px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
         .main-content { flex: 1; width: 100%; transition: 0.3s; }
         
         .sidebar { 
             width: 280px; background: var(--surface); border-radius: 20px; 
             box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 20px; 
             position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto;
-            transition: transform 0.3s ease; 
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            transform: translateZ(0);
+            transition: transform 0.3s ease;
         }
         
         .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
@@ -75,16 +69,10 @@
         .status-typing { color: var(--warning); font-weight: bold; animation: pulseText 1.5s infinite;} .dot-typing { background: var(--warning); animation: blink 1s infinite; }
         .status-done { color: var(--success); font-weight: bold; } .dot-done { background: var(--success); }
 
-        @keyframes blink { 50% { opacity: 0.4; } }
-        @keyframes pulseText { 50% { opacity: 0.7; } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes blink { 50% { opacity: 0.4; } } @keyframes pulseText { 50% { opacity: 0.7; } } @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
         .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        
-        /* 🚀 效能優化：強制硬體加速 */
-        .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); margin-bottom: 25px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform: translateZ(0); }
-        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform: translateZ(0); }
-        
+        .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); margin-bottom: 25px; }
         h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.6em; display: flex; align-items: center; gap: 10px;}
         
         button { padding: 10px 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-family: inherit; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -99,16 +87,16 @@
         .btn-broadcast { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; animation: pulse 2s infinite; font-size: 1.05em;}
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
         
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; }
+        
         .bulletin { background: linear-gradient(135deg, rgba(255,251,235,0.95) 0%, rgba(254,243,199,0.95) 100%); border-left: 6px solid var(--warning); position: relative; }
         .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
         .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block;}
         .bulletin-content a { background: #FDE68A; padding: 4px 10px; border-radius: 8px; color: #B45309; text-decoration: none; font-weight: 700; margin-top: 5px; display: inline-block;}
-        .bulletin-content a:hover { background: #FCD34D; }
         .btn-edit-small { position: absolute; top: 15px; right: 20px; background: white; color: var(--warning); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
 
         .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
         .stat-box { flex: 1; padding: 20px; border-radius: 20px; color: white; box-shadow: 0 10px 20px -3px rgba(0,0,0,0.15); position: relative; overflow: hidden; min-width: 150px;}
-        .stat-box::after { content: ''; position: absolute; top: -50%; right: -20%; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; }
         .box-total { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
         .box-paid { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
         .box-unpaid { background: linear-gradient(135deg, #F87171 0%, #EF4444 100%); }
@@ -126,25 +114,26 @@
         .quick-tag:hover { background: #E2E8F0; transform: scale(1.05); }
 
         h2 { color: var(--dark); margin-top: 0; font-size: 1.4em; font-weight: 900; display: flex; align-items: center; gap: 8px;}
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; min-width: 600px;}
-        th, td { padding: 15px 18px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; min-width: 650px;}
+        th, td { padding: 15px 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); }
         th { background-color: rgba(248, 250, 252, 0.7); color: var(--gray); font-weight: 700; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.05em; }
         th:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
         th:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
         
-        .pay-input { width: 90px; padding: 10px; margin-right: 8px; border-width: 1px;}
+        .pay-input { width: 85px; padding: 10px; margin-right: 8px; border-width: 1px;}
         .inline-edit-input { width: 100%; padding: 8px 12px; border: 2px solid var(--primary); border-radius: 8px; font-size: 1em; font-family: inherit; box-sizing: border-box; background: white;}
         .inline-edit-input.short { width: 80px; }
         
-        .btn-pay { background: var(--success); color: white; margin-right: 5px; padding: 8px 14px;}
-        .btn-edit { background: #F1F5F9; color: var(--dark); margin-right: 5px; padding: 8px 14px; box-shadow: none;}
-        .btn-del { background: #FEE2E2; color: var(--danger); padding: 8px 14px; box-shadow: none;}
+        .btn-pay { background: var(--success); color: white; margin-right: 5px; padding: 8px 12px;}
+        .btn-edit { background: #F1F5F9; color: var(--dark); margin-right: 5px; padding: 8px 12px; box-shadow: none;}
+        .btn-del { background: #FEE2E2; color: var(--danger); padding: 8px 12px; box-shadow: none;}
         .price-tag { font-family: monospace; font-size: 1.1em; font-weight: 700; color: var(--dark); }
         .change-tag { color: var(--warning); font-weight: 900; }
 
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000; text-shadow: 0 2px 4px rgba(0,0,0,0.1);}
 
+        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; animation: scaleUp 0.2s ease-out;}
         .modal-header { padding: 20px 25px; font-weight: 900; font-size: 1.2em; border-bottom: 1px solid #E2E8F0; color: var(--dark); background: white; z-index: 10; display: flex; align-items: center; gap: 10px;}
@@ -168,7 +157,6 @@
         .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
-        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
     </style>
 </head>
 <body>
@@ -239,7 +227,7 @@
             <div style="overflow-x:auto;">
                 <table id="paid-table">
                     <thead>
-                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零</th><th class="admin-only-th">操作</th></tr>
+                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零</th><th class="admin-only-th">找零狀態</th><th class="admin-only-th">操作</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -251,8 +239,7 @@
         <div class="online-header">
             👥 目前線上人員 (<span id="online-count-sidebar">0</span>)
         </div>
-        <div id="online-users-list">
-            </div>
+        <div id="online-users-list"></div>
     </div>
 </div>
 
@@ -327,7 +314,6 @@
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
     
-    // 🟢 狀態追蹤與效能控制
     let myPresenceRef = null;
     let myCurrentStatus = 'browsing'; 
     let editingOrderId = null; 
@@ -346,24 +332,35 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
+    // 🚀 修正：利用 localStorage 給每個裝置綁定專屬 ID，並利用名字進行群組去重
     function initPresence() {
-        myPresenceRef = onlineRef.push();
+        let deviceId = localStorage.getItem('lunchDeviceId');
+        if (!deviceId) { deviceId = 'device_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('lunchDeviceId', deviceId); }
+        
+        myPresenceRef = onlineRef.child(deviceId);
         myPresenceRef.onDisconnect().remove();
         
         let currentName = document.getElementById('name').value || "神秘訪客";
         myCurrentStatus = 'browsing';
         myPresenceRef.set({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
 
-        // 🚀 效能優化：使用 requestAnimationFrame 與字串比對，避免頻繁渲染 DOM
         onlineRef.on('value', (snap) => {
             requestAnimationFrame(() => {
+                let userMap = {}; 
+                // 將同名字的使用者狀態合併，只保留最活躍的狀態
+                snap.forEach(child => {
+                    const u = child.val();
+                    if (!userMap[u.name] || u.status === 'typing' || (u.status === 'done' && userMap[u.name].status === 'browsing')) {
+                        userMap[u.name] = u; 
+                    }
+                });
+
                 let listHtml = "";
                 let count = 0;
-                snap.forEach(child => {
+                for (let name in userMap) {
                     count++;
-                    const u = child.val();
+                    const u = userMap[name];
                     let statusHtml = "";
-
                     if(u.status === 'typing') statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
                     else if(u.status === 'done') statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
                     else statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
@@ -377,30 +374,20 @@
                                 <div class="user-status">${statusHtml}</div>
                             </div>
                         </div>`;
-                });
-                
-                const listContainer = document.getElementById('online-users-list');
-                if (listContainer.innerHTML !== listHtml) {
-                    listContainer.innerHTML = listHtml;
                 }
+                
+                document.getElementById('online-users-list').innerHTML = listHtml;
                 document.getElementById('online-count-sidebar').innerText = count;
             });
         });
     }
 
-    // 🚀 效能優化：極限防抖 (Debounce) 的打字狀態處理
     window.handleTyping = function() {
         const currentName = document.getElementById('name').value.trim() || "神秘訪客";
-
-        // 只有「從沒打字變有打字」或是「換了名字」才發送網路請求
         if (!isTyping || lastTypingName !== currentName) {
-            isTyping = true;
-            lastTypingName = currentName;
-            myCurrentStatus = 'typing';
+            isTyping = true; lastTypingName = currentName; myCurrentStatus = 'typing';
             if(myPresenceRef) myPresenceRef.update({ name: currentName, status: 'typing', isAdmin: isAdmin, timestamp: Date.now() });
         }
-
-        // 刷新等待時間，停手 1.5 秒後才恢復「瀏覽中」
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
             isTyping = false;
@@ -408,7 +395,7 @@
                 myCurrentStatus = 'browsing';
                 if(myPresenceRef) myPresenceRef.update({ name: document.getElementById('name').value.trim() || "神秘訪客", status: 'browsing', isAdmin: isAdmin, timestamp: Date.now() });
             }
-        }, 1500);
+        }, 1500); 
     }
 
     window.updateMyStatus = function(status) {
@@ -423,19 +410,20 @@
     }
 
     window.openSplitModal = function() { document.getElementById('split-modal').style.display = 'flex'; }
-    
     window.calculateSplit = function() {
         const amount = parseInt(document.getElementById('split-amount').value);
         if (isNaN(amount) || amount === 0) return alert("請輸入有效金額");
         if (orders.length === 0) return alert("沒有訂單");
-        
         const perPerson = Math.ceil(amount / orders.length);
         
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
                 let newPrice = order.price + perPerson;
-                let updates = { price: newPrice }; 
-                if (order.isPaid) updates.change = order.paidAmount - newPrice;
+                let updates = { price: newPrice };
+                if (order.isPaid) {
+                    updates.change = order.paidAmount - newPrice;
+                    if (updates.change > 0 && order.paidAmount !== newPrice) updates.changeGiven = false; 
+                }
                 db.ref('lunch-orders/' + order.id).update(updates);
             });
             document.getElementById('split-modal').style.display = 'none';
@@ -500,8 +488,7 @@
         if (isAdmin) { 
             if(confirm("確定要關閉團主模式嗎？")) { 
                 isAdmin = false; localStorage.removeItem('lunchAdminToken'); 
-                updateMyStatus(myCurrentStatus); 
-                updateAdminUI(); render(); 
+                updateMyStatus(myCurrentStatus); updateAdminUI(); render(); 
             } 
         } else { 
             alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。");
@@ -551,7 +538,6 @@
     }
 
     ordersRef.on('value', (snapshot) => { 
-        // 🚀 效能優化：確保資料繪製不會造成卡頓
         requestAnimationFrame(() => {
             orders = []; 
             snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); 
@@ -571,7 +557,11 @@
         document.body.appendChild(floater); setTimeout(() => floater.remove(), 1000);
     }
 
-    // 🚀 效能優化：使用純字串組裝表格，速度提升 10 倍
+    // 🚀 新增：找零狀態切換功能
+    window.markChangeGiven = function(id) {
+        db.ref('lunch-orders/' + id).update({ changeGiven: true });
+    }
+
     function render() {
         let unpaidHTML = ''; let paidHTML = '';
         let total = 0, paidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
@@ -585,6 +575,19 @@
 
             if (order.isPaid) {
                 visiblePaidCount++;
+                
+                // 🚀 已付款區 UI 處理 (包含找零狀態)
+                let changeStatusUI = '';
+                if (order.change > 0) {
+                    if (order.changeGiven) {
+                        changeStatusUI = `<span style="color:var(--gray); font-size:0.85em; background:#E5E5EA; padding:4px 8px; border-radius:12px; font-weight:bold;">✅ 已找零</span>`;
+                    } else {
+                        changeStatusUI = `<button class="btn-pay" style="background:var(--warning); color:white; padding:4px 8px; font-size:0.85em; box-shadow:none; border-radius:8px;" onclick="markChangeGiven('${order.id}')">給找零</button>`;
+                    }
+                } else {
+                    changeStatusUI = `<span style="color:var(--gray); font-size:0.85em;">無須找零</span>`;
+                }
+
                 if (isEditing && isAdmin) {
                     paidHTML += `<tr>
                         <td><strong>${order.name}</strong></td>
@@ -592,12 +595,13 @@
                         <td>$<input type="number" id="edit-price-${order.id}" value="${order.price}" class="inline-edit-input short"></td>
                         <td>$<input type="number" id="edit-paid-${order.id}" value="${order.paidAmount}" class="inline-edit-input short"></td>
                         <td><span class="change-tag">自動計算</span></td>
+                        <td>-</td>
                         <td style="white-space:nowrap;">
                             <button class="btn-pay" onclick="saveOrderInline('${order.id}', true)">💾 儲存</button>
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    let adminFields = isAdmin ? `<td><span class="price-tag">$${order.paidAmount}</span></td><td><span class="change-tag">$${order.change}</span></td><td style="white-space:nowrap;"><button class="btn-edit" onclick="editOrderInline('${order.id}')">✏️ 修改</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
+                    let adminFields = isAdmin ? `<td><span class="price-tag">$${order.paidAmount}</span></td><td><span class="change-tag">$${order.change}</span></td><td>${changeStatusUI}</td><td style="white-space:nowrap;"><button class="btn-edit" onclick="editOrderInline('${order.id}')">✏️ 修改</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
                     paidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${adminFields}</tr>`; 
                 }
             } else {
@@ -622,7 +626,7 @@
             }
         });
 
-        let unpaidColspan = isAdmin ? 5 : 4; let paidColspan = isAdmin ? 6 : 3;
+        let unpaidColspan = isAdmin ? 5 : 4; let paidColspan = isAdmin ? 7 : 3;
         document.querySelector('#unpaid-table tbody').innerHTML = unpaidHTML || `<tr><td colspan="${unpaidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有未付款訂單":"太棒了！您目前沒有未付款的訂單"}</td></tr>`;
         document.querySelector('#paid-table tbody').innerHTML = paidHTML || `<tr><td colspan="${paidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有已付款訂單":"您目前沒有已付款的記錄"}</td></tr>`;
         
@@ -635,21 +639,15 @@
         if(confirm(`👉 請確認：\n👤 姓名：${inputName}\n🍱 品項：${inputItem}\n💰 價格：$${inputPrice}`)) {
             let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
             if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
-            saveToQuickTags(inputItem, inputPrice);
-            updateMyStatus('done');
-            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
+            saveToQuickTags(inputItem, inputPrice); updateMyStatus('done');
+            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0, changeGiven: false }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
         }
     });
 
-    window.editOrderInline = function(id) {
-        editingOrderId = id;
-        render();
-    }
+    window.editOrderInline = function(id) { editingOrderId = id; render(); }
 
     window.saveOrderInline = function(id, isPaid) {
-        const order = orders.find(o => o.id === id);
-        if (!order) return;
-
+        const order = orders.find(o => o.id === id); if (!order) return;
         let itemInput = document.getElementById(`edit-item-${id}`).value.trim();
         let priceInputStr = document.getElementById(`edit-price-${id}`).value;
         let priceInput = parseInt(priceInputStr, 10);
@@ -666,10 +664,14 @@
             if (paidInput < priceInput) { alert("⚠️ 實收金額不能小於應付金額！請確認後再儲存。"); return; }
             updates.paidAmount = paidInput;
             updates.change = paidInput - priceInput; 
+            
+            // 若價格有變更導致找零產生，重置為「未找零」狀態
+            if (updates.change > 0 && paidInput !== order.paidAmount) {
+                updates.changeGiven = false;
+            }
         }
 
         editingOrderId = null; 
-        
         if (updates.item !== order.item || updates.price !== order.price || (isPaid && updates.paidAmount !== order.paidAmount)) {
             db.ref('lunch-orders/' + id).update(updates);
         } else {
@@ -677,23 +679,27 @@
         }
     }
 
-    window.cancelEditInline = function() {
-        editingOrderId = null;
-        render();
-    }
+    window.cancelEditInline = function() { editingOrderId = null; render(); }
 
     window.processPayment = function(id, btnElement) {
         const order = orders.find(o => o.id === id); if (!order) return;
         const inputEl = btnElement.closest('tr').querySelector('.pay-input');
         const rawValue = inputEl.value.trim();
-        let paidAmount = rawValue === "" ? order.price : parseInt(rawValue, 10);
         
+        // 🚀 強制驗證：沒有輸入內容就不准結帳
+        if (rawValue === "") {
+            alert('⚠️ 結帳前請輸入對方給您的【實付金額】！\n(如果對方剛好給應付金額，請輸入對應數字)'); 
+            inputEl.focus(); 
+            return; 
+        }
+
+        let paidAmount = parseInt(rawValue, 10);
         if (isNaN(paidAmount) || paidAmount < order.price) {
             alert('❌ 實付金額不能小於應付金額喔！'); inputEl.focus(); return; 
         }
 
         chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
-        db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price });
+        db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price, changeGiven: false });
     }
 
     window.deleteOrder = function(id) { if(confirm('⚠️ 確定刪除嗎？')) db.ref('lunch-orders/' + id).remove(); }
