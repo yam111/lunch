@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>午餐訂購與收費系統 (即時同步版)</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; }
+        h2 { color: #34495e; margin-top: 30px; border-left: 5px solid #3498db; padding-left: 10px; }
+        .stats { display: flex; gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .stat-box { flex: 1; text-align: center; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .stat-title { font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px;}
+        .stat-value { font-size: 1.5em; font-weight: bold; }
+        .total .stat-value { color: #2980b9; }
+        .paid .stat-value { color: #27ae60; }
+        .unpaid .stat-value { color: #e74c3c; }
+        form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; min-width: 120px; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-submit { background: #3498db; color: white; min-width: 100px; }
+        .btn-submit:hover { background: #2980b9; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; color: #2c3e50; }
+        .pay-input { width: 90px; padding: 8px; margin-right: 5px; }
+        .btn-pay { background: #2ecc71; color: white; }
+        .btn-pay:hover { background: #27ae60; }
+        .btn-del { background: #e74c3c; color: white; margin-left: 5px;}
+        .btn-del:hover { background: #c0392b; }
+        .empty-msg { text-align: center; color: #95a5a6; padding: 20px; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🍱 午餐訂購與結帳系統 (即時同步)</h1>
+
+    <div class="stats">
+        <div class="stat-box total">
+            <div class="stat-title">總訂購金額</div>
+            <div class="stat-value">$<span id="total-price">0</span></div>
+        </div>
+        <div class="stat-box paid">
+            <div class="stat-title">已收金額 (對應應收)</div>
+            <div class="stat-value">$<span id="total-paid">0</span></div>
+        </div>
+        <div class="stat-box unpaid">
+            <div class="stat-title">尚未收取</div>
+            <div class="stat-value">$<span id="total-unpaid">0</span></div>
+        </div>
+    </div>
+
+    <form id="order-form">
+        <input type="text" id="name" placeholder="訂購人姓名" required>
+        <input type="text" id="item" placeholder="餐點品項 (如: 排骨飯)" required>
+        <input type="number" id="price" placeholder="餐點價格" required min="1">
+        <button type="submit" class="btn-submit">新增訂單</button>
+    </form>
+
+    <h2>📝 未付款區 (等待收錢)</h2>
+    <table id="unpaid-table">
+        <thead>
+            <tr><th>姓名</th><th>品項</th><th>應付金額</th><th>輸入實付金額</th><th>操作</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <h2>✅ 已付款區 (結帳完畢)</h2>
+    <table id="paid-table">
+        <thead>
+            <tr><th>姓名</th><th>品項</th><th>應付金額</th><th>對方給的錢</th><th>找零</th><th>操作</th></tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    // ==========================================
+    // ⬇️ 請將這裡替換成你在 Firebase 拿到的設定碼 ⬇️
+    // ==========================================
+    const firebaseConfig = {
+  apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
+  authDomain: "lunch-f0895.firebaseapp.com",
+  databaseURL: "https://lunch-f0895-default-rtdb.firebaseio.com",
+  projectId: "lunch-f0895",
+  storageBucket: "lunch-f0895.firebasestorage.app",
+  messagingSenderId: "942714581747",
+  appId: "1:942714581747:web:c9b888b08a740842fb7d86"
+};
+    // ==========================================
+
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const ordersRef = db.ref('lunch-orders');
+
+    let orders = [];
+
+    // 監聽 Firebase 資料庫變化 (這就是即時同步的魔法)
+    ordersRef.on('value', (snapshot) => {
+        orders = [];
+        snapshot.forEach((childSnapshot) => {
+            orders.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
+        });
+        render();
+    });
+
+    // 負責將資料渲染到畫面上的主函式
+    function render() {
+        const unpaidTbody = document.querySelector('#unpaid-table tbody');
+        const paidTbody = document.querySelector('#paid-table tbody');
+        
+        unpaidTbody.innerHTML = '';
+        paidTbody.innerHTML = '';
+
+        let total = 0, paidTotal = 0, unpaidCount = 0, paidCount = 0;
+
+        orders.forEach(order => {
+            total += order.price;
+            
+            if (order.isPaid) {
+                paidTotal += order.price; 
+                paidCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td><td>$${order.paidAmount}</td>
+                    <td style="color:#e67e22; font-weight:bold;">$${order.change}</td>
+                    <td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>
+                `;
+                paidTbody.appendChild(tr);
+            } else {
+                unpaidCount++;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td>
+                    <td><input type="number" class="pay-input" id="pay-${order.id}" min="${order.price}" placeholder="給多少錢?"></td>
+                    <td>
+                        <button class="btn-pay" onclick="processPayment('${order.id}')">結帳</button>
+                        <button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>
+                    </td>
+                `;
+                unpaidTbody.appendChild(tr);
+            }
+        });
+
+        if(unpaidCount === 0) unpaidTbody.innerHTML = `<tr><td colspan="5" class="empty-msg">目前沒有未付款的訂單</td></tr>`;
+        if(paidCount === 0) paidTbody.innerHTML = `<tr><td colspan="6" class="empty-msg">目前沒有已付款的訂單</td></tr>`;
+
+        document.getElementById('total-price').innerText = total;
+        document.getElementById('total-paid').innerText = paidTotal;
+        document.getElementById('total-unpaid').innerText = total - paidTotal;
+    }
+
+    // 新增訂單寫入 Firebase
+    document.getElementById('order-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        ordersRef.push({
+            name: document.getElementById('name').value,
+            item: document.getElementById('item').value,
+            price: parseInt(document.getElementById('price').value),
+            isPaid: false,
+            paidAmount: 0,
+            change: 0
+        });
+        this.reset();
+        document.getElementById('name').focus();
+    });
+
+    // 結帳邏輯更新到 Firebase
+    window.processPayment = function(id) {
+        const order = orders.find(o => o.id === id);
+        let paidAmount = parseInt(document.getElementById('pay-' + id).value);
+
+        if (isNaN(paidAmount)) paidAmount = order.price;
+        if (paidAmount < order.price) {
+            alert('實付金額不能小於應付金額喔！');
+            return;
+        }
+
+        db.ref('lunch-orders/' + id).update({
+            isPaid: true,
+            paidAmount: paidAmount,
+            change: paidAmount - order.price
+        });
+    }
+
+    // 刪除訂單從 Firebase 移除
+    window.deleteOrder = function(id) {
+        if(confirm('確定要刪除這筆訂單嗎？')) {
+            db.ref('lunch-orders/' + id).remove();
+        }
+    }
+</script>
+
+</body>
+</html>
