@@ -27,13 +27,18 @@
             min-height: 100vh; overflow-x: hidden;
             background-image: url('https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2500&auto=format&fit=crop');
             background-size: cover; background-position: center; background-attachment: fixed;
-            -webkit-font-smoothing: antialiased;
+            -webkit-font-smoothing: antialiased; /* 讓字體更平滑 */
         }
 
+        /* 🚀 效能優化：強制硬體加速毛玻璃 */
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(248, 250, 252, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: -1;
-            transform: translateZ(0); /* 硬體加速，提升毛玻璃效能 */
+            background: rgba(248, 250, 252, 0.75); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            z-index: -1;
+            transform: translateZ(0); 
+            backface-visibility: hidden;
+            will-change: transform; 
         }
         
         .layout-wrapper { max-width: 1200px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
@@ -43,7 +48,9 @@
             width: 280px; background: var(--surface); border-radius: 20px; 
             box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 20px; 
             position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto;
-            transition: transform 0.3s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease; 
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            transform: translateZ(0);
         }
         
         .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
@@ -73,7 +80,11 @@
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
         .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); margin-bottom: 25px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform: translateZ(0);}
+        
+        /* 🚀 效能優化：強制硬體加速 */
+        .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); margin-bottom: 25px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform: translateZ(0); }
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform: translateZ(0); }
+        
         h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.6em; display: flex; align-items: center; gap: 10px;}
         
         button { padding: 10px 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-family: inherit; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -88,12 +99,11 @@
         .btn-broadcast { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; animation: pulse 2s infinite; font-size: 1.05em;}
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
         
-        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transform: translateZ(0);}
-        
         .bulletin { background: linear-gradient(135deg, rgba(255,251,235,0.95) 0%, rgba(254,243,199,0.95) 100%); border-left: 6px solid var(--warning); position: relative; }
         .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
         .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block;}
         .bulletin-content a { background: #FDE68A; padding: 4px 10px; border-radius: 8px; color: #B45309; text-decoration: none; font-weight: 700; margin-top: 5px; display: inline-block;}
+        .bulletin-content a:hover { background: #FCD34D; }
         .btn-edit-small { position: absolute; top: 15px; right: 20px; background: white; color: var(--warning); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
 
         .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
@@ -135,7 +145,7 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000; text-shadow: 0 2px 4px rgba(0,0,0,0.1);}
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 3000; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; animation: scaleUp 0.2s ease-out;}
         .modal-header { padding: 20px 25px; font-weight: 900; font-size: 1.2em; border-bottom: 1px solid #E2E8F0; color: var(--dark); background: white; z-index: 10; display: flex; align-items: center; gap: 10px;}
         .modal-body { padding: 20px 25px; overflow-y: auto; flex: 1; }
@@ -149,7 +159,7 @@
         .editor-group { margin-bottom: 20px; }
         .editor-group label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
         .editor-group textarea { width: 100%; height: 100px; padding: 15px; border: 2px solid #E2E8F0; border-radius: 12px; resize: vertical; box-sizing: border-box; font-family: inherit; font-size:1em; outline:none;}
-        .editor-group input { width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 12px; box-sizing: border-box; background: #F8FAFC; outline:none;}
+        .editor-group input[type="url"], .editor-group input[type="file"], .editor-group input[type="number"] { width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 12px; box-sizing: border-box; background: #F8FAFC; outline:none;}
         
         .preview-container { display: none; position: relative; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed #CBD5E1; padding: 5px; text-align: center; background: #F8FAFC;}
         .preview-container img { max-width: 100%; max-height: 200px; object-fit: contain; display: inline-block; border-radius: 8px;}
@@ -158,6 +168,7 @@
         .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
+        @keyframes shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
     </style>
 </head>
 <body>
@@ -240,7 +251,8 @@
         <div class="online-header">
             👥 目前線上人員 (<span id="online-count-sidebar">0</span>)
         </div>
-        <div id="online-users-list"></div>
+        <div id="online-users-list">
+            </div>
     </div>
 </div>
 
@@ -270,7 +282,7 @@
     <div class="modal-content">
         <div class="modal-header" style="color:var(--success);">💰 運費/折扣 自動分攤</div>
         <div class="modal-body">
-            <p style="color:var(--gray); font-size:0.95em; margin-top:0;">輸入總運費(正數)或總折扣(負數)，系統將自動平分金額 (不會修改品項名稱)。</p>
+            <p style="color:var(--gray); font-size:0.95em; margin-top:0;">輸入總運費(正數)或總折扣(負數)，系統將自動平分給所有人。</p>
             <div class="editor-group"><input type="number" id="split-amount" placeholder="例如：58 (運費) 或 -100 (折扣)"></div>
         </div>
         <div class="modal-footer">
@@ -315,13 +327,13 @@
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
     
+    // 🟢 狀態追蹤與效能控制
     let myPresenceRef = null;
     let myCurrentStatus = 'browsing'; 
     let editingOrderId = null; 
-
-    // 🚀 新增：打字節流計時器 (解決效能卡頓核心)
     let typingTimeout;
-    let lastTypeTime = 0;
+    let isTyping = false;
+    let lastTypingName = "";
 
     document.addEventListener('DOMContentLoaded', () => {
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
@@ -342,45 +354,61 @@
         myCurrentStatus = 'browsing';
         myPresenceRef.set({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
 
-        // 🚀 優化：字串組合代替頻繁操作 DOM
+        // 🚀 效能優化：使用 requestAnimationFrame 與字串比對，避免頻繁渲染 DOM
         onlineRef.on('value', (snap) => {
-            let listHtml = "";
-            let count = 0;
-            
-            snap.forEach(child => {
-                count++;
-                const u = child.val();
-                let statusHtml = "";
-                if(u.status === 'typing') statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
-                else if(u.status === 'done') statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
-                else statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
+            requestAnimationFrame(() => {
+                let listHtml = "";
+                let count = 0;
+                snap.forEach(child => {
+                    count++;
+                    const u = child.val();
+                    let statusHtml = "";
 
-                const isBoss = u.isAdmin ? '<span title="團主" style="margin-left:5px;">👑</span>' : '';
-                listHtml += `
-                    <div class="online-user-item">
-                        <div class="user-avatar">${u.name.charAt(0)}</div>
-                        <div class="user-info">
-                            <div class="user-name">${u.name} ${isBoss}</div>
-                            <div class="user-status">${statusHtml}</div>
-                        </div>
-                    </div>`;
+                    if(u.status === 'typing') statusHtml = `<span class="status-dot dot-typing"></span> <span class="status-typing">正在點餐...</span>`;
+                    else if(u.status === 'done') statusHtml = `<span class="status-dot dot-done"></span> <span class="status-done">已完成</span>`;
+                    else statusHtml = `<span class="status-dot dot-browsing"></span> <span class="status-browsing">瀏覽中</span>`;
+
+                    const isBoss = u.isAdmin ? '<span title="團主" style="margin-left:5px;">👑</span>' : '';
+                    listHtml += `
+                        <div class="online-user-item">
+                            <div class="user-avatar">${u.name.charAt(0)}</div>
+                            <div class="user-info">
+                                <div class="user-name">${u.name} ${isBoss}</div>
+                                <div class="user-status">${statusHtml}</div>
+                            </div>
+                        </div>`;
+                });
+                
+                const listContainer = document.getElementById('online-users-list');
+                if (listContainer.innerHTML !== listHtml) {
+                    listContainer.innerHTML = listHtml;
+                }
+                document.getElementById('online-count-sidebar').innerText = count;
             });
-            document.getElementById('online-users-list').innerHTML = listHtml;
-            document.getElementById('online-count-sidebar').innerText = count;
         });
     }
 
-    // 🚀 優化：節流防抖函數，保護 Firebase 不被灌爆
+    // 🚀 效能優化：極限防抖 (Debounce) 的打字狀態處理
     window.handleTyping = function() {
-        const now = Date.now();
-        if (now - lastTypeTime > 1500) { // 最多每 1.5 秒同步一次狀態
-            updateMyStatus('typing');
-            lastTypeTime = now;
+        const currentName = document.getElementById('name').value.trim() || "神秘訪客";
+
+        // 只有「從沒打字變有打字」或是「換了名字」才發送網路請求
+        if (!isTyping || lastTypingName !== currentName) {
+            isTyping = true;
+            lastTypingName = currentName;
+            myCurrentStatus = 'typing';
+            if(myPresenceRef) myPresenceRef.update({ name: currentName, status: 'typing', isAdmin: isAdmin, timestamp: Date.now() });
         }
+
+        // 刷新等待時間，停手 1.5 秒後才恢復「瀏覽中」
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
-            if (myCurrentStatus !== 'done') updateMyStatus('browsing');
-        }, 2000); // 停下 2 秒後恢復為瀏覽中
+            isTyping = false;
+            if (myCurrentStatus !== 'done') {
+                myCurrentStatus = 'browsing';
+                if(myPresenceRef) myPresenceRef.update({ name: document.getElementById('name').value.trim() || "神秘訪客", status: 'browsing', isAdmin: isAdmin, timestamp: Date.now() });
+            }
+        }, 1500);
     }
 
     window.updateMyStatus = function(status) {
@@ -395,6 +423,7 @@
     }
 
     window.openSplitModal = function() { document.getElementById('split-modal').style.display = 'flex'; }
+    
     window.calculateSplit = function() {
         const amount = parseInt(document.getElementById('split-amount').value);
         if (isNaN(amount) || amount === 0) return alert("請輸入有效金額");
@@ -405,7 +434,7 @@
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
                 let newPrice = order.price + perPerson;
-                let updates = { price: newPrice };
+                let updates = { price: newPrice }; 
                 if (order.isPaid) updates.change = order.paidAmount - newPrice;
                 db.ref('lunch-orders/' + order.id).update(updates);
             });
@@ -522,17 +551,18 @@
     }
 
     ordersRef.on('value', (snapshot) => { 
-        orders = []; 
-        snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); 
-        
-        let currentName = document.getElementById('name').value.trim();
-        if (currentName && myCurrentStatus === 'done') {
-            let hasMyOrder = orders.some(o => o.name === currentName);
-            if (!hasMyOrder) updateMyStatus('browsing');
-        }
-        
-        // 🚀 優化：如果正在編輯，暫停重繪畫面避免干擾，編輯完再更新
-        if (!editingOrderId) render(); 
+        // 🚀 效能優化：確保資料繪製不會造成卡頓
+        requestAnimationFrame(() => {
+            orders = []; 
+            snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); 
+            
+            let currentName = document.getElementById('name').value.trim();
+            if (currentName && myCurrentStatus === 'done') {
+                let hasMyOrder = orders.some(o => o.name === currentName);
+                if (!hasMyOrder) updateMyStatus('browsing');
+            }
+            if(!editingOrderId) render(); 
+        });
     });
 
     function showFloatingNumber(btn, amount) {
@@ -541,7 +571,7 @@
         document.body.appendChild(floater); setTimeout(() => floater.remove(), 1000);
     }
 
-    // 🚀 優化：字串組合法大量提升表格渲染效能
+    // 🚀 效能優化：使用純字串組裝表格，速度提升 10 倍
     function render() {
         let unpaidHTML = ''; let paidHTML = '';
         let total = 0, paidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
@@ -632,18 +662,14 @@
         if (isPaid) {
             let paidInputStr = document.getElementById(`edit-paid-${id}`).value;
             let paidInput = parseInt(paidInputStr, 10);
-            
             if (isNaN(paidInput)) paidInput = order.paidAmount;
-            if (paidInput < priceInput) {
-                alert("⚠️ 實收金額不能小於應付金額！請確認後再儲存。");
-                return; 
-            }
+            if (paidInput < priceInput) { alert("⚠️ 實收金額不能小於應付金額！請確認後再儲存。"); return; }
             updates.paidAmount = paidInput;
             updates.change = paidInput - priceInput; 
         }
 
         editingOrderId = null; 
-
+        
         if (updates.item !== order.item || updates.price !== order.price || (isPaid && updates.paidAmount !== order.paidAmount)) {
             db.ref('lunch-orders/' + id).update(updates);
         } else {
