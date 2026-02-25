@@ -3,14 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>午餐</title>
+    <title>🍱午餐🍱</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; }
+        
+        /* 標題與按鈕區 */
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 20px; }
+        h1 { color: #2c3e50; margin: 0; }
+        .btn-export { background: #8e44ad; color: white; padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-export:hover { background: #732d91; }
         h2 { color: #34495e; margin-top: 30px; border-left: 5px solid #3498db; padding-left: 10px; }
+        
+        /* 統計區塊 */
         .stats { display: flex; gap: 15px; margin-bottom: 25px; background: #f8f9fa; padding: 20px; border-radius: 8px; }
         .stat-box { flex: 1; text-align: center; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .stat-title { font-size: 0.9em; color: #7f8c8d; margin-bottom: 5px;}
@@ -18,10 +27,12 @@
         .total .stat-value { color: #2980b9; }
         .paid .stat-value { color: #27ae60; }
         .unpaid .stat-value { color: #e74c3c; }
+        
+        /* 表單與表格區塊 */
         form { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
         input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; min-width: 120px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-submit { background: #3498db; color: white; min-width: 100px; }
+        button { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-submit { background: #3498db; color: white; min-width: 100px; padding: 12px 20px; }
         .btn-submit:hover { background: #2980b9; }
         table { width: 100%; border-collapse: collapse; background: white; }
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
@@ -32,12 +43,30 @@
         .btn-del { background: #e74c3c; color: white; margin-left: 5px;}
         .btn-del:hover { background: #c0392b; }
         .empty-msg { text-align: center; color: #95a5a6; padding: 20px; font-style: italic; }
+
+        /* 漂浮數字動畫 */
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(1.2); }
+        }
+        .floating-num {
+            position: absolute;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 20px;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🍱午餐🍱</h1>
+    <div class="header-area">
+        <h1>🍱午餐🍱</h1>
+        <button onclick="exportToExcel()" class="btn-export">📊 匯出 Excel</button>
+    </div>
 
     <div class="stats">
         <div class="stat-box total">
@@ -45,7 +74,7 @@
             <div class="stat-value">$<span id="total-price">0</span></div>
         </div>
         <div class="stat-box paid">
-            <div class="stat-title">已收金額 (對應應收)</div>
+            <div class="stat-title">已收金額</div>
             <div class="stat-value">$<span id="total-paid">0</span></div>
         </div>
         <div class="stat-box unpaid">
@@ -83,14 +112,14 @@
     // ⬇️ 請將這裡替換成你在 Firebase 拿到的設定碼 ⬇️
     // ==========================================
     const firebaseConfig = {
-  apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
-  authDomain: "lunch-f0895.firebaseapp.com",
-  databaseURL: "https://lunch-f0895-default-rtdb.firebaseio.com",
-  projectId: "lunch-f0895",
-  storageBucket: "lunch-f0895.firebasestorage.app",
-  messagingSenderId: "942714581747",
-  appId: "1:942714581747:web:c9b888b08a740842fb7d86"
-};
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      databaseURL: "YOUR_DATABASE_URL",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
     // ==========================================
 
     // 初始化 Firebase
@@ -98,108 +127,24 @@
     const db = firebase.database();
     const ordersRef = db.ref('lunch-orders');
 
+    // 載入音效 (Google 提供之免費版權音效)
+    const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
+
     let orders = [];
 
-    // 監聽 Firebase 資料庫變化 (這就是即時同步的魔法)
+    // 網頁載入時，檢查是否有記憶的姓名
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedName = localStorage.getItem('myLunchName');
+        if (savedName) {
+            document.getElementById('name').value = savedName;
+            document.getElementById('item').focus(); 
+        }
+    });
+
+    // 監聽 Firebase 資料庫變化
     ordersRef.on('value', (snapshot) => {
         orders = [];
         snapshot.forEach((childSnapshot) => {
             orders.push({
                 id: childSnapshot.key,
                 ...childSnapshot.val()
-            });
-        });
-        render();
-    });
-
-    // 負責將資料渲染到畫面上的主函式
-    function render() {
-        const unpaidTbody = document.querySelector('#unpaid-table tbody');
-        const paidTbody = document.querySelector('#paid-table tbody');
-        
-        unpaidTbody.innerHTML = '';
-        paidTbody.innerHTML = '';
-
-        let total = 0, paidTotal = 0, unpaidCount = 0, paidCount = 0;
-
-        orders.forEach(order => {
-            total += order.price;
-            
-            if (order.isPaid) {
-                paidTotal += order.price; 
-                paidCount++;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td><td>$${order.paidAmount}</td>
-                    <td style="color:#e67e22; font-weight:bold;">$${order.change}</td>
-                    <td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>
-                `;
-                paidTbody.appendChild(tr);
-            } else {
-                unpaidCount++;
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td>
-                    <td><input type="number" class="pay-input" id="pay-${order.id}" min="${order.price}" placeholder="給多少錢?"></td>
-                    <td>
-                        <button class="btn-pay" onclick="processPayment('${order.id}')">結帳</button>
-                        <button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>
-                    </td>
-                `;
-                unpaidTbody.appendChild(tr);
-            }
-        });
-
-        if(unpaidCount === 0) unpaidTbody.innerHTML = `<tr><td colspan="5" class="empty-msg">目前沒有未付款的訂單</td></tr>`;
-        if(paidCount === 0) paidTbody.innerHTML = `<tr><td colspan="6" class="empty-msg">目前沒有已付款的訂單</td></tr>`;
-
-        document.getElementById('total-price').innerText = total;
-        document.getElementById('total-paid').innerText = paidTotal;
-        document.getElementById('total-unpaid').innerText = total - paidTotal;
-    }
-
-    // 新增訂單寫入 Firebase
-    document.getElementById('order-form').addEventListener('submit', function(e) {
-        e.preventDefault();
-        ordersRef.push({
-            name: document.getElementById('name').value,
-            item: document.getElementById('item').value,
-            price: parseInt(document.getElementById('price').value),
-            isPaid: false,
-            paidAmount: 0,
-            change: 0
-        });
-        this.reset();
-        document.getElementById('name').focus();
-    });
-
-    // 結帳邏輯更新到 Firebase
-    window.processPayment = function(id) {
-        const order = orders.find(o => o.id === id);
-        let paidAmount = parseInt(document.getElementById('pay-' + id).value);
-
-        if (isNaN(paidAmount)) paidAmount = order.price;
-        if (paidAmount < order.price) {
-            alert('實付金額不能小於應付金額喔！');
-            return;
-        }
-
-        db.ref('lunch-orders/' + id).update({
-            isPaid: true,
-            paidAmount: paidAmount,
-            change: paidAmount - order.price
-        });
-    }
-
-    // 刪除訂單從 Firebase 移除
-    window.deleteOrder = function(id) {
-        if(confirm('確定要刪除這筆訂單嗎？')) {
-            db.ref('lunch-orders/' + id).remove();
-        }
-    }
-</script>
-
-</body>
-</html>
-
-
