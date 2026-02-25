@@ -30,6 +30,7 @@
             background-size: cover; background-position: center; background-attachment: fixed;
         }
 
+        /* 全域毛玻璃遮罩 */
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(248, 250, 252, 0.75); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: -1;
@@ -38,14 +39,16 @@
         .layout-wrapper { max-width: 1200px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
         .main-content { flex: 1; width: 100%; transition: 0.3s; }
         
-        /* 右側欄 */
+        /* 右側欄樣式 */
         .sidebar { 
             width: 280px; background: var(--surface); border-radius: 20px; 
             box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 20px; 
             position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto;
             transition: transform 0.3s ease; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         }
+        
         .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
+
         @media (max-width: 900px) {
             .sidebar { position: fixed; top: 0; right: 0; height: 100vh; z-index: 1500; transform: translateX(110%); width: 80%; max-width: 300px; border-radius: 20px 0 0 20px;}
             .sidebar.active { transform: translateX(0); }
@@ -61,11 +64,15 @@
         .user-info { display: flex; flex-direction: column; width: 100%; overflow: hidden;}
         .user-name { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px;}
         .user-status { font-size: 0.8em; color: var(--gray); display: flex; align-items: center; gap: 4px;}
+        
         .status-dot { width: 6px; height: 6px; border-radius: 50%; }
         .status-browsing { color: var(--gray); } .dot-browsing { background: var(--gray); }
         .status-typing { color: var(--warning); font-weight: bold; animation: pulseText 1.5s infinite;} .dot-typing { background: var(--warning); animation: blink 1s infinite; }
         .status-done { color: var(--success); font-weight: bold; } .dot-done { background: var(--success); }
-        @keyframes blink { 50% { opacity: 0.4; } } @keyframes pulseText { 50% { opacity: 0.7; } } @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        @keyframes blink { 50% { opacity: 0.4; } }
+        @keyframes pulseText { 50% { opacity: 0.7; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
         /* UI 元件 */
         .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -321,7 +328,7 @@
     
     let myPresenceRef = null;
     let myCurrentStatus = 'browsing'; 
-    let editingOrderId = null; // ✏️ 追蹤目前正在編輯的列 ID
+    let editingOrderId = null; // ✏️ 追蹤行內編輯狀態
 
     document.addEventListener('DOMContentLoaded', () => {
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
@@ -377,26 +384,19 @@
     }
 
     window.openSplitModal = function() { document.getElementById('split-modal').style.display = 'flex'; }
-    
-    // 💰 分攤運費：修正自動校正找零邏輯
     window.calculateSplit = function() {
         const amount = parseInt(document.getElementById('split-amount').value);
         if (isNaN(amount) || amount === 0) return alert("請輸入有效金額");
         if (orders.length === 0) return alert("沒有訂單");
-        
         const perPerson = Math.ceil(amount / orders.length);
         const typeText = amount > 0 ? `運+${perPerson}` : `折${perPerson}`;
-        
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
                 let newPrice = order.price + perPerson;
                 let updates = { price: newPrice, item: `${order.item} (${typeText})` };
-                
-                // 🔥 如果訂單已經結帳，自動重新計算找零！
                 if (order.isPaid) {
                     updates.change = order.paidAmount - newPrice;
                 }
-                
                 db.ref('lunch-orders/' + order.id).update(updates);
             });
             document.getElementById('split-modal').style.display = 'none';
@@ -544,7 +544,7 @@
             if (order.isPaid) {
                 visiblePaidCount++; const tr = document.createElement('tr');
                 
-                // ✏️ 已付款區：行內編輯模式
+                // ✏️ 已付款區：行內編輯
                 if (isEditing && isAdmin) {
                     tr.innerHTML = `
                         <td><strong>${order.name}</strong></td>
@@ -565,9 +565,9 @@
             } else {
                 visibleUnpaidCount++; const tr = document.createElement('tr');
                 
-                // ✏️ 未付款區：行內編輯模式
+                // ✏️ 未付款區：行內編輯
                 if (isEditing && (!globalLocked || isAdmin)) {
-                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳前不可改實收</span></td>` : `<td style="display:none;"></td>`;
+                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">請使用結帳按鈕</span></td>` : `<td style="display:none;"></td>`;
                     tr.innerHTML = `
                         <td><strong>${order.name}</strong></td>
                         <td><input type="text" id="edit-item-${order.id}" value="${order.item}" class="inline-edit-input"></td>
@@ -612,7 +612,7 @@
         render();
     }
 
-    // ✏️ 儲存行內編輯的結果 (不須跳出視窗)
+    // ✏️ 儲存行內編輯結果（🐛 關鍵修正：先解除編輯狀態，再送出更新）
     window.saveOrderInline = function(id, isPaid) {
         const itemInput = document.getElementById(`edit-item-${id}`).value.trim();
         const priceInput = parseInt(document.getElementById(`edit-price-${id}`).value, 10);
@@ -622,7 +622,6 @@
 
         let updates = { item: itemInput, price: priceInput };
 
-        // 如果是已付款訂單，額外讀取並檢查「實收金額」
         if (isPaid) {
             const paidInput = parseInt(document.getElementById(`edit-paid-${id}`).value, 10);
             if (isNaN(paidInput)) return alert("實收金額無效！");
@@ -632,9 +631,9 @@
             updates.change = paidInput - priceInput; // 自動計算找零
         }
 
-        db.ref('lunch-orders/' + id).update(updates).then(() => {
-            editingOrderId = null; // 儲存成功後關閉編輯模式
-        });
+        // 🔥 解決 Bug：先將編輯狀態歸零，避免 Firebase 瞬間更新觸發舊狀態渲染
+        editingOrderId = null; 
+        db.ref('lunch-orders/' + id).update(updates);
     }
 
     window.cancelEditInline = function() {
@@ -644,16 +643,12 @@
 
     window.processPayment = function(id, btnElement) {
         const order = orders.find(o => o.id === id); if (!order) return;
-        
-        // 絕對鎖定：從點擊的按鈕往上找 <tr>，再往下找輸入框
         const inputEl = btnElement.closest('tr').querySelector('.pay-input');
         const rawValue = inputEl.value.trim();
-        
         let paidAmount = rawValue === "" ? order.price : parseInt(rawValue, 10);
+        
         if (isNaN(paidAmount) || paidAmount < order.price) {
-            alert('❌ 實付金額不能小於應付金額喔！');
-            inputEl.focus();
-            return; 
+            alert('❌ 實付金額不能小於應付金額喔！'); inputEl.focus(); return; 
         }
 
         chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
