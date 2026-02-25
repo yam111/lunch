@@ -30,23 +30,6 @@
             --gray-soft: rgba(142, 142, 147, 0.1);
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --primary: #0A84FF; --success: #30D158; 
-                --danger: #FF453A; --warning: #FF9F0A; --purple: #BF5AF2;
-                --bg: #000000; --surface: #1C1C1E;
-                --text-main: #F5F5F7; --text-muted: #8E8E93;
-                --border: #38383A; --input-bg: #2C2C2E;
-
-                --primary-soft: rgba(10, 132, 255, 0.15);
-                --success-soft: rgba(48, 209, 88, 0.15);
-                --danger-soft: rgba(255, 69, 58, 0.15);
-                --warning-soft: rgba(255, 159, 10, 0.15);
-                --purple-soft: rgba(191, 90, 242, 0.15);
-                --gray-soft: rgba(142, 142, 147, 0.15);
-            }
-        }
-
         body { 
             font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; 
             margin: 0; padding: 20px 10px; 
@@ -55,7 +38,6 @@
             background-image: url('https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2500&auto=format&fit=crop');
             background-size: cover; background-position: center; background-attachment: fixed;
             -webkit-font-smoothing: antialiased;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         body::before {
@@ -144,13 +126,9 @@
         .btn-action-icon { padding: 10px; min-width: 45px; flex: none; display: flex; justify-content: center; align-items: center; font-size: 1.2em; border-radius: 12px; cursor: pointer; border: none; transition: 0.2s;}
         .btn-action-icon:active { transform: scale(0.95); }
 
-        .quick-notes-area { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 15px;}
-        .quick-note-tag { background: var(--gray-soft); color: var(--text-main); padding: 6px 12px; border-radius: 8px; font-size: 0.85em; font-weight: 500;}
-        .quick-note-tag:active { transform: scale(0.95); background: var(--primary); color: white;}
-        
         .quick-tags-area { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px;}
-        .quick-tag { background: var(--primary-soft); color: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: 0.85em; box-shadow: none;}
-        .quick-tag-label { font-size: 0.85em; color: var(--text-muted); font-weight: 600;}
+        .quick-tag { background: #F1F5F9; color: var(--dark); border: 1px solid #E2E8F0; padding: 6px 14px; border-radius: 20px; font-size: 0.95em; box-shadow: none;}
+        .quick-tag:hover { background: #E2E8F0; transform: scale(1.05); }
 
         h2 { color: var(--dark); margin-top: 0; font-size: 1.4em; font-weight: 900; display: flex; align-items: center; gap: 8px;}
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; min-width: 650px;}
@@ -194,6 +172,8 @@
         .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
+
+        #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
     </style>
 </head>
 <body>
@@ -203,6 +183,10 @@
 
 <div class="layout-wrapper">
     <div class="main-content">
+        <div id="countdown-banner">
+            ⏳ 距離結單還剩：<span id="timer-display">00:00</span>
+        </div>
+
         <div class="flex header-area">
             <h1>
                 🍱 今天吃甚麼 🍱
@@ -210,6 +194,7 @@
             </h1>
             <div class="flex">
                 <button id="btn-admin" onclick="toggleAdmin()" class="btn-admin">一般身分</button>
+                <button onclick="setCountdown()" class="btn-timer admin-only">⏱️ 設定倒數</button>
                 <button onclick="triggerBroadcast()" class="btn-broadcast admin-only">🔔 通知取餐</button>
                 <button id="btn-lock" onclick="toggleLock()" class="btn-lock admin-only">🛑 停止收單</button>
                 <button onclick="openSplitModal()" class="btn-split admin-only">💰 分攤運費</button>
@@ -238,15 +223,6 @@
         </div>
 
         <div class="card">
-            <div class="quick-notes-area">
-                <span class="quick-tag-label" style="margin-right: 5px;">客製備註：</span>
-                <button type="button" class="quick-note-tag" onclick="appendNote('飯少')">🍚 飯少</button>
-                <button type="button" class="quick-note-tag" onclick="appendNote('加飯')">🍚 加飯</button>
-                <button type="button" class="quick-note-tag" onclick="appendNote('大辣')">🌶️ 大辣</button>
-                <button type="button" class="quick-note-tag" onclick="appendNote('不蔥')">🚫 不蔥</button>
-                <button type="button" class="quick-note-tag" onclick="appendNote('素食')">🥦 素食</button>
-            </div>
-
             <form id="order-form">
                 <input type="text" id="name" placeholder="您的姓名" required oninput="handleTyping()">
                 
@@ -290,7 +266,7 @@
 
     <div class="sidebar" id="sidebar">
         <div class="online-header">
-            👥 目前線上人員 (<span id="online-count-sidebar">0</span>)
+            👥 目前線上 (<span id="online-count-sidebar">0</span>)
         </div>
         <div id="online-users-list"></div>
     </div>
@@ -363,6 +339,7 @@
 
     const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
     const bellSound = new Audio('https://actions.google.com/sounds/v1/alarms/dinner_bell.ogg');
+    const lockSound = new Audio('https://actions.google.com/sounds/v1/doors/locking_door.ogg'); 
 
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
@@ -373,6 +350,8 @@
     let typingTimeout;
     let isTyping = false;
     let lastTypingName = "";
+    let countdownInterval;
+    let globalLockTime = 0;
 
     document.addEventListener('DOMContentLoaded', () => {
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
@@ -399,18 +378,14 @@
         row.querySelector('.item-input').focus();
     }
 
-    // 🏷️ 備註加入最後一個輸入框
-    window.appendNote = function(note) {
-        const inputs = document.querySelectorAll('.item-input');
-        if(inputs.length === 0) return;
-        const lastInput = inputs[inputs.length - 1];
-        if (lastInput.value.trim() !== '') {
-            lastInput.value += ` (${note})`;
-        } else {
-            lastInput.value = `(${note})`;
+    window.setCountdown = function() {
+        const mins = prompt("⏳ 請輸入「幾分鐘後」自動鎖單？\n(輸入 0 或取消可解除倒數)", "15");
+        if (mins !== null) {
+            const parsedMins = parseInt(mins, 10);
+            if (parsedMins > 0) {
+                settingsRef.update({ lockTime: Date.now() + parsedMins * 60000, isLocked: false });
+            } else { settingsRef.update({ lockTime: null }); }
         }
-        handleTyping();
-        lastInput.focus();
     }
 
     function initPresence() {
@@ -527,10 +502,11 @@
         
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
-                let updates = { price: order.price + perPerson };
+                let newPrice = order.price + perPerson;
+                let updates = { price: newPrice };
                 if (order.isPaid) {
-                    updates.change = order.paidAmount - updates.price;
-                    if (updates.change > 0 && order.paidAmount !== updates.price) updates.changeGiven = false; 
+                    updates.change = order.paidAmount - newPrice;
+                    if (updates.change > 0 && order.paidAmount !== newPrice) updates.changeGiven = false; 
                 }
                 db.ref('lunch-orders/' + order.id).update(updates);
             });
@@ -541,6 +517,7 @@
     settingsRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
         globalLocked = data.isLocked || false;
+        globalLockTime = data.lockTime || 0; 
         bText = data.bulletinText || "📢 歡迎點餐！";
         bLink = data.bulletinLink || ""; uploadedImageBase64 = data.bulletinImage || "";
 
@@ -565,8 +542,36 @@
             submitBtn.innerText = "✅ 送出訂單"; submitBtn.disabled = false; inputs.forEach(input => input.disabled = false);
             lockBtn.innerText = "🛑 停止收單"; lockBtn.style.background = "var(--danger)";
         }
+        
+        updateCountdownUI(); 
         if(!editingOrderId) render(); 
     });
+
+    function updateCountdownUI() {
+        clearInterval(countdownInterval);
+        const banner = document.getElementById('countdown-banner');
+        
+        if (globalLockTime > Date.now() && !globalLocked) {
+            banner.style.display = 'block';
+            countdownInterval = setInterval(() => {
+                const remaining = globalLockTime - Date.now();
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    banner.style.display = 'none';
+                    if (isAdmin) {
+                        settingsRef.update({ isLocked: true, lockTime: null });
+                        lockSound.currentTime = 0; lockSound.play().catch(e=>console.log(e));
+                    }
+                } else {
+                    const m = Math.floor(remaining / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+                    document.getElementById('timer-display').innerText = `${m}:${s}`;
+                }
+            }, 1000);
+        } else {
+            banner.style.display = 'none';
+        }
+    }
 
     function showBroadcast() { bellSound.currentTime = 0; bellSound.play().catch(e => console.log(e)); document.getElementById('broadcast-screen').style.display = 'flex'; }
     window.triggerBroadcast = function() { if(confirm("發送廣播通知全體？")) settingsRef.update({ broadcastTime: Date.now() }); }
@@ -579,7 +584,7 @@
             favs.forEach(f => {
                 let btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-tag'; btn.innerText = `${f.item} ($${f.price})`;
                 btn.onclick = () => { 
-                    // 常點功能：重置購物車並填入
+                    // 點擊常點時，還原為單一列並自動填入
                     document.getElementById('order-items-container').innerHTML = `
                         <div class="order-item-row">
                             <input type="text" class="item-input" placeholder="餐點品項 (如: 肉燥飯)" required oninput="handleTyping()" value="${f.item}">
@@ -642,9 +647,8 @@
         document.getElementById('bulletin-file-input').value = ""; document.getElementById('bulletin-modal').style.display = "flex";
     }
     window.saveBulletin = function() { settingsRef.update({ bulletinText: document.getElementById('bulletin-text-input').value, bulletinLink: document.getElementById('bulletin-link-input').value, bulletinImage: uploadedImageBase64 }).then(() => { document.getElementById('bulletin-modal').style.display = "none"; }); }
-    window.toggleLock = function() { if(confirm(globalLocked ? "開放點餐？" : "停止收單？")) settingsRef.update({ isLocked: !globalLocked }); }
+    window.toggleLock = function() { if(confirm(globalLocked ? "開放點餐？" : "停止收單？")) settingsRef.update({ isLocked: !globalLocked, lockTime: null }); }
 
-    // 🚀 自動拆解多品項訂單，精準統計總數量
     window.showSummary = function() {
         let counts = {}; let totalQty = 0;
         orders.forEach(o => { 
@@ -762,7 +766,6 @@
                 } else {
                     let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" placeholder="實付金額"></td>` : `<td style="display:none;"></td>`;
                     
-                    // 🚀 一般使用者在未鎖單時，也能看到刪除與修改按鈕
                     let payBtn = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this)">結帳</button>` : ``;
                     let delBtn = (!globalLocked || isAdmin) ? `<button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
                     let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrderInline('${order.id}')">修改</button>` : `<span style="color:var(--gray); font-size:0.9em; font-weight:bold;">🔒 已鎖定</span>`;
@@ -781,7 +784,6 @@
         document.getElementById('total-unpaid').innerText = unpaidTotal;
     }
 
-    // 🚀 送出訂單時自動將多個品項與價格合併
     document.getElementById('order-form').addEventListener('submit', function(e) {
         e.preventDefault(); if (globalLocked) { alert("⚠️ 已結單！"); return; }
         const inputName = document.getElementById('name').value.trim(); 
@@ -813,7 +815,6 @@
             updateMyStatus('done');
             
             ordersRef.push({ name: inputName, item: combinedItem, price: totalPrice, isPaid: false, paidAmount: 0, change: 0, changeGiven: false }).then(() => { 
-                // 送出後重置回一列
                 document.getElementById('order-items-container').innerHTML = `
                     <div class="order-item-row">
                         <input type="text" class="item-input" placeholder="餐點品項 (如: 肉燥飯)" required oninput="handleTyping()">
