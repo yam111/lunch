@@ -14,31 +14,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        /* 🍎 全域變數 (預設亮色模式) */
+        /* 🍎 全域變數 (效能優先，改回純色與平滑漸層) */
         :root {
             --primary: #4F46E5; --primary-hover: #4338CA;
             --success: #10B981; --danger: #EF4444; --warning: #F59E0B;
-            --dark: #1E293B; --gray: #8E8E93; --bg: #F2F2F7; 
-            --surface: rgba(255, 255, 255, 0.95);
+            --dark: #1E293B; --gray: #8E8E93; 
+            --surface: #FFFFFF; /* 恢復純白，捨棄透明度計算 */
             --border-color: rgba(0,0,0,0.05);
-            --input-bg: rgba(248, 250, 252, 0.8);
-            --glass-bg: rgba(248, 250, 252, 0.75);
+            --input-bg: #F8FAFC;
             --modal-bg: #FFFFFF;
         }
 
-        /* 🌙 蘋果原生深色模式自動切換 */
+        /* 🌙 蘋果原生深色模式 (無縫切換深色平滑漸層) */
         @media (prefers-color-scheme: dark) {
             :root {
                 --primary: #5E5CE6; --primary-hover: #4F46E5;
                 --success: #32D74B; --danger: #FF453A; --warning: #FF9F0A;
-                --dark: #FFFFFF; --gray: #EBEBF5; --bg: #000000; 
-                --surface: rgba(28, 28, 30, 0.85);
+                --dark: #FFFFFF; --gray: #EBEBF5; 
+                --surface: #1C1C1E; /* 純黑灰色，零效能負擔 */
                 --border-color: rgba(255,255,255,0.1);
-                --input-bg: rgba(44, 44, 46, 0.8);
-                --glass-bg: rgba(0, 0, 0, 0.8);
+                --input-bg: #2C2C2E;
                 --modal-bg: #1C1C1E;
             }
-            .bulletin { background: linear-gradient(135deg, rgba(58,48,0,0.95) 0%, rgba(40,30,0,0.95) 100%) !important; border-color: #5E4A00 !important; }
+            body { background: linear-gradient(135deg, #1c1c1e 0%, #000000 100%) !important; }
+            .bulletin { background: linear-gradient(135deg, #2A2400 0%, #1A1500 100%) !important; border-color: #5E4A00 !important; }
             .bulletin-content { color: #FFD60A !important; }
             .bulletin-content a { background: #5E4A00 !important; color: #FFD60A !important; }
             th { background-color: rgba(44, 44, 46, 0.7) !important; color: var(--gray) !important; }
@@ -55,16 +54,9 @@
             font-family: 'Noto Sans TC', -apple-system, sans-serif; 
             margin: 0; padding: 20px 10px; color: var(--dark); 
             min-height: 100vh; overflow-x: hidden;
-            background-image: url('https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2500&auto=format&fit=crop');
-            background-size: cover; background-position: center; background-attachment: fixed;
+            /* 🚀 恢復最順暢的漸層背景 */
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
             -webkit-font-smoothing: antialiased;
-        }
-
-        /* 全域毛玻璃遮罩 */
-        body::before {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); z-index: -1;
-            transform: translateZ(0); 
         }
         
         .layout-wrapper { max-width: 1250px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
@@ -72,12 +64,12 @@
         
         .sidebar { 
             width: 280px; background: var(--surface); border-radius: 20px; 
-            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2); padding: 20px; 
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 20px; 
             position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto;
-            transition: transform 0.3s ease; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            transition: transform 0.3s ease;
         }
         
-        .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
+        .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
 
         @media (max-width: 900px) {
             .sidebar { position: fixed; top: 0; right: 0; height: 100vh; z-index: 1500; transform: translateX(110%); width: 80%; max-width: 300px; border-radius: 20px 0 0 20px;}
@@ -104,14 +96,13 @@
         @keyframes blink { 50% { opacity: 0.4; } } @keyframes pulseText { 50% { opacity: 0.7; } } @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
         .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.15); margin-bottom: 25px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transform: translateZ(0);}
+        .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); margin-bottom: 25px; }
         h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.6em; display: flex; align-items: center; gap: 10px;}
         
         button { padding: 10px 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-family: inherit; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); color: var(--dark);}
-        button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px -2px rgba(0,0,0,0.2); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px -2px rgba(0,0,0,0.15); }
         .admin-only { display: none; }
         
-        /* 團主按鈕群配色 */
         .btn-admin { background: transparent; color: var(--primary); box-shadow: none; border: 1px solid var(--primary);}
         .btn-timer { background: var(--dark); color: white; }
         .btn-lock { background: var(--danger); color: white; } 
@@ -122,19 +113,20 @@
         .btn-broadcast { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; animation: pulse 2s infinite; font-size: 1.05em;}
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
         
-        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.15); padding: 25px; margin-bottom: 25px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transform: translateZ(0);}
+        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; }
         
         /* ⏱️ 倒數計時橫幅 */
         #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
 
-        .bulletin { background: linear-gradient(135deg, rgba(255,251,235,0.95) 0%, rgba(254,243,199,0.95) 100%); border-left: 6px solid var(--warning); position: relative; }
+        .bulletin { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-left: 6px solid var(--warning); position: relative; }
         .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
-        .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: block;}
+        .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block;}
         .bulletin-content a { background: #FDE68A; padding: 4px 10px; border-radius: 8px; color: #B45309; text-decoration: none; font-weight: 700; margin-top: 5px; display: inline-block;}
+        .bulletin-content a:hover { background: #FCD34D; }
         .btn-edit-small { position: absolute; top: 15px; right: 20px; background: transparent; color: var(--warning); box-shadow: none; border: 1px solid var(--warning);}
 
         .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
-        .stat-box { flex: 1; padding: 20px; border-radius: 20px; color: white; box-shadow: 0 10px 20px -3px rgba(0,0,0,0.3); position: relative; overflow: hidden; min-width: 150px;}
+        .stat-box { flex: 1; padding: 20px; border-radius: 20px; color: white; box-shadow: 0 10px 20px -3px rgba(0,0,0,0.15); position: relative; overflow: hidden; min-width: 150px;}
         .stat-box::after { content: ''; position: absolute; top: -50%; right: -20%; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; }
         .box-total { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
         .box-paid { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
@@ -148,9 +140,8 @@
         .btn-submit { background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; min-width: 140px; font-size: 1.1em; }
         .btn-submit:disabled { background: var(--gray); cursor: not-allowed; box-shadow: none; transform: none;}
         
-        /* 🏷️ 客製化備註與常點標籤 */
         .quick-notes-area { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px;}
-        .quick-note-tag { background: #FFF; color: var(--dark); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 8px; font-size: 0.9em; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.1s;}
+        .quick-note-tag { background: var(--input-bg); color: var(--dark); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 8px; font-size: 0.9em; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.1s;}
         .quick-note-tag:active { transform: scale(0.95); background: var(--primary); color: white;}
         
         .quick-tags-area { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -177,8 +168,7 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000;}
 
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 3000; justify-content: center; align-items: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: var(--modal-bg); border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; animation: scaleUp 0.2s ease-out; border: 1px solid var(--border-color);}
         .modal-header { padding: 20px 25px; font-weight: 900; font-size: 1.2em; border-bottom: 1px solid var(--border-color); color: var(--dark); z-index: 10; display: flex; align-items: center; gap: 10px;}
         .modal-body { padding: 20px 25px; overflow-y: auto; flex: 1; }
@@ -194,11 +184,11 @@
         .editor-group textarea { width: 100%; height: 100px; padding: 15px; border: 2px solid var(--border-color); border-radius: 12px; resize: vertical; box-sizing: border-box; font-family: inherit; font-size:1em; outline:none; background: var(--input-bg); color: var(--dark);}
         .editor-group input[type="url"], .editor-group input[type="file"], .editor-group input[type="number"] { width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: 12px; box-sizing: border-box; background: var(--input-bg); outline:none; color: var(--dark);}
         
-        .preview-container { display: none; position: relative; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed var(--gray); padding: 5px; text-align: center; background: rgba(0,0,0,0.1);}
+        .preview-container { display: none; position: relative; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed var(--gray); padding: 5px; text-align: center; background: rgba(0,0,0,0.05);}
         .preview-container img { max-width: 100%; max-height: 200px; object-fit: contain; display: inline-block; border-radius: 8px;}
         .btn-remove-img { position: absolute; top: 10px; right: 10px; background: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 36px; height: 36px; font-weight: 900; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer;}
         
-        .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
+        .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
     </style>
@@ -216,7 +206,7 @@
 
         <div class="flex header-area">
             <h1>
-                🍱 午餐訂購
+                🍱 今天吃甚麼 🍱
                 <span id="admin-badge" style="font-size:0.5em; background:var(--danger); color:white; padding:4px 10px; border-radius:12px; display:none; vertical-align: middle;">👑 團主</span>
             </h1>
             <div class="flex">
@@ -285,7 +275,7 @@
             <div style="overflow-x:auto;">
                 <table id="paid-table">
                     <thead>
-                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零狀態</th><th class="admin-only-th">操作</th></tr>
+                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th" style="min-width: 110px;">帳款狀態</th><th class="admin-only-th">操作</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -367,7 +357,6 @@
 
     const chaChingSound = new Audio('https://actions.google.com/sounds/v1/foley/cash_register.ogg');
     const bellSound = new Audio('https://actions.google.com/sounds/v1/alarms/dinner_bell.ogg');
-    // ⏱️ 新增鎖定音效
     const lockSound = new Audio('https://actions.google.com/sounds/v1/doors/locking_door.ogg'); 
 
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
@@ -379,8 +368,6 @@
     let typingTimeout;
     let isTyping = false;
     let lastTypingName = "";
-    
-    // ⏱️ 倒數計時變數
     let countdownInterval;
     let globalLockTime = 0;
 
@@ -395,19 +382,13 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
-    // 🏷️ 客製備註加入功能
     window.appendNote = function(note) {
         const itemInput = document.getElementById('item');
-        if (itemInput.value.trim() !== '') {
-            itemInput.value += ` (${note})`;
-        } else {
-            itemInput.value = `(${note})`;
-        }
-        handleTyping();
-        itemInput.focus();
+        if (itemInput.value.trim() !== '') { itemInput.value += ` (${note})`; } 
+        else { itemInput.value = `(${note})`; }
+        handleTyping(); itemInput.focus();
     }
 
-    // ⏱️ 設定倒數計時器
     window.setCountdown = function() {
         const mins = prompt("⏳ 請輸入「幾分鐘後」自動鎖單？ (例如: 15)\n(輸入 0 或取消可解除倒數)", "15");
         if (mins !== null) {
@@ -508,6 +489,7 @@
         if (isNaN(amount) || amount === 0) return alert("請輸入有效金額");
         if (orders.length === 0) return alert("沒有訂單");
         const perPerson = Math.ceil(amount / orders.length);
+        
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
                 let newPrice = order.price + perPerson;
@@ -525,7 +507,7 @@
     settingsRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
         globalLocked = data.isLocked || false;
-        globalLockTime = data.lockTime || 0; // ⏱️ 取得倒數時間
+        globalLockTime = data.lockTime || 0; 
         bText = data.bulletinText || "📢 歡迎點餐！";
         bLink = data.bulletinLink || ""; uploadedImageBase64 = data.bulletinImage || "";
 
@@ -546,33 +528,26 @@
         if (globalLocked) {
             submitBtn.innerText = "🚫 今日已結單"; submitBtn.disabled = true; inputs.forEach(input => input.disabled = true);
             lockBtn.innerText = "🟢 開放收單"; lockBtn.style.background = "var(--success)";
-            document.getElementById('countdown-banner').style.display = 'none'; // 結單後隱藏倒數
+            document.getElementById('countdown-banner').style.display = 'none'; 
         } else {
             submitBtn.innerText = "✅ 送出訂單"; submitBtn.disabled = false; inputs.forEach(input => input.disabled = false);
             lockBtn.innerText = "🛑 停止收單"; lockBtn.style.background = "var(--danger)";
         }
         
-        updateCountdownUI(); // ⏱️ 更新倒數 UI
+        updateCountdownUI(); 
         if(!editingOrderId) render(); 
     });
 
-    // ⏱️ 倒數計時器核心邏輯
     function updateCountdownUI() {
         clearInterval(countdownInterval);
         const banner = document.getElementById('countdown-banner');
-        
         if (globalLockTime > Date.now() && !globalLocked) {
             banner.style.display = 'block';
             countdownInterval = setInterval(() => {
                 const remaining = globalLockTime - Date.now();
                 if (remaining <= 0) {
-                    clearInterval(countdownInterval);
-                    banner.style.display = 'none';
-                    // 時間到！自動鎖單 (防呆：只讓團主發出鎖單指令，避免多人重複寫入)
-                    if (isAdmin) {
-                        settingsRef.update({ isLocked: true, lockTime: null });
-                        lockSound.currentTime = 0; lockSound.play().catch(e=>console.log(e));
-                    }
+                    clearInterval(countdownInterval); banner.style.display = 'none';
+                    if (isAdmin) { settingsRef.update({ isLocked: true, lockTime: null }); lockSound.currentTime = 0; lockSound.play().catch(e=>console.log(e)); }
                 } else {
                     const m = Math.floor(remaining / 60000).toString().padStart(2, '0');
                     const s = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
@@ -591,20 +566,16 @@
         let favs = JSON.parse(localStorage.getItem('myFavOrders') || '[]');
         let container = document.getElementById('quick-tags-container'); container.innerHTML = '';
         if(favs.length > 0) {
-            let label = document.createElement('span'); label.className = 'quick-tag-label'; label.innerText = '近期點過：'; container.appendChild(label);
+            let label = document.createElement('span'); label.className = 'quick-tag-label'; label.innerText = '⚡️ 快速點餐：'; container.appendChild(label);
             favs.forEach(f => {
                 let btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-tag'; btn.innerText = `${f.item} ($${f.price})`;
-                btn.onclick = () => { 
-                    document.getElementById('item').value = f.item; document.getElementById('price').value = f.price; 
-                    handleTyping(); 
-                };
+                btn.onclick = () => { document.getElementById('item').value = f.item; document.getElementById('price').value = f.price; handleTyping(); };
                 container.appendChild(btn);
             });
         }
     }
     function saveToQuickTags(item, price) {
         let favs = JSON.parse(localStorage.getItem('myFavOrders') || '[]');
-        // 去除客製化備註再存入常點清單，保持清單乾淨
         let cleanItem = item.replace(/\s*\(.*\)/g, '').trim();
         favs = favs.filter(f => f.item !== cleanItem); favs.unshift({ item: cleanItem, price: price });
         if(favs.length > 4) favs.pop(); localStorage.setItem('myFavOrders', JSON.stringify(favs)); renderQuickTags();
@@ -612,13 +583,8 @@
 
     window.toggleAdmin = function() {
         if (isAdmin) { 
-            if(confirm("確定要關閉團主模式嗎？")) { 
-                isAdmin = false; localStorage.removeItem('lunchAdminToken'); 
-                updateMyStatus(myCurrentStatus); updateAdminUI(); render(); 
-            } 
-        } else { 
-            alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。");
-        }
+            if(confirm("確定要關閉團主模式嗎？")) { isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateMyStatus(myCurrentStatus); updateAdminUI(); render(); } 
+        } else { alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。"); }
     }
 
     function updateAdminUI() {
@@ -653,7 +619,6 @@
         document.getElementById('bulletin-file-input').value = ""; document.getElementById('bulletin-modal').style.display = "flex";
     }
     window.saveBulletin = function() { settingsRef.update({ bulletinText: document.getElementById('bulletin-text-input').value, bulletinLink: document.getElementById('bulletin-link-input').value, bulletinImage: uploadedImageBase64 }).then(() => { document.getElementById('bulletin-modal').style.display = "none"; }); }
-    
     window.toggleLock = function() { 
         if(confirm(globalLocked ? "確定要開放點餐嗎？" : "確定要停止收單嗎？\n(若有設定倒數計時將會被清除)")) {
             settingsRef.update({ isLocked: !globalLocked, lockTime: null }); 
@@ -672,7 +637,6 @@
         requestAnimationFrame(() => {
             orders = []; 
             snapshot.forEach((childSnapshot) => { orders.push({ id: childSnapshot.key, ...childSnapshot.val() }); }); 
-            
             let currentName = document.getElementById('name').value.trim();
             if (currentName && myCurrentStatus === 'done') {
                 let hasMyOrder = orders.some(o => o.name === currentName);
@@ -716,14 +680,14 @@
 
                 if (diff > 0) {
                     if (order.changeGiven) {
-                        accountStatusUI = `<span style="color:var(--gray); font-size:0.85em; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:12px; font-weight:bold; border: 1px solid var(--border-color);">✅ 已找零</span>`;
+                        accountStatusUI = `<span style="color:var(--gray); font-size:0.85em; background:rgba(142,142,147,0.1); padding:4px 8px; border-radius:12px; font-weight:bold; border: 1px solid var(--border-color);">✅ 已找零</span>`;
                     } else {
                         accountStatusUI = `<button class="btn-pay" style="background:var(--warning); color:white; padding:6px 12px; font-size:0.85em; border-radius:8px; box-shadow:none;" onclick="markChangeGiven('${order.id}')">找零 $${diff}</button>`;
                     }
                 } else if (diff < 0) {
                     accountStatusUI = `<button class="btn-pay" style="background:var(--danger); color:white; padding:6px 12px; font-size:0.85em; border-radius:8px; box-shadow:none; animation: pulseText 1.5s infinite;" onclick="settleBalance('${order.id}', ${order.price})">補收 $${Math.abs(diff)}</button>`;
                 } else {
-                    accountStatusUI = `<span style="color:var(--gray); font-size:0.85em; background:rgba(255,255,255,0.1); padding:4px 8px; border-radius:12px; font-weight:bold; border: 1px solid var(--border-color);">✅ 剛好</span>`;
+                    accountStatusUI = `<span style="color:var(--gray); font-size:0.85em; background:rgba(142,142,147,0.1); padding:4px 8px; border-radius:12px; font-weight:bold; border: 1px solid var(--border-color);">✅ 剛好</span>`;
                 }
 
                 if (isEditing && isAdmin) {
@@ -823,6 +787,7 @@
     }
 
     window.deleteOrder = function(id) { if(confirm('⚠️ 確定刪除嗎？')) db.ref('lunch-orders/' + id).remove(); }
+    
     window.clearAllOrders = function() { 
         if(confirm('🚨 確定清空今天「所有」訂單與線上名單嗎？')) {
             db.ref('lunch-orders').remove(); db.ref('online-presence').remove(); 
