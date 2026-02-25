@@ -158,7 +158,7 @@
         .preview-container img { max-width: 100%; max-height: 200px; object-fit: contain; display: inline-block; border-radius: 8px;}
         .btn-remove-img { position: absolute; top: 10px; right: 10px; background: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 36px; height: 36px; font-weight: 900; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer;}
         
-        .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s forwards;}
+        .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
     </style>
@@ -243,8 +243,7 @@
         <div class="online-header">
             👥 目前線上人員 (<span id="online-count-sidebar">0</span>)
         </div>
-        <div id="online-users-list">
-            </div>
+        <div id="online-users-list"></div>
     </div>
 </div>
 
@@ -339,12 +338,15 @@
 
     // 🚀 核心優化：絕對精準不殘留的線上名單追蹤
     function initPresence() {
+        let deviceId = localStorage.getItem('lunchDeviceId');
+        if (!deviceId) { deviceId = 'device_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('lunchDeviceId', deviceId); }
+        
         const connectedRef = db.ref('.info/connected');
         
         connectedRef.on('value', (snap) => {
             if (snap.val() === true) {
                 // 每當重新連線時，創建一個全新的專屬節點，斷線時自動銷毀
-                myPresenceRef = onlineRef.push();
+                myPresenceRef = onlineRef.child(deviceId);
                 myPresenceRef.onDisconnect().remove();
                 
                 let currentName = document.getElementById('name').value.trim() || "神秘訪客";
@@ -357,15 +359,28 @@
         window.addEventListener('beforeunload', () => { if (myPresenceRef) myPresenceRef.remove(); });
         window.addEventListener('pagehide', () => { if (myPresenceRef) myPresenceRef.remove(); });
 
+        // 每 10 分鐘自動更新一次自己的存活時間，證明我還在
+        setInterval(() => {
+            if (myPresenceRef) myPresenceRef.update({ timestamp: Date.now() });
+        }, 10 * 60 * 1000);
+
         onlineRef.on('value', (snap) => {
             requestAnimationFrame(() => {
                 let userMap = {}; 
+                const NOW = Date.now();
+
                 // 排除重複名字，並保留最新/最高權重狀態
                 snap.forEach(child => {
                     const u = child.val();
                     if (!u || !u.name) return;
+
+                    // 👻 幽靈過濾機制：超過 2 小時沒動靜的節點，直接無視
+                    if (u.timestamp && (NOW - u.timestamp > 2 * 60 * 60 * 1000)) {
+                        if (isAdmin) db.ref('online-presence/' + child.key).remove(); // 團主順手清理資料庫
+                        return; 
+                    }
+
                     if (!userMap[u.name] || u.status === 'typing' || (u.status === 'done' && userMap[u.name].status === 'browsing') || u.isAdmin) {
-                        // 若同一名字有人是 isAdmin，則強制覆蓋為 admin 狀態
                         if (userMap[u.name] && userMap[u.name].isAdmin && !u.isAdmin) return;
                         userMap[u.name] = u; 
                     }
@@ -395,7 +410,6 @@
                             </div>
                         </div>`;
                     
-                    // 👑 團主優先置頂排版
                     if (u.isAdmin) adminHtml += itemHtml;
                     else normalHtml += itemHtml;
                 }
@@ -512,8 +526,7 @@
         if (isAdmin) { 
             if(confirm("確定要關閉團主模式嗎？")) { 
                 isAdmin = false; localStorage.removeItem('lunchAdminToken'); 
-                updateMyStatus(myCurrentStatus); 
-                updateAdminUI(); render(); 
+                updateMyStatus(myCurrentStatus); updateAdminUI(); render(); 
             } 
         } else { 
             alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。");
@@ -594,12 +607,11 @@
         orders.forEach(order => {
             total += order.price; 
             
-            // 💰 已收金額精準追蹤邏輯：反映真實手上現金
             if (order.isPaid) {
                 if (order.change > 0 && !order.changeGiven) {
-                    paidTotal += order.paidAmount; // 還沒找零，手上的錢是收到的全額
+                    paidTotal += order.paidAmount; 
                 } else {
-                    paidTotal += order.price; // 已經找零，或剛好付清，手上的錢只剩便當錢
+                    paidTotal += order.price; 
                 }
             } else {
                 unpaidTotal += order.price;
@@ -642,7 +654,7 @@
             } else {
                 visibleUnpaidCount++; 
                 if (isEditing && (!globalLocked || isAdmin)) {
-                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳前不可改實收</span></td>` : `<td style="display:none;"></td>`;
+                    let payTd = isAdmin ? `<td><span style="color:var(--gray); font-size:0.85em;">結帳請用按鈕</span></td>` : `<td style="display:none;"></td>`;
                     unpaidHTML += `<tr>
                         <td><strong>${order.name}</strong></td>
                         <td><input type="text" id="edit-item-${order.id}" value="${order.item}" class="inline-edit-input"></td>
@@ -653,7 +665,7 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" placeholder="輸入金額"></td>` : `<td style="display:none;"></td>`;
+                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" min="${order.price}" placeholder="輸入金額"></td>` : `<td style="display:none;"></td>`;
                     let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this)">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
                     let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrderInline('${order.id}')">✏️ 修改</button>` : `<span style="color:var(--gray); font-size:0.9em; font-weight:bold;">🔒 已鎖定</span>`;
                     unpaidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${payInputTd}<td>${editBtn}${adminBtns}</td></tr>`; 
@@ -717,7 +729,6 @@
 
     window.cancelEditInline = function() { editingOrderId = null; render(); }
 
-    // 🚀 修正：結帳時沒有輸入金額會自動擋下
     window.processPayment = function(id, btnElement) {
         const order = orders.find(o => o.id === id); if (!order) return;
         const inputEl = btnElement.closest('tr').querySelector('.pay-input');
@@ -739,7 +750,19 @@
     }
 
     window.deleteOrder = function(id) { if(confirm('⚠️ 確定刪除嗎？')) db.ref('lunch-orders/' + id).remove(); }
-    window.clearAllOrders = function() { if(confirm('🚨 確定清空今天「所有」訂單嗎？')) db.ref('lunch-orders').remove(); }
+    
+    // 🚀 修正：淨空訂單時，一併清除資料庫裡的幽靈名單
+    window.clearAllOrders = function() { 
+        if(confirm('🚨 確定清空今天「所有」訂單與線上名單嗎？')) {
+            db.ref('lunch-orders').remove(); 
+            db.ref('online-presence').remove(); 
+            setTimeout(() => {
+                let currentName = document.getElementById('name').value.trim() || "神秘訪客";
+                if(myPresenceRef) myPresenceRef.set({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
+            }, 1000);
+        }
+    }
+
     window.exportToExcel = function() {
         if (orders.length === 0) return alert("沒有訂單可匯出！"); 
         let excelData = [["姓名", "餐點品項", "應付金額", "付款狀態", "實付金額", "找零"]];
