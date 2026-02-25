@@ -65,13 +65,11 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;}
         
-        /* 傻瓜式公佈欄表單樣式 */
         .editor-group { margin-bottom: 15px; }
         .editor-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
         .editor-group textarea { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; resize: vertical; box-sizing: border-box; font-family: inherit;}
         .editor-group input[type="url"], .editor-group input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; background: #fff;}
         
-        /* 圖片預覽區 */
         .preview-container { display: none; position: relative; margin-top: 10px; border-radius: 8px; overflow: hidden; border: 2px dashed #bdc3c7; padding: 5px;}
         .preview-container img { width: 100%; height: auto; display: block; border-radius: 4px;}
         .btn-remove-img { position: absolute; top: 10px; right: 10px; background: rgba(231, 76, 60, 0.9); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
@@ -82,12 +80,12 @@
 
 <div class="container">
     <div class="flex header-area">
-        <h1>🍱午餐🍱 <span id="admin-badge" style="font-size:0.5em; background:#e74c3c; color:white; padding:4px 8px; border-radius:12px; display:none;">👑 團主</span></h1>
+        <h1>🍱午餐🍱 <span id="admin-badge" style="font-size:0.5em; background:#e74c3c; color:white; padding:4px 8px; border-radius:12px; display:none;">👑 團主模式已解鎖</span></h1>
         <div class="flex">
             <button id="btn-admin" onclick="toggleAdmin()" class="btn-admin">一般身分</button>
             <button id="btn-lock" onclick="toggleLock()" class="btn-lock admin-only">🛑 停止收單</button>
             <button onclick="showSummary()" class="btn-summary admin-only">📋 叫餐統計</button>
-            <button onclick="clearAllOrders()" class="btn-clear admin-only">🗑️ 淨空</button>
+            <button onclick="clearAllOrders()" class="btn-clear admin-only">🗑️ 淨空訂單</button>
             <button onclick="exportToExcel()" class="btn-export admin-only">📊 匯出 Excel</button>
         </div>
     </div>
@@ -104,13 +102,13 @@
     </div>
 
     <form id="order-form" class="flex">
-        <input type="text" id="name" placeholder="姓名" required>
+        <input type="text" id="name" placeholder="您的姓名" required>
         <input type="text" id="item" placeholder="餐點品項 (如: 排骨飯)" required>
         <input type="number" id="price" placeholder="價格" required min="1">
         <button type="submit" id="submit-btn" class="btn-submit">✅ 送出訂單確認</button>
     </form>
 
-    <h2>📝 未付款區 (等待收錢)</h2>
+    <h2 id="unpaid-title">📝 您的未付款訂單</h2>
     <div style="overflow-x:auto;">
         <table id="unpaid-table">
             <thead>
@@ -126,7 +124,7 @@
         </table>
     </div>
 
-    <h2>✅ 已付款區 (結帳完畢)</h2>
+    <h2 id="paid-title">✅ 您的已付款訂單</h2>
     <div style="overflow-x:auto;">
         <table id="paid-table">
             <thead>
@@ -162,7 +160,6 @@
         <div class="editor-group">
             <label>🖼️ 匯入菜單圖片 (選填)：</label>
             <input type="file" id="bulletin-file-input" accept="image/*" style="cursor: pointer;">
-            
             <div id="image-preview-container" class="preview-container">
                 <img id="image-preview" src="">
                 <button class="btn-remove-img" onclick="clearImage()" title="移除圖片">X</button>
@@ -211,11 +208,16 @@
     
     let bText = "";
     let bLink = "";
-    let uploadedImageBase64 = ""; // 用來暫存轉換後的圖片資料
+    let uploadedImageBase64 = "";
 
     document.addEventListener('DOMContentLoaded', () => {
-        const savedName = localStorage.getItem('myLunchName');
-        if (savedName) { document.getElementById('name').value = savedName; document.getElementById('item').focus(); }
+        // 讀取這台電腦曾經輸入過的「所有名字」
+        let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
+        if (myNames.length > 0) { 
+            // 把最後一次用的名字填入輸入框
+            document.getElementById('name').value = myNames[myNames.length - 1]; 
+            document.getElementById('item').focus(); 
+        }
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('role') === 'boss' || localStorage.getItem('lunchAdminToken') === 'boss') {
@@ -232,7 +234,7 @@
         
         bText = data.bulletinText !== undefined ? data.bulletinText : "📢 歡迎點餐！請填寫下方表單。";
         bLink = data.bulletinLink || "";
-        uploadedImageBase64 = data.bulletinImage || ""; // 從資料庫讀取圖片資料
+        uploadedImageBase64 = data.bulletinImage || "";
 
         let displayHtml = bText.replace(/\n/g, '<br>');
         if (bLink) {
@@ -263,10 +265,10 @@
 
     window.toggleAdmin = function() {
         if (isAdmin) {
-            if(confirm("確定要關閉團主模式嗎？\n關閉後若需再次開啟，請重新使用專屬管理員網址進入。")) {
+            if(confirm("確定要關閉團主模式嗎？\n關閉後您將只能看到自己的訂單。")) {
                 isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateAdminUI(); render(); 
             }
-        } else { alert("💡 提示：您目前是一般點餐身分。\n若您是團主，請使用您的「專屬管理員網址」進入系統。"); }
+        } else { alert("💡 提示：您目前是一般點餐身分，系統只顯示您本人的訂單。\n若您是團主，請使用您的「專屬管理員網址」進入系統。"); }
     }
 
     function updateAdminUI() {
@@ -274,47 +276,34 @@
         document.getElementById('admin-badge').style.display = isAdmin ? "inline" : "none";
         document.getElementById('admin-stats').style.display = isAdmin ? "flex" : "none";
         
+        // 動態改變表格標題
+        document.getElementById('unpaid-title').innerText = isAdmin ? "📝 所有未付款區 (等待收錢)" : "📝 您的未付款訂單";
+        document.getElementById('paid-title').innerText = isAdmin ? "✅ 所有已付款區 (結帳完畢)" : "✅ 您的已付款訂單";
+        
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? "inline-block" : "none");
         document.querySelectorAll('.admin-only-th').forEach(th => th.style.display = isAdmin ? "table-cell" : "none");
     }
 
-    // ==========================================
-    // 📸 圖片處理核心邏輯：選取檔案後自動壓縮並預覽
-    // ==========================================
+    // 處理圖片上傳預覽
     document.getElementById('bulletin-file-input').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
-
-        // 檢查是否為圖片格式
-        if (!file.type.match('image.*')) {
-            alert("請選擇圖片檔案！");
-            return;
-        }
+        if (!file.type.match('image.*')) { alert("請選擇圖片檔案！"); return; }
 
         const reader = new FileReader();
         reader.onload = function(event) {
             const img = new Image();
             img.onload = function() {
-                // 自動壓縮技術：限制圖片最大寬度為 800px，防止資料庫爆滿
                 const canvas = document.createElement('canvas');
                 const MAX_WIDTH = 800;
                 let width = img.width;
                 let height = img.height;
-
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-
-                canvas.width = width;
-                canvas.height = height;
+                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                // 將畫布轉換成 Base64 字串 (0.8 為壓縮品質)
                 uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                
-                // 顯示預覽圖
                 document.getElementById('image-preview').src = uploadedImageBase64;
                 document.getElementById('image-preview-container').style.display = 'block';
             };
@@ -323,10 +312,9 @@
         reader.readAsDataURL(file);
     });
 
-    // 移除已選取的圖片
     window.clearImage = function() {
         uploadedImageBase64 = "";
-        document.getElementById('bulletin-file-input').value = ""; // 清空上傳欄位
+        document.getElementById('bulletin-file-input').value = ""; 
         document.getElementById('image-preview-container').style.display = 'none';
     }
 
@@ -334,15 +322,13 @@
         document.getElementById('bulletin-text-input').value = bText;
         document.getElementById('bulletin-link-input').value = bLink;
         
-        // 載入時如果已經有圖片，顯示預覽
         if (uploadedImageBase64) {
             document.getElementById('image-preview').src = uploadedImageBase64;
             document.getElementById('image-preview-container').style.display = 'block';
         } else {
             document.getElementById('image-preview-container').style.display = 'none';
         }
-        document.getElementById('bulletin-file-input').value = ""; // 每次打開重置選擇器
-        
+        document.getElementById('bulletin-file-input').value = ""; 
         document.getElementById('bulletin-modal').style.display = "flex";
     }
 
@@ -350,25 +336,16 @@
         const newText = document.getElementById('bulletin-text-input').value;
         const newLink = document.getElementById('bulletin-link-input').value;
 
-        // 將文字、網址、以及壓縮後的圖片字串，一起存入 Firebase
         settingsRef.update({ 
-            bulletinText: newText,
-            bulletinLink: newLink,
-            bulletinImage: uploadedImageBase64
+            bulletinText: newText, bulletinLink: newLink, bulletinImage: uploadedImageBase64
         }).then(() => {
             document.getElementById('bulletin-modal').style.display = "none";
-        }).catch(err => {
-            alert("發布失敗，請確認網路連線或圖片是否過大！");
-            console.error(err);
-        });
+        }).catch(err => { alert("發布失敗，請確認網路！"); });
     }
-    // ==========================================
 
     window.toggleLock = function() {
         const confirmMsg = globalLocked ? "確定要「開放」大家繼續點餐與修改嗎？" : "確定要「停止收單」嗎？\n(鎖單後，大家將無法新增或修改訂單)";
-        if(confirm(confirmMsg)) {
-            settingsRef.update({ isLocked: !globalLocked });
-        }
+        if(confirm(confirmMsg)) { settingsRef.update({ isLocked: !globalLocked }); }
     }
 
     window.showSummary = function() {
@@ -405,25 +382,35 @@
         const unpaidTbody = document.querySelector('#unpaid-table tbody');
         const paidTbody = document.querySelector('#paid-table tbody');
         unpaidTbody.innerHTML = ''; paidTbody.innerHTML = '';
-        let total = 0, paidTotal = 0, unpaidCount = 0, paidCount = 0;
+        
+        let total = 0, paidTotal = 0;
+        let visibleUnpaidCount = 0, visiblePaidCount = 0; // 用來計算「畫面上」顯示了幾筆
+
+        // 讀取這台電腦記憶的所有名字
+        let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
 
         orders.forEach(order => {
+            // 💡 團主的統計報表：無條件計算所有人的訂單金額
             total += order.price;
+            if (order.isPaid) { paidTotal += order.price; }
+
+            // 🛡️ 隱私過濾器：如果不是團主，且這個名字不在我的記憶裡，就直接跳過不顯示！
+            if (!isAdmin && !myNames.includes(order.name)) {
+                return; 
+            }
+
+            // 接下來是渲染畫面的邏輯 (只有團主 或 自己點的餐 才會走到這裡)
             if (order.isPaid) {
-                paidTotal += order.price; 
-                paidCount++;
+                visiblePaidCount++;
                 const tr = document.createElement('tr');
-                
                 let adminFields = isAdmin ? `<td>$${order.paidAmount}</td><td style="color:#e67e22; font-weight:bold;">$${order.change}</td><td><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
                 tr.innerHTML = `<td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td>${adminFields}`;
                 paidTbody.appendChild(tr);
             } else {
-                unpaidCount++;
+                visibleUnpaidCount++;
                 const tr = document.createElement('tr');
-                
                 let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" id="pay-${order.id}" min="${order.price}" placeholder="金額?"></td>` : `<td style="display:none;"></td>`;
                 let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this, ${order.price})">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
-                
                 let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrder('${order.id}')">✏️ 修改</button>` : `🔒`;
 
                 tr.innerHTML = `<td>${order.name}</td><td>${order.item}</td><td>$${order.price}</td>${payInputTd}<td>${editBtn}${adminBtns}</td>`;
@@ -431,12 +418,20 @@
             }
         });
 
+        // 判斷畫面是否要顯示「空空如也」的提示字
         let unpaidColspan = isAdmin ? 5 : 4;
         let paidColspan = isAdmin ? 6 : 3;
         
-        if(unpaidCount === 0) unpaidTbody.innerHTML = `<tr><td colspan="${unpaidColspan}" class="empty-msg">目前沒有未付款的訂單</td></tr>`;
-        if(paidCount === 0) paidTbody.innerHTML = `<tr><td colspan="${paidColspan}" class="empty-msg">目前沒有已付款的訂單</td></tr>`;
+        if(visibleUnpaidCount === 0) {
+            let emptyMsg = isAdmin ? "目前沒有未付款的訂單" : "您目前沒有未付款的訂單，趕快點餐吧！";
+            unpaidTbody.innerHTML = `<tr><td colspan="${unpaidColspan}" class="empty-msg">${emptyMsg}</td></tr>`;
+        }
+        if(visiblePaidCount === 0) {
+            let emptyMsg = isAdmin ? "目前沒有已付款的訂單" : "您目前沒有已付款的訂單";
+            paidTbody.innerHTML = `<tr><td colspan="${paidColspan}" class="empty-msg">${emptyMsg}</td></tr>`;
+        }
         
+        // 更新頂部統計數字 (這裡的數字永遠是全公司的總和，但一般人看不到)
         document.getElementById('total-price').innerText = total;
         document.getElementById('total-paid').innerText = paidTotal;
         document.getElementById('total-unpaid').innerText = total - paidTotal;
@@ -445,12 +440,20 @@
     document.getElementById('order-form').addEventListener('submit', function(e) {
         e.preventDefault();
         if (globalLocked) { alert("⚠️ 抱歉，目前已結單，無法新增訂單！"); return; }
+        
         const inputName = document.getElementById('name').value.trim();
         const inputItem = document.getElementById('item').value.trim();
         const inputPrice = parseInt(document.getElementById('price').value);
 
         if(confirm(`👉 請確認您的訂餐資訊：\n\n👤 姓名：${inputName}\n🍱 品項：${inputItem}\n💰 價格：$${inputPrice}\n\n按下「確定」送出訂單！`)) {
-            localStorage.setItem('myLunchName', inputName);
+            
+            // 💾 隱私追蹤：把這次輸入的名字存進這台電腦的記憶裡
+            let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
+            if (!myNames.includes(inputName)) {
+                myNames.push(inputName);
+                localStorage.setItem('myLunchNames', JSON.stringify(myNames));
+            }
+
             ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0 })
             .then(() => {
                 alert("✅ 點餐成功！");
