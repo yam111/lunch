@@ -27,21 +27,21 @@
             margin: 0; padding: 20px 10px; color: var(--dark); 
             min-height: 100vh; overflow-x: hidden;
             
-            /* ✨ 新增：高質感清新美食背景圖 */
+            /* ✨ 清新美食背景圖 */
             background-image: url('https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2500&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
         }
 
-        /* ✨ 新增：全域毛玻璃遮罩 (保護閱讀性，透出柔和背景色) */
+        /* ✨ 全域毛玻璃遮罩 (保護閱讀性，透出柔和背景色) */
         body::before {
             content: "";
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(248, 250, 252, 0.75); /* 75% 的柔和白灰覆蓋 */
-            backdrop-filter: blur(15px); /* 核心毛玻璃模糊效果 */
-            -webkit-backdrop-filter: blur(15px); /* 支援 Safari */
+            background: rgba(248, 250, 252, 0.75); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px); 
             z-index: -1;
         }
         
@@ -151,7 +151,7 @@
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000; text-shadow: 0 2px 4px rgba(0,0,0,0.1);}
 
-        /* Modal 結構修復：固定按鈕、內部滑動 */
+        /* 完美結構 Modal：固定按鈕、內部滑動 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 3000; justify-content: center; align-items: center; }
         .modal-content { background: white; border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; animation: scaleUp 0.2s ease-out;}
         
@@ -565,8 +565,8 @@
                 tr.innerHTML = `<td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${adminFields}`; paidTbody.appendChild(tr);
             } else {
                 visibleUnpaidCount++; const tr = document.createElement('tr');
-                let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" id="pay-${order.id}" min="${order.price}" placeholder="$"></td>` : `<td style="display:none;"></td>`;
-                let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this, ${order.price})">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
+                let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" min="${order.price}" placeholder="$"></td>` : `<td style="display:none;"></td>`;
+                let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this)">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
                 let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrder('${order.id}')">✏️ 修改</button>` : `<span style="color:var(--gray); font-size:0.9em; font-weight:bold;">🔒 已鎖定</span>`;
                 tr.innerHTML = `<td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${payInputTd}<td>${editBtn}${adminBtns}</td>`; unpaidTbody.appendChild(tr);
             }
@@ -603,11 +603,37 @@
         db.ref('lunch-orders/' + id).update({ item: newItem.trim(), price: newPrice });
     }
 
-    window.processPayment = function(id, btnElement, price) {
-        const order = orders.find(o => o.id === id); let paidAmount = parseInt(document.getElementById('pay-' + id).value);
-        if (isNaN(paidAmount)) paidAmount = order.price; if (paidAmount < order.price) return alert('實付金額不足！');
-        chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
-        db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price });
+    // 🚀 修正結帳邏輯：鎖定同一列輸入框的值
+    window.processPayment = function(id, btnElement) {
+        const order = orders.find(o => o.id === id); 
+        if (!order) return;
+        
+        // 絕對鎖定：從按鈕往上找到 <tr>，再往下找到輸入框
+        const inputEl = btnElement.closest('tr').querySelector('.pay-input');
+        const rawValue = inputEl.value.trim();
+        
+        let paidAmount;
+        if (rawValue === "") {
+            paidAmount = order.price; // 如果留空，預設為剛剛好
+        } else {
+            paidAmount = parseInt(rawValue, 10);
+        }
+
+        if (isNaN(paidAmount) || paidAmount < order.price) {
+            alert('❌ 實付金額不能小於應付金額喔！');
+            inputEl.focus();
+            return; 
+        }
+
+        chaChingSound.currentTime = 0; 
+        chaChingSound.play().catch(e => console.log(e)); 
+        showFloatingNumber(btnElement, order.price); 
+        
+        db.ref('lunch-orders/' + id).update({ 
+            isPaid: true, 
+            paidAmount: paidAmount, 
+            change: paidAmount - order.price 
+        });
     }
 
     window.deleteOrder = function(id) { if(confirm('⚠️ 確定刪除嗎？')) db.ref('lunch-orders/' + id).remove(); }
