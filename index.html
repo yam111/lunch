@@ -32,8 +32,7 @@
 
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(248, 250, 252, 0.65); 
-            z-index: -1;
+            background: rgba(248, 250, 252, 0.65); z-index: -1;
         }
         
         .layout-wrapper { max-width: 1250px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
@@ -59,10 +58,8 @@
         .online-header { font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary); border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 10px;}
         .online-user-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.02); animation: slideIn 0.3s ease;}
         .online-user-item.is-admin { background: rgba(245, 158, 11, 0.05); border-radius: 12px; border-bottom: none; margin-bottom: 5px; border: 1px solid rgba(245, 158, 11, 0.2);}
-        
         .user-avatar { width: 35px; height: 35px; background: #E0E7FF; color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0;}
         .online-user-item.is-admin .user-avatar { background: #FEF3C7; color: #D97706; }
-        
         .user-info { display: flex; flex-direction: column; width: 100%; overflow: hidden;}
         .user-name { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px;}
         .user-status { font-size: 0.8em; color: var(--gray); display: flex; align-items: center; gap: 4px;}
@@ -96,7 +93,6 @@
         .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
         .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block;}
         .bulletin-content a { background: #FDE68A; padding: 4px 10px; border-radius: 8px; color: #B45309; text-decoration: none; font-weight: 700; margin-top: 5px; display: inline-block;}
-        .bulletin-content a:hover { background: #FCD34D; }
         .btn-edit-small { position: absolute; top: 15px; right: 20px; background: white; color: var(--warning); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
 
         .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
@@ -133,7 +129,6 @@
         .btn-edit { background: #F1F5F9; color: var(--dark); margin-right: 5px; padding: 8px 12px; box-shadow: none;}
         .btn-del { background: #FEE2E2; color: var(--danger); padding: 8px 12px; box-shadow: none;}
         .price-tag { font-family: monospace; font-size: 1.1em; font-weight: 700; color: var(--dark); }
-        .change-tag { color: var(--warning); font-weight: 900; }
 
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
         .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000; text-shadow: 0 2px 4px rgba(0,0,0,0.1);}
@@ -200,8 +195,8 @@
 
         <div class="flex stats" id="admin-stats">
             <div class="stat-box box-total"><div class="stat-title">總金額 (應付加總)</div><div class="stat-value">$<span id="total-price">0</span></div></div>
-            <div class="stat-box box-paid"><div class="stat-title">已收金額 (實際拿到的現金)</div><div class="stat-value">$<span id="total-paid">0</span></div></div>
-            <div class="stat-box box-unpaid"><div class="stat-title">未收金額 (未結帳總額)</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
+            <div class="stat-box box-paid"><div class="stat-title">手上現金 (實際拿到)</div><div class="stat-value">$<span id="total-paid">0</span></div></div>
+            <div class="stat-box box-unpaid"><div class="stat-title">剩餘待收 (含補收差額)</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
         </div>
 
         <div class="card">
@@ -231,7 +226,7 @@
             <div style="overflow-x:auto;">
                 <table id="paid-table">
                     <thead>
-                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th">找零</th><th class="admin-only-th">找零狀態</th><th class="admin-only-th">操作</th></tr>
+                        <tr><th>姓名</th><th>品項</th><th>應付</th><th class="admin-only-th">實收</th><th class="admin-only-th" style="min-width: 110px;">帳款狀態</th><th class="admin-only-th">操作</th></tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -336,7 +331,6 @@
         updateAdminUI(); renderQuickTags(); initPresence();
     });
 
-    // 🚀 核心優化：絕對精準不殘留的線上名單追蹤
     function initPresence() {
         let deviceId = localStorage.getItem('lunchDeviceId');
         if (!deviceId) { deviceId = 'device_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('lunchDeviceId', deviceId); }
@@ -345,7 +339,6 @@
         
         connectedRef.on('value', (snap) => {
             if (snap.val() === true) {
-                // 每當重新連線時，創建一個全新的專屬節點，斷線時自動銷毀
                 myPresenceRef = onlineRef.child(deviceId);
                 myPresenceRef.onDisconnect().remove();
                 
@@ -355,11 +348,9 @@
             }
         });
 
-        // 確保網頁關閉或重新整理瞬間立刻移除節點
         window.addEventListener('beforeunload', () => { if (myPresenceRef) myPresenceRef.remove(); });
         window.addEventListener('pagehide', () => { if (myPresenceRef) myPresenceRef.remove(); });
 
-        // 每 10 分鐘自動更新一次自己的存活時間，證明我還在
         setInterval(() => {
             if (myPresenceRef) myPresenceRef.update({ timestamp: Date.now() });
         }, 10 * 60 * 1000);
@@ -369,14 +360,12 @@
                 let userMap = {}; 
                 const NOW = Date.now();
 
-                // 排除重複名字，並保留最新/最高權重狀態
                 snap.forEach(child => {
                     const u = child.val();
                     if (!u || !u.name) return;
 
-                    // 👻 幽靈過濾機制：超過 2 小時沒動靜的節點，直接無視
                     if (u.timestamp && (NOW - u.timestamp > 2 * 60 * 60 * 1000)) {
-                        if (isAdmin) db.ref('online-presence/' + child.key).remove(); // 團主順手清理資料庫
+                        if (isAdmin) db.ref('online-presence/' + child.key).remove(); 
                         return; 
                     }
 
@@ -456,13 +445,7 @@
         
         if(confirm(`總額 $${amount}，共 ${orders.length} 人。\n每人分攤 $${perPerson} 元。\n確定更新？`)) {
             orders.forEach(order => {
-                let newPrice = order.price + perPerson;
-                let updates = { price: newPrice };
-                if (order.isPaid) {
-                    updates.change = order.paidAmount - newPrice;
-                    if (updates.change > 0 && order.paidAmount !== newPrice) updates.changeGiven = false; 
-                }
-                db.ref('lunch-orders/' + order.id).update(updates);
+                db.ref('lunch-orders/' + order.id).update({ price: order.price + perPerson });
             });
             document.getElementById('split-modal').style.display = 'none';
         }
@@ -595,26 +578,28 @@
         document.body.appendChild(floater); setTimeout(() => floater.remove(), 1000);
     }
 
-    window.markChangeGiven = function(id) {
-        db.ref('lunch-orders/' + id).update({ changeGiven: true });
+    // 🚀 一鍵平帳功能 (找零/補收)
+    window.settleBalance = function(id, targetPrice) {
+        chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e));
+        db.ref('lunch-orders/' + id).update({ paidAmount: targetPrice });
     }
 
     function render() {
         let unpaidHTML = ''; let paidHTML = '';
-        let total = 0, paidTotal = 0, unpaidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
+        let total = 0, actualCollectedCash = 0, unpaidTotal = 0, visibleUnpaidCount = 0, visiblePaidCount = 0; 
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
 
         orders.forEach(order => {
             total += order.price; 
             
+            // 💰 儀表板精算邏輯：
             if (order.isPaid) {
-                if (order.change > 0 && !order.changeGiven) {
-                    paidTotal += order.paidAmount; 
-                } else {
-                    paidTotal += order.price; 
+                actualCollectedCash += order.paidAmount; // 口袋裡拿到的實體現金
+                if (order.price > order.paidAmount) {
+                    unpaidTotal += (order.price - order.paidAmount); // 若事後加價導致實收不夠，差額算入待收
                 }
             } else {
-                unpaidTotal += order.price;
+                unpaidTotal += order.price; // 還沒付錢的全算待收
             }
 
             if (!isAdmin && !myNames.includes(order.name)) return; 
@@ -624,15 +609,16 @@
             if (order.isPaid) {
                 visiblePaidCount++;
                 
-                let changeStatusUI = '';
-                if (order.change > 0) {
-                    if (order.changeGiven) {
-                        changeStatusUI = `<span style="color:var(--gray); font-size:0.85em; background:#E5E5EA; padding:4px 8px; border-radius:12px; font-weight:bold;">✅ 已找零</span>`;
-                    } else {
-                        changeStatusUI = `<button class="btn-pay" style="background:var(--warning); color:white; padding:4px 8px; font-size:0.85em; box-shadow:none; border-radius:8px;" onclick="markChangeGiven('${order.id}')">給找零</button>`;
-                    }
+                // 💰 智慧帳款狀態按鈕 (合併找零與補收邏輯)
+                let accountStatusUI = '';
+                let diff = order.paidAmount - order.price;
+
+                if (diff > 0) {
+                    accountStatusUI = `<button class="btn-pay" style="background:var(--warning); color:white; padding:6px 12px; font-size:0.85em; border-radius:8px; box-shadow:none;" onclick="settleBalance('${order.id}', ${order.price})">找零 $${diff}</button>`;
+                } else if (diff < 0) {
+                    accountStatusUI = `<button class="btn-pay" style="background:var(--danger); color:white; padding:6px 12px; font-size:0.85em; border-radius:8px; box-shadow:none; animation: pulseText 1.5s infinite;" onclick="settleBalance('${order.id}', ${order.price})">補收 $${Math.abs(diff)}</button>`;
                 } else {
-                    changeStatusUI = `<span style="color:var(--gray); font-size:0.85em;">無須找零</span>`;
+                    accountStatusUI = `<span style="color:var(--gray); font-size:0.85em; background:#E5E5EA; padding:4px 8px; border-radius:12px; font-weight:bold;">✅ 已結清</span>`;
                 }
 
                 if (isEditing && isAdmin) {
@@ -641,14 +627,13 @@
                         <td><input type="text" id="edit-item-${order.id}" value="${order.item}" class="inline-edit-input"></td>
                         <td>$<input type="number" id="edit-price-${order.id}" value="${order.price}" class="inline-edit-input short"></td>
                         <td>$<input type="number" id="edit-paid-${order.id}" value="${order.paidAmount}" class="inline-edit-input short"></td>
-                        <td><span class="change-tag">自動計算</span></td>
                         <td>-</td>
                         <td style="white-space:nowrap;">
                             <button class="btn-pay" onclick="saveOrderInline('${order.id}', true)">💾 儲存</button>
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    let adminFields = isAdmin ? `<td><span class="price-tag">$${order.paidAmount}</span></td><td><span class="change-tag">$${order.change}</span></td><td>${changeStatusUI}</td><td style="white-space:nowrap;"><button class="btn-edit" onclick="editOrderInline('${order.id}')">✏️ 修改</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
+                    let adminFields = isAdmin ? `<td><span class="price-tag">$${order.paidAmount}</span></td><td>${accountStatusUI}</td><td style="white-space:nowrap;"><button class="btn-edit" onclick="editOrderInline('${order.id}')">✏️ 修改</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button></td>` : `<td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td>`;
                     paidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${adminFields}</tr>`; 
                 }
             } else {
@@ -665,7 +650,7 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" min="${order.price}" placeholder="輸入金額"></td>` : `<td style="display:none;"></td>`;
+                    let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" placeholder="實付金額"></td>` : `<td style="display:none;"></td>`;
                     let adminBtns = isAdmin ? `<button class="btn-pay" onclick="processPayment('${order.id}', this)">結帳</button><button class="btn-del" onclick="deleteOrder('${order.id}')">刪除</button>` : ``;
                     let editBtn = (!globalLocked || isAdmin) ? `<button class="btn-edit" onclick="editOrderInline('${order.id}')">✏️ 修改</button>` : `<span style="color:var(--gray); font-size:0.9em; font-weight:bold;">🔒 已鎖定</span>`;
                     unpaidHTML += `<tr><td><strong>${order.name}</strong></td><td>${order.item}</td><td><span class="price-tag">$${order.price}</span></td>${payInputTd}<td>${editBtn}${adminBtns}</td></tr>`; 
@@ -673,12 +658,12 @@
             }
         });
 
-        let unpaidColspan = isAdmin ? 5 : 4; let paidColspan = isAdmin ? 7 : 3;
+        let unpaidColspan = isAdmin ? 5 : 4; let paidColspan = isAdmin ? 6 : 3;
         document.querySelector('#unpaid-table tbody').innerHTML = unpaidHTML || `<tr><td colspan="${unpaidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有未付款訂單":"太棒了！您目前沒有未付款的訂單"}</td></tr>`;
         document.querySelector('#paid-table tbody').innerHTML = paidHTML || `<tr><td colspan="${paidColspan}" style="text-align:center; padding:30px; color:var(--gray); font-weight:bold;">${isAdmin?"目前沒有已付款訂單":"您目前沒有已付款的記錄"}</td></tr>`;
         
         document.getElementById('total-price').innerText = total; 
-        document.getElementById('total-paid').innerText = paidTotal; 
+        document.getElementById('total-paid').innerText = actualCollectedCash; 
         document.getElementById('total-unpaid').innerText = unpaidTotal;
     }
 
@@ -689,7 +674,7 @@
             let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
             if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
             saveToQuickTags(inputItem, inputPrice); updateMyStatus('done');
-            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0, change: 0, changeGiven: false }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
+            ordersRef.push({ name: inputName, item: inputItem, price: inputPrice, isPaid: false, paidAmount: 0 }).then(() => { document.getElementById('item').value = ''; document.getElementById('price').value = ''; document.getElementById('item').focus(); });
         }
     });
 
@@ -698,8 +683,7 @@
     window.saveOrderInline = function(id, isPaid) {
         const order = orders.find(o => o.id === id); if (!order) return;
         let itemInput = document.getElementById(`edit-item-${id}`).value.trim();
-        let priceInputStr = document.getElementById(`edit-price-${id}`).value;
-        let priceInput = parseInt(priceInputStr, 10);
+        let priceInput = parseInt(document.getElementById(`edit-price-${id}`).value, 10);
         
         if (!itemInput) itemInput = order.item;
         if (isNaN(priceInput) || priceInput <= 0) priceInput = order.price;
@@ -707,16 +691,9 @@
         let updates = { item: itemInput, price: priceInput };
 
         if (isPaid) {
-            let paidInputStr = document.getElementById(`edit-paid-${id}`).value;
-            let paidInput = parseInt(paidInputStr, 10);
+            let paidInput = parseInt(document.getElementById(`edit-paid-${id}`).value, 10);
             if (isNaN(paidInput)) paidInput = order.paidAmount;
-            if (paidInput < priceInput) { alert("⚠️ 實收金額不能小於應付金額！請確認後再儲存。"); return; }
             updates.paidAmount = paidInput;
-            updates.change = paidInput - priceInput; 
-            
-            if (updates.change > 0 && paidInput !== order.paidAmount) {
-                updates.changeGiven = false;
-            }
         }
 
         editingOrderId = null; 
@@ -735,7 +712,7 @@
         const rawValue = inputEl.value.trim();
         
         if (rawValue === "") {
-            alert('⚠️ 結帳前請輸入對方給您的【實付金額】！\n(如果對方剛好給應付金額，請輸入對應數字)'); 
+            alert('⚠️ 結帳前請先輸入對方給您的【實付金額】！\n(如果對方給的剛好是應付金額，也請輸入)'); 
             inputEl.focus(); 
             return; 
         }
@@ -746,12 +723,11 @@
         }
 
         chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e)); showFloatingNumber(btnElement, order.price); 
-        db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount, change: paidAmount - order.price, changeGiven: false });
+        db.ref('lunch-orders/' + id).update({ isPaid: true, paidAmount: paidAmount });
     }
 
     window.deleteOrder = function(id) { if(confirm('⚠️ 確定刪除嗎？')) db.ref('lunch-orders/' + id).remove(); }
     
-    // 🚀 修正：淨空訂單時，一併清除資料庫裡的幽靈名單
     window.clearAllOrders = function() { 
         if(confirm('🚨 確定清空今天「所有」訂單與線上名單嗎？')) {
             db.ref('lunch-orders').remove(); 
@@ -766,7 +742,10 @@
     window.exportToExcel = function() {
         if (orders.length === 0) return alert("沒有訂單可匯出！"); 
         let excelData = [["姓名", "餐點品項", "應付金額", "付款狀態", "實付金額", "找零"]];
-        orders.forEach(order => { excelData.push([order.name, order.item, order.price, order.isPaid ? "✅ 已付款" : "❌ 未付款", order.paidAmount, order.change]); });
+        orders.forEach(order => { 
+            let diff = order.paidAmount - order.price;
+            excelData.push([order.name, order.item, order.price, order.isPaid ? "✅ 已付款" : "❌ 未付款", order.paidAmount, order.isPaid ? diff : 0]); 
+        });
         let worksheet = XLSX.utils.aoa_to_sheet(excelData); let workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "今日午餐"); XLSX.writeFile(workbook, `午餐對帳單_${new Date().toLocaleDateString()}.xlsx`);
     }
