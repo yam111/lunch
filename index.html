@@ -788,24 +788,19 @@
             });
 
             const data = await response.json();
-
-            // 檢查 AI 是不是有成功回傳文字
+// 檢查 AI 是不是有成功回傳文字
             if (data.candidates && data.candidates.length > 0) {
                 let aiText = data.candidates[0].content.parts[0].text;
-                // 自動填入文字框，並把多餘的空白換行修剪掉
                 menuInput.value = aiText.trim();
-                statusEl.innerText = "✅ AI 辨識完成！超精準，請確認後點擊「儲存發布」。";
+                statusEl.innerText = "✅ AI 辨識完成！請確認格式是否正確。";
+            } else if (data.error) {
+                // 👉 把 Google 吐出來的真正錯誤訊息印在畫面上
+                statusEl.innerText = "❌ API 拒絕連線，錯誤原因：" + data.error.message;
+                console.error("詳細錯誤:", data.error);
             } else {
-                statusEl.innerText = "❌ AI 看不懂這張圖片，請嘗試換一張更清晰的。";
-                console.log("AI 回傳錯誤:", data);
+                statusEl.innerText = "❌ 發生未知的錯誤，請按 F12 打開開發者工具查看 Console。";
+                console.log("奇怪的回傳資料:", data);
             }
-        } catch (err) {
-            console.error("呼叫 API 時發生錯誤:", err);
-            statusEl.innerText = "❌ 發生錯誤，請確認網路連線或 API Key 是否正確。";
-        } finally {
-            btn.disabled = false;
-        }
-    }
 
     window.toggleLock = function() { if(confirm(globalLocked ? "開放點餐？" : "停止收單？")) settingsRef.update({ isLocked: !globalLocked, lockTime: null }); }
 
@@ -1066,6 +1061,7 @@
 
 </body>
 </html>
+
 
 
 
