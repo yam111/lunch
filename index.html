@@ -173,6 +173,27 @@
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
         #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
+    /* 👉 新增：點餐區塊的左右橫向排版魔法 */
+        .ordering-layout { display: flex; gap: 20px; align-items: flex-start; }
+        
+        /* 左側：點餐表單 (設定 sticky 讓它往下滑時會黏在頂部) */
+        .form-side { flex: 1; min-width: 280px; position: sticky; top: 20px; z-index: 10; background: var(--surface); }
+        
+        /* 右側：店家菜單 (設定獨立卷軸與最大高度) */
+        .menu-side { flex: 1.2; min-width: 280px; background: #F8FAFC; padding: 15px; border-radius: 16px; border: 1px solid #E2E8F0; max-height: 550px; overflow-y: auto; }
+        
+        /* 美化右側菜單的專屬卷軸 */
+        .menu-side::-webkit-scrollbar { width: 6px; }
+        .menu-side::-webkit-scrollbar-track { background: transparent; }
+        .menu-side::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        .menu-side::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* 手機版 (寬度小於 800px) 自動變回上下排列 */
+        @media (max-width: 800px) {
+            .ordering-layout { flex-direction: column; }
+            .form-side { position: static; width: 100%; box-sizing: border-box; }
+            .menu-side { width: 100%; box-sizing: border-box; max-height: 400px; }
+        }
     </style>
 </head>
 <body>
@@ -221,21 +242,36 @@
             <div class="stat-box box-unpaid"><div class="stat-title">剩餘待收 (含補收差額)</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
         </div>
 
-        <div class="card">
-            <form id="order-form">
-                <input type="text" id="name" placeholder="您的姓名" required oninput="handleTyping()">
+        <div class="card" style="padding: 20px;">
+            <div class="ordering-layout">
                 
-                <div id="order-items-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                    <div class="order-item-row">
-                        <input type="text" class="item-input" placeholder="餐點品項 (如: 肉燥飯)" required oninput="handleTyping()">
-                        <input type="number" class="price-input" placeholder="價格" required min="1" oninput="handleTyping()" style="width: 90px; flex: none;">
-                        <button type="button" class="btn-action-icon" onclick="addOrderItemRow()" style="background: var(--primary-soft); color: var(--primary);" title="新增下一樣餐點">➕</button>
+                <div class="form-side">
+                    <h2 style="margin-top:0; margin-bottom: 15px;">🛒 開始點餐</h2>
+                    <form id="order-form">
+                        <input type="text" id="name" placeholder="您的姓名" required oninput="handleTyping()">
+                        
+                        <div id="order-items-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                            <div class="order-item-row">
+                                <input type="text" class="item-input" placeholder="餐點品項 (如: 肉燥飯)" required oninput="handleTyping()">
+                                <input type="number" class="price-input" placeholder="價格" required min="1" oninput="handleTyping()" style="width: 90px; flex: none;">
+                                <button type="button" class="btn-action-icon" onclick="addOrderItemRow()" style="background: var(--primary-soft); color: var(--primary);" title="新增下一樣餐點">➕</button>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="btn-submit">✅ 送出訂單</button>
+                    </form>
+                    <div class="quick-tags-area" id="quick-tags-container" style="margin-top: 15px; border-top: 1px dashed #E2E8F0; padding-top: 10px;"></div>
+                </div>
+
+                <div class="menu-side" id="system-menu-wrapper">
+                    <div id="system-menu-container">
+                        <div style="text-align:center; padding: 40px 20px; color: var(--gray); font-weight: bold;">
+                            📋 團主尚未發布今日菜單
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" id="submit-btn" class="btn-submit">✅ 送出訂單</button>
-            </form>
-            <div class="quick-tags-area" id="quick-tags-container"></div>
+            </div>
         </div>
 
         <div class="card">
@@ -521,23 +557,20 @@
         }
     }
 
-    // 👉 升級版的系統菜單標籤生成函數 (支援自動分類 + 摺疊收合 + 精簡版面)
+    // 👉 升級版的系統菜單標籤生成函數 (放入右側區塊 + 點擊動態回饋)
     function renderSystemMenuTags(menuStr) {
         let container = document.getElementById('system-menu-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'system-menu-container';
-            container.style.marginTop = '15px';
-            container.style.borderTop = '2px dashed #CBD5E1';
-            container.style.paddingTop = '10px';
-            document.getElementById('quick-tags-container').insertAdjacentElement('afterend', container);
+        if (!container) return; // 確保容器存在
+        
+        if(!menuStr) {
+            // 如果沒有菜單，顯示預設文字
+            container.innerHTML = '<div style="text-align:center; padding: 40px 20px; color: var(--gray); font-weight: bold;">📋 團主尚未發布今日菜單</div>';
+            return;
         }
-        
-        // 加入標題與提示操作的小字
-        container.innerHTML = '<h3 style="margin: 0 0 10px 0; color: var(--primary); font-size: 1.1em; display: flex; align-items: center; justify-content: space-between;"><span>📋 本日店家菜單</span><span style="font-size: 0.75em; color: var(--gray); font-weight: normal; background: #E2E8F0; padding: 2px 8px; border-radius: 10px;">點擊分類可收合 ↕️</span></h3>';
-        
-        if(!menuStr) return;
 
+        // 加入標題與提示小字
+        container.innerHTML = '<h3 style="margin: 0 0 15px 0; color: var(--primary); font-size: 1.1em; display: flex; align-items: center; justify-content: space-between;"><span>📋 本日菜單選項</span><span style="font-size: 0.75em; color: var(--gray); font-weight: normal; background: #E2E8F0; padding: 2px 8px; border-radius: 10px;">點擊直接加入左側 👈</span></h3>';
+        
         let lines = menuStr.split('\n');
         let currentCategoryDiv = null;
 
@@ -548,29 +581,27 @@
             if (text.startsWith('[') && text.endsWith(']')) {
                 let catName = text.substring(1, text.length - 1);
                 
-                // 🌟 改變魔法這裡開始：使用 details 標籤製作原生的「摺疊面板」
+                // 建立可摺疊的分類面板
                 let catSection = document.createElement('details');
-                catSection.open = true; // 預設全部展開，覺得太長可以點擊收合
-                catSection.style.marginBottom = '6px'; // 縮小分類之間的垂直距離
-                catSection.style.background = '#F8FAFC'; // 換成淡淡的灰藍色背景
+                catSection.open = true; // 預設展開
+                catSection.style.marginBottom = '8px'; 
+                catSection.style.background = 'white'; 
                 catSection.style.borderRadius = '8px';
                 catSection.style.border = '1px solid #E2E8F0';
+                catSection.style.boxShadow = '0 1px 2px rgba(0,0,0,0.02)';
                 
-                // 分類的標題按鈕
                 let catTitle = document.createElement('summary');
                 catTitle.innerText = `${catName}`;
                 catTitle.style.fontWeight = 'bold';
                 catTitle.style.color = '#334155';
-                catTitle.style.padding = '8px 12px'; // 縮小標題的上下空間
+                catTitle.style.padding = '10px 12px'; 
                 catTitle.style.cursor = 'pointer';
-                catTitle.style.userSelect = 'none';
                 catTitle.style.outline = 'none';
                 
-                // 放餐點按鈕的容器
                 let btnContainer = document.createElement('div');
                 btnContainer.className = 'quick-tags-area';
-                btnContainer.style.padding = '0 12px 10px 12px';
-                btnContainer.style.gap = '6px'; // 縮小按鈕之間的間隔
+                btnContainer.style.padding = '0 12px 12px 12px';
+                btnContainer.style.gap = '6px'; 
                 
                 catSection.appendChild(catTitle);
                 catSection.appendChild(btnContainer);
@@ -587,14 +618,14 @@
                         let btn = document.createElement('button'); 
                         btn.type = 'button'; 
                         btn.className = 'quick-tag'; 
-                        // 🌟 讓餐點按鈕變小、變精簡
-                        btn.style.background = 'white'; 
+                        btn.style.background = '#F8FAFC'; 
                         btn.style.borderColor = '#CBD5E1';
-                        btn.style.padding = '4px 10px'; 
+                        btn.style.padding = '6px 12px'; 
                         btn.style.fontSize = '0.9em';
-                        btn.innerText = `${item} $${price}`; // 拿掉括號，視覺更俐落
+                        btn.innerText = `${item} $${price}`; 
                         
-                        btn.onclick = () => { 
+                        // 點擊事件：自動加入左側表單 ＋ 特效
+                        btn.onclick = (e) => { 
                             let rows = document.querySelectorAll('.order-item-row');
                             let lastRow = rows[rows.length - 1];
                             let itemInput = lastRow.querySelector('.item-input');
@@ -607,6 +638,18 @@
                                 priceInput.value = price;
                             }
                             window.handleTyping(); 
+                            
+                            // 💡 視覺回饋：按鈕變綠色一秒鐘
+                            let originalBg = e.target.style.background;
+                            let originalColor = e.target.style.color;
+                            e.target.style.background = 'var(--success)';
+                            e.target.style.color = 'white';
+                            e.target.innerText = '✅ 已加入';
+                            setTimeout(() => {
+                                e.target.style.background = originalBg;
+                                e.target.style.color = originalColor;
+                                e.target.innerText = `${item} $${price}`;
+                            }, 800);
                         };
                         
                         if (!currentCategoryDiv) {
@@ -1124,6 +1167,7 @@
 
 </body>
 </html>
+
 
 
 
