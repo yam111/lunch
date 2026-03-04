@@ -752,28 +752,25 @@
         }); 
     }
 
-  // 👉 執行 AI 視覺辨識 (終極升級版)
+  // 👉 執行 AI 視覺辨識 (終極升級版 + 錯誤除錯)
     window.startOCR = async function() {
         if (!uploadedImageBase64) return;
         const statusEl = document.getElementById('ocr-status');
         const btn = document.getElementById('btn-ocr');
         const menuInput = document.getElementById('parsed-menu-input');
         
-        // 🔑 步驟一：請在這裡貼上你剛剛申請的 Gemini API Key
-        const GEMINI_API_KEY = "AIzaSyDmAIx4yv9htCf7FtddRGn8PSb7Ae-DaXE";
+        // 🔑 填入你的 Key (請確保保留前後雙引號，且引號內沒有多餘的空白)
+        const GEMINI_API_KEY = "AIzaSyDmAIx4yv9htCf7FtddRGn8PSb7Ae-DaXE"; 
 
         statusEl.innerText = "✨ 召喚 AI 看菜單中，請稍候幾秒鐘...";
         btn.disabled = true;
 
         try {
-            // 處理圖片格式，把前面的 data:image/jpeg;base64, 拿掉，只留乾淨的編碼給 AI
             const base64Data = uploadedImageBase64.split(',')[1];
             const mimeType = uploadedImageBase64.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
 
-            // 準備給 AI 的指令 (Prompt)
             const promptText = "這是一張餐廳菜單。請幫我辨識出所有的餐點品項和對應的價格。請嚴格按照「品項名稱 價格」的格式輸出，中間空一格，每行一個品項。如果該項目沒有價格請跳過。不要輸出任何其他廢話、標題或 Markdown 符號。範例：\n排骨飯 100\n雞腿便當 110";
 
-            // 呼叫 Gemini 1.5 Flash 模型
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -788,19 +785,26 @@
             });
 
             const data = await response.json();
-// 檢查 AI 是不是有成功回傳文字
+
+            // 檢查 AI 是不是有成功回傳文字
             if (data.candidates && data.candidates.length > 0) {
                 let aiText = data.candidates[0].content.parts[0].text;
                 menuInput.value = aiText.trim();
                 statusEl.innerText = "✅ AI 辨識完成！請確認格式是否正確。";
             } else if (data.error) {
-                // 👉 把 Google 吐出來的真正錯誤訊息印在畫面上
                 statusEl.innerText = "❌ API 拒絕連線，錯誤原因：" + data.error.message;
                 console.error("詳細錯誤:", data.error);
             } else {
                 statusEl.innerText = "❌ 發生未知的錯誤，請按 F12 打開開發者工具查看 Console。";
                 console.log("奇怪的回傳資料:", data);
             }
+        } catch (err) {
+            console.error("呼叫 API 時發生錯誤:", err);
+            statusEl.innerText = "❌ 發生錯誤，請確認網路連線是否正常。";
+        } finally {
+            btn.disabled = false;
+        }
+    }
 
     window.toggleLock = function() { if(confirm(globalLocked ? "開放點餐？" : "停止收單？")) settingsRef.update({ isLocked: !globalLocked, lockTime: null }); }
 
@@ -1061,6 +1065,7 @@
 
 </body>
 </html>
+
 
 
 
