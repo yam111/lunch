@@ -521,19 +521,20 @@
         }
     }
 
-    // 👉 升級版的系統菜單標籤生成函數 (支援自動分類排版)
+    // 👉 升級版的系統菜單標籤生成函數 (支援自動分類 + 摺疊收合 + 精簡版面)
     function renderSystemMenuTags(menuStr) {
         let container = document.getElementById('system-menu-container');
         if (!container) {
             container = document.createElement('div');
             container.id = 'system-menu-container';
-            container.style.marginTop = '20px';
+            container.style.marginTop = '15px';
             container.style.borderTop = '2px dashed #CBD5E1';
-            container.style.paddingTop = '15px';
+            container.style.paddingTop = '10px';
             document.getElementById('quick-tags-container').insertAdjacentElement('afterend', container);
         }
-        // 清空並加入總標題
-        container.innerHTML = '<h3 style="margin: 0 0 15px 0; color: var(--primary); font-size: 1.1em; display: flex; align-items: center; gap: 8px;">📋 本日店家菜單</h3>';
+        
+        // 加入標題與提示操作的小字
+        container.innerHTML = '<h3 style="margin: 0 0 10px 0; color: var(--primary); font-size: 1.1em; display: flex; align-items: center; justify-content: space-between;"><span>📋 本日店家菜單</span><span style="font-size: 0.75em; color: var(--gray); font-weight: normal; background: #E2E8F0; padding: 2px 8px; border-radius: 10px;">點擊分類可收合 ↕️</span></h3>';
         
         if(!menuStr) return;
 
@@ -544,40 +545,39 @@
             let text = line.trim();
             if (!text) return;
 
-            // 判斷是不是分類標題 (開頭是 [ 結尾是 ])
             if (text.startsWith('[') && text.endsWith(']')) {
-                let catName = text.substring(1, text.length - 1); // 把中括號拿掉
+                let catName = text.substring(1, text.length - 1);
                 
-                // 建立該分類的專屬區塊
-                let catSection = document.createElement('div');
-                catSection.style.marginBottom = '15px';
-                catSection.style.background = 'white';
-                catSection.style.padding = '12px 15px';
-                catSection.style.borderRadius = '12px';
+                // 🌟 改變魔法這裡開始：使用 details 標籤製作原生的「摺疊面板」
+                let catSection = document.createElement('details');
+                catSection.open = true; // 預設全部展開，覺得太長可以點擊收合
+                catSection.style.marginBottom = '6px'; // 縮小分類之間的垂直距離
+                catSection.style.background = '#F8FAFC'; // 換成淡淡的灰藍色背景
+                catSection.style.borderRadius = '8px';
                 catSection.style.border = '1px solid #E2E8F0';
                 
-                // 建立分類標題
-                let catTitle = document.createElement('div');
-                catTitle.innerText = `🏷️ ${catName}`;
-                catTitle.style.fontWeight = '900';
-                catTitle.style.color = '#475569';
-                catTitle.style.marginBottom = '10px';
-                catTitle.style.fontSize = '0.95em';
-                catTitle.style.borderBottom = '2px solid #F1F5F9';
-                catTitle.style.paddingBottom = '6px';
+                // 分類的標題按鈕
+                let catTitle = document.createElement('summary');
+                catTitle.innerText = `${catName}`;
+                catTitle.style.fontWeight = 'bold';
+                catTitle.style.color = '#334155';
+                catTitle.style.padding = '8px 12px'; // 縮小標題的上下空間
+                catTitle.style.cursor = 'pointer';
+                catTitle.style.userSelect = 'none';
+                catTitle.style.outline = 'none';
                 
-                // 建立放按鈕的容器
+                // 放餐點按鈕的容器
                 let btnContainer = document.createElement('div');
                 btnContainer.className = 'quick-tags-area';
-                btnContainer.style.marginTop = '0';
+                btnContainer.style.padding = '0 12px 10px 12px';
+                btnContainer.style.gap = '6px'; // 縮小按鈕之間的間隔
                 
                 catSection.appendChild(catTitle);
                 catSection.appendChild(btnContainer);
                 container.appendChild(catSection);
                 
-                currentCategoryDiv = btnContainer; // 把接下來的按鈕都丟進這個容器裡
+                currentCategoryDiv = btnContainer;
             } else {
-                // 如果是餐點品項
                 let parts = text.split(/\s+/);
                 if (parts.length >= 2) {
                     let price = parts.pop();
@@ -587,11 +587,12 @@
                         let btn = document.createElement('button'); 
                         btn.type = 'button'; 
                         btn.className = 'quick-tag'; 
-                        btn.style.background = '#EEF2FF'; // 柔和的藍紫色
-                        btn.style.borderColor = '#C7D2FE';
-                        btn.style.color = '#3730A3';
-                        btn.style.fontWeight = 'bold';
-                        btn.innerText = `${item} ($${price})`;
+                        // 🌟 讓餐點按鈕變小、變精簡
+                        btn.style.background = 'white'; 
+                        btn.style.borderColor = '#CBD5E1';
+                        btn.style.padding = '4px 10px'; 
+                        btn.style.fontSize = '0.9em';
+                        btn.innerText = `${item} $${price}`; // 拿掉括號，視覺更俐落
                         
                         btn.onclick = () => { 
                             let rows = document.querySelectorAll('.order-item-row');
@@ -608,12 +609,12 @@
                             window.handleTyping(); 
                         };
                         
-                        // 防呆：如果 AI 一開始沒有給分類標題，就先建一個「其他」分類
                         if (!currentCategoryDiv) {
                             let defaultSection = document.createElement('div');
-                            defaultSection.style.marginBottom = '15px';
+                            defaultSection.style.marginBottom = '8px';
                             currentCategoryDiv = document.createElement('div');
                             currentCategoryDiv.className = 'quick-tags-area';
+                            currentCategoryDiv.style.gap = '6px';
                             defaultSection.appendChild(currentCategoryDiv);
                             container.appendChild(defaultSection);
                         }
@@ -1123,6 +1124,7 @@
 
 </body>
 </html>
+
 
 
 
