@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     
     <style>
         :root {
@@ -284,6 +285,12 @@
                     <button class="btn-remove-img" onclick="clearImage()">✕</button>
                 </div>
             </div>
+            <div class="editor-group" id="ocr-section" style="display: none; background: #F8FAFC; padding: 15px; border-radius: 12px; border: 1px dashed #CBD5E1;">
+                <button type="button" id="btn-ocr" onclick="startOCR()" style="background: var(--primary); color: white; width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🔍 自動辨識菜單文字 (需等幾秒鐘)</button>
+                <p id="ocr-status" style="font-size: 0.9em; color: var(--warning); font-weight: bold; margin: 5px 0;"></p>
+                <label style="margin-top: 10px;">📋 辨識結果 (請修正為「品項 價格」格式，每行一個)：</label>
+                <textarea id="parsed-menu-input" placeholder="例如：&#10;排骨飯 100&#10;雞腿便當 110" style="height: 150px; border: 1px solid #CBD5E1; background: white; border-radius: 8px; padding: 10px; width: 100%; box-sizing: border-box;"></textarea>
+            </div>
         </div>
         <div class="modal-footer">
             <button class="btn-modal-cancel" onclick="document.getElementById('bulletin-modal').style.display='none'">取消</button>
@@ -341,6 +348,9 @@
 
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
+    
+    // 👉 儲存當前解析的菜單文字
+    let currentMenuText = "";
     
     let myPresenceRef = null;
     let myCurrentStatus = 'browsing'; 
@@ -511,12 +521,71 @@
         }
     }
 
+    // 👉 新增的系統菜單標籤生成函數
+    function renderSystemMenuTags(menuStr) {
+        let container = document.getElementById('system-menu-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'system-menu-container';
+            container.className = 'quick-tags-area';
+            container.style.marginTop = '15px';
+            container.style.borderTop = '1px dashed #E2E8F0';
+            container.style.paddingTop = '10px';
+            document.getElementById('quick-tags-container').insertAdjacentElement('afterend', container);
+        }
+        container.innerHTML = '';
+        
+        if(!menuStr) return;
+
+        let label = document.createElement('span'); 
+        label.className = 'quick-tag-label'; 
+        label.innerText = '📋 本日店家菜單：'; 
+        label.style.fontWeight = 'bold';
+        container.appendChild(label);
+
+        let lines = menuStr.split('\n');
+        lines.forEach(line => {
+            let parts = line.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                let price = parts.pop();
+                let item = parts.join(' ');
+                
+                if(!isNaN(price)) {
+                    let btn = document.createElement('button'); 
+                    btn.type = 'button'; 
+                    btn.className = 'quick-tag'; 
+                    btn.style.background = '#E0E7FF';
+                    btn.style.borderColor = '#C7D2FE';
+                    btn.innerText = `${item} ($${price})`;
+                    
+                    btn.onclick = () => { 
+                        let rows = document.querySelectorAll('.order-item-row');
+                        let lastRow = rows[rows.length - 1];
+                        let itemInput = lastRow.querySelector('.item-input');
+                        let priceInput = lastRow.querySelector('.price-input');
+                        
+                        if(itemInput.value !== "") {
+                            window.addOrderItemRow(item, price);
+                        } else {
+                            itemInput.value = item;
+                            priceInput.value = price;
+                        }
+                        window.handleTyping(); 
+                    };
+                    container.appendChild(btn);
+                }
+            }
+        });
+    }
+
     settingsRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
         globalLocked = data.isLocked || false;
         globalLockTime = data.lockTime || 0; 
         bText = data.bulletinText || "📢 歡迎點餐！";
-        bLink = data.bulletinLink || ""; uploadedImageBase64 = data.bulletinImage || "";
+        bLink = data.bulletinLink || ""; 
+        uploadedImageBase64 = data.bulletinImage || "";
+        currentMenuText = data.menuText || ""; // 👉 讀取伺服器上的菜單
 
         if (data.broadcastTime && data.broadcastTime > lastBroadcastTime) {
             lastBroadcastTime = data.broadcastTime;
@@ -542,6 +611,9 @@
         
         updateCountdownUI(); 
         if(!editingOrderId) render(); 
+        
+        // 👉 更新畫面上的菜單按鈕
+        renderSystemMenuTags(currentMenuText);
     });
 
     function updateCountdownUI() {
@@ -621,6 +693,7 @@
         document.querySelectorAll('.admin-only-th').forEach(th => th.style.display = isAdmin ? "table-cell" : "none");
     }
 
+    // 👉 更新圖片上傳事件：同時顯示 OCR 按鈕
     document.getElementById('bulletin-file-input').addEventListener('change', function(e) {
         const file = e.target.files[0]; if (!file) return; if (!file.type.match('image.*')) { alert("請選擇圖片！"); return; }
         const reader = new FileReader();
@@ -631,18 +704,91 @@
                 if (width > 800) { height *= 800 / width; width = 800; }
                 canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                 uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
-                document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'inline-block';
+                document.getElementById('image-preview').src = uploadedImageBase64; 
+                document.getElementById('image-preview-container').style.display = 'inline-block';
+                // 顯示 OCR 區塊
+                document.getElementById('ocr-section').style.display = 'block';
             }; img.src = event.target.result;
         }; reader.readAsDataURL(file);
     });
     
-    window.clearImage = function() { uploadedImageBase64 = ""; document.getElementById('bulletin-file-input').value = ""; document.getElementById('image-preview-container').style.display = 'none'; }
-    window.openBulletinEditor = function() {
-        document.getElementById('bulletin-text-input').value = bText; document.getElementById('bulletin-link-input').value = bLink;
-        if (uploadedImageBase64) { document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'inline-block'; } else { document.getElementById('image-preview-container').style.display = 'none'; }
-        document.getElementById('bulletin-file-input').value = ""; document.getElementById('bulletin-modal').style.display = "flex";
+    // 👉 更新清除圖片事件：隱藏 OCR 按鈕與結果
+    window.clearImage = function() { 
+        uploadedImageBase64 = ""; 
+        document.getElementById('bulletin-file-input').value = ""; 
+        document.getElementById('image-preview-container').style.display = 'none';
+        document.getElementById('ocr-section').style.display = 'none';
+        document.getElementById('ocr-status').innerText = "";
     }
-    window.saveBulletin = function() { settingsRef.update({ bulletinText: document.getElementById('bulletin-text-input').value, bulletinLink: document.getElementById('bulletin-link-input').value, bulletinImage: uploadedImageBase64 }).then(() => { document.getElementById('bulletin-modal').style.display = "none"; }); }
+    
+    // 👉 更新打開編輯器事件：載入已儲存的菜單文字
+    window.openBulletinEditor = function() {
+        document.getElementById('bulletin-text-input').value = bText; 
+        document.getElementById('bulletin-link-input').value = bLink;
+        document.getElementById('parsed-menu-input').value = currentMenuText;
+        
+        if (uploadedImageBase64) { 
+            document.getElementById('image-preview').src = uploadedImageBase64; 
+            document.getElementById('image-preview-container').style.display = 'inline-block'; 
+            document.getElementById('ocr-section').style.display = 'block';
+        } else { 
+            document.getElementById('image-preview-container').style.display = 'none'; 
+            document.getElementById('ocr-section').style.display = 'none';
+        }
+        document.getElementById('bulletin-file-input').value = ""; 
+        document.getElementById('ocr-status').innerText = "";
+        document.getElementById('bulletin-modal').style.display = "flex";
+    }
+    
+    // 👉 更新儲存事件：儲存辨識整理後的文字
+    window.saveBulletin = function() { 
+        settingsRef.update({ 
+            bulletinText: document.getElementById('bulletin-text-input').value, 
+            bulletinLink: document.getElementById('bulletin-link-input').value, 
+            bulletinImage: uploadedImageBase64,
+            menuText: document.getElementById('parsed-menu-input').value
+        }).then(() => { 
+            document.getElementById('bulletin-modal').style.display = "none"; 
+        }); 
+    }
+
+    // 👉 執行 OCR 辨識
+    window.startOCR = async function() {
+        if (!uploadedImageBase64) return;
+        const statusEl = document.getElementById('ocr-status');
+        const btn = document.getElementById('btn-ocr');
+        const menuInput = document.getElementById('parsed-menu-input');
+        
+        statusEl.innerText = "⏳ 載入中文辨識引擎中，請稍候...";
+        btn.disabled = true;
+
+        try {
+            const worker = await Tesseract.createWorker('cht');
+            statusEl.innerText = "🔍 正在努力看菜單中...";
+            
+            const ret = await worker.recognize(uploadedImageBase64);
+            await worker.terminate();
+
+            const text = ret.data.text;
+            let lines = text.split('\n');
+            let parsedLines = [];
+            lines.forEach(line => {
+                let cleanLine = line.trim().replace(/\s+/g, ' '); 
+                if (cleanLine.length > 2) { 
+                    parsedLines.push(cleanLine);
+                }
+            });
+
+            menuInput.value = parsedLines.join('\n');
+            statusEl.innerText = "✅ 辨識完成！因為菜單排版複雜，請務必手動整理成「品項名稱 價格」(中間空一格) 的格式喔！";
+        } catch (err) {
+            console.error(err);
+            statusEl.innerText = "❌ 辨識失敗，請確認網路連線。";
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
     window.toggleLock = function() { if(confirm(globalLocked ? "開放點餐？" : "停止收單？")) settingsRef.update({ isLocked: !globalLocked, lockTime: null }); }
 
     window.showSummary = function() {
@@ -697,7 +843,6 @@
         orders.forEach(order => {
             total += order.price; 
             
-            // 🐛 修復：精確的「實際現金」計算，原為 undefined 變數導致整個程式卡死！
             if (order.isPaid) {
                 if (order.change > 0 && !order.changeGiven) {
                     actualCollectedCash += order.paidAmount; 
@@ -711,7 +856,6 @@
             if (!isAdmin && !myNames.includes(order.name)) return; 
             
             let isEditing = (editingOrderId === order.id);
-            // 🐛 修復：避免品項內含有 " 雙引號導致 HTML 破版
             let safeItem = order.item ? order.item.replace(/"/g, '&quot;') : '';
 
             if (order.isPaid) {
@@ -762,7 +906,6 @@
                             <button class="btn-del" onclick="cancelEditInline()">取消</button>
                         </td></tr>`;
                 } else {
-                    // 🐛 修復：結帳框自動預設帶入應付金額，且不會被別人的動作洗掉
                     let currentPayVal = window.payInputValues[order.id] !== undefined ? window.payInputValues[order.id] : order.price;
                     let payInputTd = isAdmin ? `<td><input type="number" class="pay-input" value="${currentPayVal}" oninput="window.payInputValues['${order.id}'] = this.value"></td>` : `<td style="display:none;"></td>`;
                     
@@ -821,7 +964,6 @@
         editingOrderId = id; render(); 
     }
 
-    // 🐛 修復：儲存時強制解除編輯狀態並更新畫面
     window.saveOrderInline = function(id, isPaid) {
         const order = orders.find(o => o.id === id); if (!order) return;
         let itemInput = document.getElementById(`edit-item-${id}`).value.trim();
