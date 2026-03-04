@@ -752,19 +752,33 @@
         }); 
     }
 
-    // 👉 執行 OCR 辨識
+  // 👉 執行 OCR 辨識 (加入進度條顯示)
     window.startOCR = async function() {
         if (!uploadedImageBase64) return;
         const statusEl = document.getElementById('ocr-status');
         const btn = document.getElementById('btn-ocr');
         const menuInput = document.getElementById('parsed-menu-input');
         
-        statusEl.innerText = "⏳ 載入中文辨識引擎中，請稍候...";
+        statusEl.innerText = "⏳ 準備連線到辨識引擎...";
         btn.disabled = true;
 
         try {
-            const worker = await Tesseract.createWorker('cht');
-            statusEl.innerText = "🔍 正在努力看菜單中...";
+            // 建立 Worker 時，加入 logger 來監聽進度
+            // 註：繁體中文的標準代號是 'chi_tra'
+            const worker = await Tesseract.createWorker('chi_tra', 1, {
+                logger: m => {
+                    // m.status 會回報目前的狀態，m.progress 是 0~1 的進度
+                    let percent = Math.round(m.progress * 100);
+                    
+                    if (m.status === 'loading language traineddata') {
+                        statusEl.innerText = `⏳ 下載中文語言包中... ${percent}% (初次使用較久，之後就很快囉)`;
+                    } else if (m.status === 'recognizing text') {
+                        statusEl.innerText = `🔍 正在努力看菜單中... ${percent}%`;
+                    } else {
+                        statusEl.innerText = `⏳ 系統準備中... (${m.status})`;
+                    }
+                }
+            });
             
             const ret = await worker.recognize(uploadedImageBase64);
             await worker.terminate();
@@ -783,7 +797,7 @@
             statusEl.innerText = "✅ 辨識完成！因為菜單排版複雜，請務必手動整理成「品項名稱 價格」(中間空一格) 的格式喔！";
         } catch (err) {
             console.error(err);
-            statusEl.innerText = "❌ 辨識失敗，請確認網路連線。";
+            statusEl.innerText = "❌ 辨識失敗，請確認網路連線是否穩定。";
         } finally {
             btn.disabled = false;
         }
@@ -1048,3 +1062,4 @@
 
 </body>
 </html>
+
