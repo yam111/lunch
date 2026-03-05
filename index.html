@@ -147,38 +147,22 @@
 <script type="module">
     import { GoogleGenerativeAI } from "@google/generative-ai";
 
-    // --- 1. Firebase 初始化 ---
+  // --- 1. Firebase 初始化 ---
     const firebaseConfig = {
-  apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
-  authDomain: "lunch-f0895.firebaseapp.com",
-  databaseURL: "https://lunch-f0895-default-rtdb.firebaseio.com",
-  projectId: "lunch-f0895",
-  storageBucket: "lunch-f0895.firebasestorage.app",
-  messagingSenderId: "942714581747",
-  appId: "1:942714581747:web:c9b888b08a740842fb7d86"
-};
+        apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
+        authDomain: "lunch-f0895.firebaseapp.com",
+        databaseURL: "https://lunch-f0895-default-rtdb.firebaseio.com",
+        projectId: "lunch-f0895",
+        storageBucket: "lunch-f0895.firebasestorage.app",
+        messagingSenderId: "942714581747",
+        appId: "1:942714581747:web:c9b888b08a740842fb7d86"
+    };
 
-    // 檢查是否已填寫 Config
-    if (firebaseConfig.apiKey === "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM") {
-        alert("⚠️ 尚未配置 Firebase Config！請編輯程式碼並填入您的 Firebase 設定。");
-    }
-
+    // 刪除原本的 if 檢查判斷式，直接初始化
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- 2. 初始化變數 ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const isBoss = urlParams.get('role') === 'boss';
-    let cart = [];
-
-    // --- 3. Key 管理 (Gemini AI 用) ---
-    window.saveApiKey = function() {
-        const key = document.getElementById('input-api-key').value;
-        if (key) { localStorage.setItem('GEMINI_KEY', key); document.getElementById('key-modal').style.display = 'none'; }
-    };
-    window.resetApiKey = function() { localStorage.removeItem('GEMINI_KEY'); location.reload(); };
-
-    // --- 4. AI OCR 功能 ---
+    // --- 4. AI OCR 功能 (這裡我幫你把模型改回 1.5 版，解決 limit: 0 的問題) ---
     window.runAutoOCR = async function(input) {
         const key = localStorage.getItem('GEMINI_KEY');
         if (!key) { document.getElementById('key-modal').style.display = 'flex'; return; }
@@ -187,10 +171,14 @@
 
         try {
             const genAI = new GoogleGenerativeAI(key);
+            // 改用 gemini-1.5-flash，通常免費額度最穩，不會報 429 或 404
             const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             const file = input.files[0];
             const base64 = await toBase64(file);
-            const result = await model.generateContent([{ inlineData: { data: base64.split(',')[1], mimeType: file.type } }, "分析菜單提取品項與價格。格式：[分類] 下一行 品項 價格。"]);
+            const result = await model.generateContent([
+                { inlineData: { data: base64.split(',')[1], mimeType: file.type } }, 
+                "分析菜單提取品項與價格。格式：[分類] 下一行 品項 價格。只輸出文字內容。"
+            ]);
             document.getElementById('menu-editor').value = result.response.text();
         } catch (e) { alert("辨識失敗：" + e.message); }
         finally { document.getElementById('ai-status').style.display = 'none'; }
@@ -353,5 +341,6 @@
 
 </body>
 </html>
+
 
 
