@@ -63,192 +63,60 @@
         .cart-item-row input { margin: 0; border: none; background: transparent; padding: 5px; font-size: 1em; }
         .cart-item-row input:focus { box-shadow: none; background: white; border-radius: 6px;}
         
-        .layout-wrapper { max-width: 1250px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
-        .main-content { flex: 1; width: 100%; transition: 0.3s; }
-        
-        .sidebar { 
-            width: 280px; background: var(--surface); border-radius: 20px; 
-            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 20px; 
-            position: sticky; top: 20px; height: calc(100vh - 40px); overflow-y: auto;
-            transition: transform 0.3s ease;
-        }
-        
-        .toggle-sidebar-btn { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 2000; border: none; font-size: 1.5em; cursor: pointer;}
-
-        @media (max-width: 900px) {
-            .sidebar { position: fixed; top: 0; right: 0; height: 100vh; z-index: 1500; transform: translateX(110%); width: 80%; max-width: 300px; border-radius: 20px 0 0 20px;}
-            .sidebar.active { transform: translateX(0); }
-            .toggle-sidebar-btn { display: block; }
-            .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1400; }
-            .sidebar-overlay.active { display: block; }
-        }
-
-        .online-header { font-weight: 900; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--primary); border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom: 10px;}
-        .online-user-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.02); animation: slideIn 0.3s ease;}
-        .online-user-item.is-admin { background: rgba(245, 158, 11, 0.05); border-radius: 12px; border-bottom: none; margin-bottom: 5px; border: 1px solid rgba(245, 158, 11, 0.2);}
-        .user-avatar { width: 35px; height: 35px; background: #E0E7FF; color: var(--primary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0;}
-        .online-user-item.is-admin .user-avatar { background: #FEF3C7; color: #D97706; }
-        .user-info { display: flex; flex-direction: column; width: 100%; overflow: hidden;}
-        .user-name { font-weight: 700; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px;}
-        .user-status { font-size: 0.8em; color: var(--gray); display: flex; align-items: center; gap: 4px;}
-        
-        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
-        .status-browsing { color: var(--gray); } .dot-browsing { background: var(--gray); }
-        .status-typing { color: var(--warning); font-weight: bold; animation: pulseText 1.5s infinite;} .dot-typing { background: var(--warning); animation: blink 1s infinite; }
-        .status-done { color: var(--success); font-weight: bold; } .dot-done { background: var(--success); }
-
-        @keyframes blink { 50% { opacity: 0.4; } } @keyframes pulseText { 50% { opacity: 0.7; } } @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
-        .flex { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .header-area { justify-content: space-between; background: var(--surface); padding: 20px 25px; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); margin-bottom: 25px; }
-        h1 { margin: 0; font-weight: 900; color: var(--dark); font-size: 1.6em; display: flex; align-items: center; gap: 10px;}
-        
-        button { padding: 10px 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-family: inherit; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px -2px rgba(0,0,0,0.15); }
-        .admin-only { display: none; }
-        .btn-admin { background: #E2E8F0; color: var(--gray); box-shadow: none; } .btn-admin:hover { background: #CBD5E1; color: var(--dark);}
-        .btn-lock { background: #FEE2E2; color: var(--danger); } .btn-lock:hover { background: var(--danger); color: white;}
-        .btn-summary { background: #E0E7FF; color: var(--primary); } .btn-summary:hover { background: var(--primary); color: white;}
-        .btn-split { background: #D1FAE5; color: #047857; } .btn-split:hover { background: #10B981; color: white;}
-        .btn-export { background: #F3E8FF; color: #9333EA; } .btn-export:hover { background: #9333EA; color: white;}
-        .btn-clear { background: #F1F5F9; color: var(--gray); box-shadow: none;} .btn-clear:hover { background: var(--dark); color: white;}
-        .btn-broadcast { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; animation: pulse 2s infinite; font-size: 1.05em;}
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
-        
-        .card { background: var(--surface); border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.08); padding: 25px; margin-bottom: 25px; }
-        
-        .bulletin { background: linear-gradient(135deg, rgba(255,251,235,0.95) 0%, rgba(254,243,199,0.95) 100%); border-left: 6px solid var(--warning); position: relative; }
-        .bulletin-content { color: #92400E; font-size: 1.1em; line-height: 1.7; }
-        .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: block;}
-        .bulletin-content a { background: #FDE68A; padding: 4px 10px; border-radius: 8px; color: #B45309; text-decoration: none; font-weight: 700; margin-top: 5px; display: inline-block;}
-        .bulletin-content a:hover { background: #FCD34D; }
-        .btn-edit-small { position: absolute; top: 15px; right: 20px; background: white; color: var(--warning); box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
-
-        .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none;}
-        .stat-box { flex: 1; padding: 20px; border-radius: 20px; color: white; box-shadow: 0 10px 20px -3px rgba(0,0,0,0.15); position: relative; overflow: hidden; min-width: 150px;}
-        .stat-box::after { content: ''; position: absolute; top: -50%; right: -20%; width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; }
-        .box-total { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); }
-        .box-paid { background: linear-gradient(135deg, #34D399 0%, #10B981 100%); }
-        .box-unpaid { background: linear-gradient(135deg, #F87171 0%, #EF4444 100%); }
-        .stat-title { font-size: 0.95em; opacity: 0.9; font-weight: 500; margin-bottom: 5px;}
-        .stat-value { font-size: 2em; font-weight: 900; }
-
-        form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; width: 100%;}
-        input { padding: 14px 18px; border: 2px solid #E2E8F0; border-radius: 12px; font-size: 1.05em; background: rgba(248, 250, 252, 0.8); outline: none; transition: 0.3s; font-family: inherit; width: 100%; box-sizing: border-box;}
-        input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        .btn-submit { background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; width: 100%; padding: 14px; font-size: 1.1em; margin-top: 5px;}
-        .btn-submit:disabled { background: #CBD5E1; cursor: not-allowed; box-shadow: none; transform: none;}
-        
-        .order-item-row { display: flex; gap: 8px; width: 100%; align-items: center; }
-        .order-item-row input { margin: 0; }
-        .btn-action-icon { padding: 10px; min-width: 45px; flex: none; display: flex; justify-content: center; align-items: center; font-size: 1.2em; border-radius: 12px; cursor: pointer; border: none; transition: 0.2s;}
-        .btn-action-icon:active { transform: scale(0.95); }
-
-        .quick-tags-area { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px;}
-        .quick-tag { background: #F1F5F9; color: var(--dark); border: 1px solid #E2E8F0; padding: 6px 14px; border-radius: 20px; font-size: 0.95em; box-shadow: none;}
-        .quick-tag:hover { background: #E2E8F0; transform: scale(1.05); }
-
-        h2 { color: var(--dark); margin-top: 0; font-size: 1.4em; font-weight: 900; display: flex; align-items: center; gap: 8px;}
-        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 15px; min-width: 650px;}
-        th, td { padding: 15px 12px; text-align: left; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        th { background-color: rgba(248, 250, 252, 0.7); color: var(--gray); font-weight: 700; text-transform: uppercase; font-size: 0.85em; letter-spacing: 0.05em; }
-        th:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-        th:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-        
-        .pay-input { width: 85px; padding: 10px; margin-right: 8px; border: 2px solid var(--border); border-radius: 8px; font-weight: bold; color: var(--primary);}
-        .inline-edit-input { width: 100%; padding: 8px 12px; border: 2px solid var(--primary); border-radius: 8px; font-size: 1em; font-family: inherit; box-sizing: border-box; background: white;}
-        .inline-edit-input.short { width: 80px; }
-        
-        .btn-pay { background: var(--success); color: white; margin-right: 5px; padding: 8px 12px;}
-        .btn-edit { background: #F1F5F9; color: var(--dark); margin-right: 5px; padding: 8px 12px; box-shadow: none;}
-        .btn-del { background: #FEE2E2; color: var(--danger); padding: 8px 12px; box-shadow: none;}
-        .price-tag { font-family: monospace; font-size: 1.1em; font-weight: 700; color: var(--dark); }
-
-        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.2); } }
-        .floating-num { position: absolute; color: var(--success); font-weight: 900; font-size: 24px; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 1000; text-shadow: 0 2px 4px rgba(0,0,0,0.1);}
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-content { background: white; border-radius: 24px; width: 90%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; animation: scaleUp 0.2s ease-out;}
-        .modal-header { padding: 20px 25px; font-weight: 900; font-size: 1.2em; border-bottom: 1px solid #E2E8F0; color: var(--dark); background: white; z-index: 10; display: flex; align-items: center; gap: 10px;}
-        .modal-body { padding: 20px 25px; overflow-y: auto; flex: 1; }
-        .modal-footer { padding: 15px 25px; border-top: 1px solid #E2E8F0; display: flex; gap: 10px; background: white; z-index: 10; justify-content: flex-end;}
-        .modal-footer button { padding: 12px 20px; font-size: 1em; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; border: none; box-shadow: none;}
-        .btn-modal-cancel { background: #F1F5F9; color: var(--gray); } .btn-modal-cancel:hover { background: #E2E8F0; }
-        .btn-modal-confirm { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);} .btn-modal-confirm:hover { background: var(--primary-hover); transform: translateY(-2px); }
-
-        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        .editor-group { margin-bottom: 20px; }
-        .editor-group label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--dark); }
-        .editor-group textarea { width: 100%; height: 100px; padding: 15px; border: 2px solid #E2E8F0; border-radius: 12px; resize: vertical; box-sizing: border-box; font-family: inherit; font-size:1em; outline:none;}
-        .editor-group input[type="url"], .editor-group input[type="file"], .editor-group input[type="number"] { width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 12px; box-sizing: border-box; background: #F8FAFC; outline:none;}
-        
-        .preview-container { display: none; position: relative; margin-top: 15px; border-radius: 12px; overflow: hidden; border: 2px dashed #CBD5E1; padding: 5px; text-align: center; background: #F8FAFC;}
-        .preview-container img { max-width: 100%; max-height: 200px; object-fit: contain; display: inline-block; border-radius: 8px;}
-        .btn-remove-img { position: absolute; top: 10px; right: 10px; background: rgba(239, 68, 68, 0.9); color: white; border-radius: 50%; width: 36px; height: 36px; font-weight: 900; display: flex; justify-content: center; align-items: center; border: none; cursor: pointer;}
-        
-        .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;}
-        @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
-        .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
-        #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
-   
-/* 👉 終極黃金排版：左邊菜單、右邊固定購物車 */
-        .ordering-layout { 
+        /* 👉 1. 解放螢幕寬度，利用兩側空白 */
+        .layout-wrapper { 
+            max-width: 95%; /* 🌟 原本是 1250px，現在放寬到螢幕 95% */
+            margin: auto; 
             display: flex; 
             gap: 20px; 
             align-items: flex-start; 
-            flex-direction: row; 
-            flex-wrap: nowrap; /* 🌟 關鍵：強制不換行，保證購物車永遠在右邊 */
+            position: relative;
+        }
+        .main-content { flex: 1; width: 100%; transition: 0.3s; }
+
+        /* 👉 2. 終極黃金排版：強制不換行，購物車死守右邊 */
+        .ordering-layout { 
+            display: flex; 
+            gap: 25px; 
+            align-items: flex-start; 
+            flex-direction: row !important; /* 強制橫向 */
+            flex-wrap: nowrap !important; /* 🌟 絕對不允許掉到下一行 */
+            width: 100%;
         }
         
-        /* 1. 左側：菜單區塊 */
+        /* 左側：菜單區塊 */
         .menu-side { 
-            flex: 1.5; /* 菜單佔比稍寬 */
-            min-width: 0; /* 防止內容撐爆版面 */
+            flex: 1 1 65%; /* 佔據 65% 的寬度 */
+            min-width: 0; 
             background: #F8FAFC; 
             padding: 15px; 
             border-radius: 16px; 
             border: 1px solid #E2E8F0; 
-            height: calc(100vh - 120px); /* 🌟 給定明確高度，產生獨立捲軸 */
+            height: calc(100vh - 120px); 
             max-height: 800px;
             overflow-y: auto !important; 
             overflow-x: hidden !important; 
             position: relative;
         }
 
-        /* 🌟 讓丸子標籤列永遠吸附在菜單「最上方」 */
+        /* 導覽丸子與吸頂標題 */
         .category-pills {
-            position: sticky;
-            top: -15px; /* 抵銷外層 padding，讓它完美貼合頂部 */
-            background: #F8FAFC; 
-            z-index: 30; /* 確保在最上層，不會被卡片蓋住 */
-            padding: 10px 0;
-            margin: 0 0 15px 0;
-            border-bottom: 2px solid #E2E8F0;
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
+            position: sticky; top: -15px; background: #F8FAFC; z-index: 30; 
+            padding: 10px 0; margin: 0 0 15px 0; border-bottom: 2px solid #E2E8F0;
+            display: flex; gap: 10px; overflow-x: auto; scroll-behavior: smooth;
         }
         .category-pills::-webkit-scrollbar { display: none; } 
         .category-pills { -ms-overflow-style: none; scrollbar-width: none; }
 
-        /* 🌟 讓分類標題吸附在「丸子下方」 */
         .category-wrapper h3 { 
-            position: sticky; 
-            top: 45px; /* 配合丸子的高度，停在丸子正下方 */
-            background: rgba(248, 250, 252, 0.95);
-            backdrop-filter: blur(5px);
-            z-index: 5;
-            padding: 10px 0;
-            margin: 0 0 10px 0 !important;
-            border-bottom: 2px solid var(--primary-soft);
+            position: sticky; top: 45px; background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(5px); z-index: 5; padding: 10px 0;
+            margin: 0 0 10px 0 !important; border-bottom: 2px solid var(--primary-soft);
         }
 
-        /* 2. 右側：購物車 */
+        /* 右側：購物車區塊 */
         .cart-side { 
-            flex: 1; 
-            min-width: 300px; /* 確保購物車有足夠寬度 */
+            flex: 0 0 350px; /* 🌟 鎖死寬度為 350px，確保它有足夠空間又不會亂跑 */
             background: white; 
             border-radius: 15px; 
             padding: 20px; 
@@ -259,23 +127,60 @@
             z-index: 10;
         }
 
-        /* 內部網格容器 */
+        /* 網格設定 */
         #system-menu-container { display: flex; flex-direction: column; gap: 25px; }
         .category-wrapper { display: flex; flex-direction: column; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 
-        /* 手機版排版 (螢幕太小才會變上下排) */
+        /* 👉 3. 懸浮右下角的線上人數工具列 */
+        .floating-online-widget {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: white;
+            border-radius: 30px; /* 縮起來時是個圓角膠囊 */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            width: 60px;
+            height: 60px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid var(--primary-soft);
+        }
+        
+        /* 🌟 滑鼠移過去自動展開 */
+        .floating-online-widget:hover {
+            width: 250px;
+            height: 350px;
+            border-radius: 15px;
+        }
+
+        .widget-icon {
+            width: 60px; height: 60px; flex-shrink: 0; display: flex;
+            align-items: center; justify-content: center; font-size: 1.5rem;
+            background: var(--surface); color: var(--primary); font-weight: bold; cursor: default;
+        }
+        
+        .widget-content-area {
+            flex: 1; padding: 0 15px 15px 15px; overflow-y: auto;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .floating-online-widget:hover .widget-content-area { opacity: 1; transition-delay: 0.1s; }
+
+        /* 手機版排版 */
         @media (max-width: 900px) {
-            .ordering-layout { flex-direction: column; }
-            .menu-side { width: 100%; box-sizing: border-box; height: 60vh; }
-            .cart-side { position: static; width: 100%; box-sizing: border-box; }
+            .ordering-layout { flex-direction: column !important; }
+            .menu-side { width: 100%; box-sizing: border-box; height: 60vh; flex: none; }
+            .cart-side { position: static; width: 100%; box-sizing: border-box; flex: none; }
+            .floating-online-widget { display: none; } /* 手機版太擠，可以隱藏或另外寫點擊展開 */
         }
     </style>
 </head>
 <body>
 
-<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
-<button class="toggle-sidebar-btn" onclick="toggleSidebar()">👥</button>
+
 
 <div class="layout-wrapper">
     <div class="main-content">
@@ -388,10 +293,13 @@
         </div>
     </div>
 
-    <div class="sidebar" id="sidebar">
-        <div class="online-header">
-            👥 目前線上 (<span id="online-count-sidebar">0</span>)
-        </div>
+    </div>
+
+<div class="floating-online-widget" id="online-widget">
+    <div class="widget-icon">👥<span id="online-count-sidebar" style="font-size: 0.9rem; margin-left: 5px;">0</span></div>
+    
+    <div class="widget-content-area">
+        <div style="font-size: 0.9em; color: var(--gray); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">目前線上名單</div>
         <div id="online-users-list"></div>
     </div>
 </div>
@@ -541,9 +449,12 @@
                 myPresenceRef = onlineRef.child(deviceId);
                 myPresenceRef.onDisconnect().remove();
                 
-                let currentName = document.getElementById('name').value.trim() || "神秘訪客";
-                myCurrentStatus = 'browsing';
-                myPresenceRef.set({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
+                // 🌟 只有當使用者輸入了名字，才把自己寫入線上名單
+                let currentName = document.getElementById('name').value.trim();
+                if (currentName) {
+                    myCurrentStatus = 'browsing';
+                    myPresenceRef.set({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
+                }
             }
         });
 
@@ -606,20 +517,22 @@
         });
     }
 
+   // 👉 簡化版：只負責檢查名字和更新金額，不再發送「正在點餐...」狀態
     window.handleTyping = function() {
-        let currentName = document.getElementById('name').value.trim() || "神秘訪客";
-        if (!isTyping || lastTypingName !== currentName) {
-            isTyping = true; lastTypingName = currentName; myCurrentStatus = 'typing';
-            if(myPresenceRef) myPresenceRef.update({ name: currentName, status: 'typing', isAdmin: isAdmin, timestamp: Date.now() });
+        let currentName = document.getElementById('name').value.trim();
+        
+        if (currentName && myPresenceRef) {
+            // 有名字才更新狀態上線
+            myPresenceRef.update({ name: currentName, status: myCurrentStatus, isAdmin: isAdmin, timestamp: Date.now() });
+        } else if (!currentName && myPresenceRef) {
+            // 沒名字就從名單移除
+            myPresenceRef.remove();
         }
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-            isTyping = false;
-            if (myCurrentStatus !== 'done') {
-                myCurrentStatus = 'browsing';
-                if(myPresenceRef) myPresenceRef.update({ name: document.getElementById('name').value.trim() || "神秘訪客", status: 'browsing', isAdmin: isAdmin, timestamp: Date.now() });
-            }
-        }, 1500); 
+        
+        // 確保有呼叫到購物車金額更新
+        if (typeof updateCartTotal === 'function') {
+            updateCartTotal();
+        }
     }
 
     window.updateMyStatus = function(status) {
@@ -1319,6 +1232,7 @@ window.startOCR = async function() {
 
 </body>
 </html>
+
 
 
 
