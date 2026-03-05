@@ -34,61 +34,66 @@
         .upload-zone:hover { border-color: var(--secondary); background: rgba(255,255,255,0.08); }
         .upload-zone input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
         
-        textarea { width: 100%; height: 250px; border-radius: 12px; border: none; padding: 15px; font-family: monospace; font-size: 1rem; background: #f1f5f9; color: #1e293b; }
+        textarea { width: 100%; height: 280px; border-radius: 12px; border: none; padding: 15px; font-family: monospace; font-size: 1rem; background: #f1f5f9; color: #1e293b; }
         
-        /* 佈局 */
+        /* 布局 */
         .layout { display: flex; gap: 20px; align-items: flex-start; }
         .menu-side { flex: 2; }
         .cart-side { flex: 1; background: white; border-radius: 20px; padding: 25px; position: sticky; top: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         @media (max-width: 900px) { .layout { flex-direction: column; } .cart-side { width: 100%; position: static; } }
 
-        /* 菜單展示 */
+        /* API Key 設定彈窗 */
+        #key-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; color: #333; }
+
+        /* 菜單展示樣式 */
         .category-title { border-left: 6px solid var(--primary); padding-left: 15px; margin: 30px 0 15px; font-size: 1.5rem; font-weight: 900; }
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 18px; }
         .food-card { background: white; border-radius: 18px; text-align: center; padding: 20px; border: 1px solid var(--border); transition: 0.3s; }
         .food-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
         .food-img { font-size: 3.5rem; margin-bottom: 15px; }
-        .food-name { font-weight: bold; font-size: 1.1rem; height: 2.5em; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-        .food-price { color: var(--primary); font-weight: 900; font-size: 1.3rem; margin: 10px 0; }
         .btn-add { background: var(--secondary); color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; }
         
-        /* 訂單明細 */
-        .order-card { background: white; border-radius: 20px; padding: 25px; margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 15px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-        .status-pill { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-        .unpaid { background: #fef3c7; color: #92400e; }
-        .paid { background: #dcfce7; color: #166534; }
-        
-        #ai-status { color: var(--secondary); font-weight: bold; display: none; margin-top: 15px; font-size: 1.1rem; }
+        #ai-status { color: var(--secondary); font-weight: bold; display: none; margin-top: 15px; }
         .loading-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
         @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 40% { color: var(--secondary); text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .2em 0 0 var(--secondary), .4em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .2em 0 0 var(--secondary), .4em 0 0 var(--secondary); } }
     </style>
 </head>
 <body>
 
+<div id="key-modal">
+    <div class="modal-content">
+        <h3>🔑 設定 Gemini API Key</h3>
+        <p style="font-size: 0.9rem; color: #666;">為了安全，請設定您的金鑰。此金鑰將僅儲存於您的瀏覽器中，不會寫在程式碼裡。</p>
+        <input type="password" id="input-api-key" placeholder="貼上您的 API Key" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 15px;">
+        <button onclick="saveApiKey()" style="width: 100%; padding: 12px; background: var(--secondary); color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">儲存並開始使用</button>
+        <p style="font-size: 0.8rem; margin-top: 10px; text-align: center;"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary);">點此去申請免費金鑰</a></p>
+    </div>
+</div>
+
 <div class="container">
     <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-        <h1 style="font-weight: 900; color: #334155;">🍴 AI 快速點餐 <span style="font-weight: 400; font-size: 1rem; color: #94a3b8;">Gemini 2.5 Flash Inside</span></h1>
-        <div id="role-badge" style="background: #334155; color: white; padding: 6px 16px; border-radius: 30px; font-size: 0.9rem;">顧客模式</div>
+        <h1 style="font-weight: 900; color: #334155;">🍴點餐系統</h1>
+        <div>
+            <button onclick="resetApiKey()" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.8rem;">重設 Key</button>
+            <div id="role-badge" style="display: inline-block; background: #334155; color: white; padding: 6px 16px; border-radius: 30px; font-size: 0.9rem; margin-left: 10px;">顧客模式</div>
+        </div>
     </header>
 
-    <!-- 團主管理後台 -->
     <div id="boss-panel">
         <h2 style="margin-top: 0;">👨‍🍳 團主後台</h2>
         <div class="boss-grid">
             <div class="upload-zone">
-                <p style="font-size: 1.3rem; font-weight: 700;">📸 拍一張菜單</p>
-                <p style="color: #94a3b8;">上傳後 AI 將自動分析品項與價格</p>
+                <p style="font-size: 1.3rem; font-weight: 700;">📸 拍一張菜單照片</p>
+                <p style="color: #94a3b8;">讓 Gemini 2.5 Flash 自動分析</p>
                 <input type="file" id="menu-file" accept="image/*" onchange="runAutoOCR(this)">
                 <div id="ai-status">AI 正在努力看菜單中<span class="loading-dots"></span></div>
             </div>
             <div>
-                <p style="font-weight: bold;">📝 菜單資料 (可手動調整)</p>
                 <textarea id="menu-editor" placeholder="[類別]\n餐點名稱 價格"></textarea>
                 <div style="margin-top: 15px; display: flex; gap: 12px;">
                     <button onclick="publishMenu()" style="flex: 2; padding: 15px; background: var(--secondary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 900; font-size: 1.1rem;">🚀 發布正式菜單</button>
-                    <button onclick="exportExcel()" style="padding: 15px; background: #475569; color: white; border: none; border-radius: 12px; cursor: pointer;">匯出 Excel</button>
+                    <button onclick="exportExcel()" style="padding: 15px; background: #475569; color: white; border: none; border-radius: 12px; cursor: pointer;">匯出</button>
                     <button onclick="clearOrders()" style="padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer;">清空</button>
                 </div>
             </div>
@@ -100,17 +105,9 @@
             <div id="menu-container" style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); min-height: 300px;">
                 <p style="text-align: center; color: #cbd5e1; margin-top: 100px;">🍽️ 尚未發布菜單，請通知團主。</p>
             </div>
-
-            <div class="order-card">
-                <h2 style="margin: 0 0 15px 0;">📝 今日訂購統計</h2>
-                <div style="overflow-x: auto;">
-                    <table>
-                        <thead>
-                            <tr><th>姓名</th><th>餐點</th><th>金額</th><th>狀態</th><th class="boss-ctrl" style="display:none">管理</th></tr>
-                        </thead>
-                        <tbody id="order-list"></tbody>
-                    </table>
-                </div>
+            <div style="background: white; border-radius: 20px; padding: 25px; margin-top: 30px;">
+                <h2 style="margin: 0;">📝 今日訂購清單</h2>
+                <div style="overflow-x: auto;"><table id="order-table"><thead><tr><th>姓名</th><th>餐點</th><th>金額</th><th>狀態</th><th class="boss-ctrl" style="display:none">管理</th></tr></thead><tbody id="order-list"></tbody></table></div>
             </div>
         </div>
 
@@ -118,14 +115,14 @@
             <h2 style="margin-top: 0; color: var(--primary);">🛒 點餐區</h2>
             <div style="margin-bottom: 20px;">
                 <label style="font-weight: bold;">👤 您的稱呼：</label>
-                <input type="text" id="user-name" placeholder="請輸入姓名" style="width:100%; padding:15px; border:2px solid #e2e8f0; border-radius:12px; margin-top:8px; font-size:1.1rem; outline: none;">
+                <input type="text" id="user-name" placeholder="請輸入姓名" style="width:100%; padding:15px; border:2px solid #e2e8f0; border-radius:12px; margin-top:8px;">
             </div>
             <div id="cart-items"></div>
             <div style="margin-top: 30px; border-top: 3px dashed #f1f5f9; padding-top: 20px;">
                 <div style="display: flex; justify-content: space-between; font-size: 1.8rem; font-weight: 900;">
                     <span>總額：</span><span id="cart-total" style="color: var(--primary);">$0</span>
                 </div>
-                <button onclick="submitOrder()" style="width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 15px; margin-top: 20px; font-size: 1.25rem; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(255,107,107,0.2);">確認送出 🚀</button>
+                <button onclick="submitOrder()" style="width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 15px; margin-top: 20px; font-size: 1.25rem; font-weight: 900; cursor: pointer;">確認點餐 🚀</button>
             </div>
         </div>
     </div>
@@ -134,15 +131,29 @@
 <script type="module">
     import { GoogleGenerativeAI } from "@google/generative-ai";
 
-    // ==========================================
-    // 🔑 請在此貼上您的 Gemini API Key 
-    // ==========================================
-    const INTERNAL_GEMINI_KEY = "AIzaSyCi9xtAc6x3lj0pAjBsIiFpZwG8A1vALME"; 
+    // --- Key 管理邏輯 ---
+    window.saveApiKey = function() {
+        const key = document.getElementById('input-api-key').value;
+        if (key) {
+            localStorage.setItem('GEMINI_API_KEY_SECURE', key);
+            document.getElementById('key-modal').style.display = 'none';
+            alert('金鑰已安全儲存！');
+        }
+    };
 
-    // --- 自動 OCR 辨識 ---
+    window.resetApiKey = function() {
+        if(confirm("確定要重設 API Key 嗎？")) {
+            localStorage.removeItem('GEMINI_API_KEY_SECURE');
+            location.reload();
+        }
+    };
+
+    // --- AI 辨識邏輯 ---
     window.runAutoOCR = async function(input) {
-        if (!INTERNAL_GEMINI_KEY || INTERNAL_GEMINI_KEY.includes("在此")) {
-            return alert("❌ 程式碼中尚未設定 API Key，請先在 script 標籤中設定。");
+        const apiKey = localStorage.getItem('GEMINI_API_KEY_SECURE');
+        if (!apiKey) {
+            document.getElementById('key-modal').style.display = 'flex';
+            return;
         }
         if (!input.files[0]) return;
 
@@ -153,15 +164,12 @@
         try {
             const file = input.files[0];
             const base64Data = await toBase64(file);
-            
-            const genAI = new GoogleGenerativeAI(INTERNAL_GEMINI_KEY);
-            // 使用 Gemini 2.5 Flash
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // 使用穩定版 2.0 Flash
 
-            const prompt = `分析這張菜單圖片，提取所有品項與價格。
-            規則：
-            1. 偵測到的分類放在中括號內，如 [主食]。
-            2. 品項與價格放同一行，中間用空格隔開，如：牛肉麵 150。
+            const prompt = `分析這張菜單圖片，提取所有品項與價格。規則：
+            1. 分類放在中括號內，如 [主食]。
+            2. 品項與價格放同一行，如：牛肉麵 150。
             3. 只輸出清單文字，不要有任何解釋。`;
 
             const imageParts = [{ inlineData: { data: base64Data.split(',')[1], mimeType: file.type } }];
@@ -170,29 +178,23 @@
             editor.value = response.text();
             alert("AI 辨識完成！");
         } catch (error) {
-            console.error(error);
-            alert("辨識失敗：" + error.message);
+            if (error.message.includes('403')) {
+                alert("API Key 似乎已失效，請點擊網頁上方的『重設 Key』更換新的。");
+            } else {
+                alert("辨識失敗：" + error.message);
+            }
         } finally {
             status.style.display = 'none';
         }
     }
 
-    function toBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-        });
-    }
-
-    // --- 核心點餐系統邏輯 ---
+    // --- 以下為通用功能邏輯 ---
     const isBoss = new URLSearchParams(window.location.search).get('role') === 'boss';
     let cart = [];
 
     window.publishMenu = function() {
         const text = document.getElementById('menu-editor').value;
-        localStorage.setItem('menu_quick_v1', text);
+        localStorage.setItem('menu_data', text);
         renderMenu(text);
         alert("菜單已成功發布！");
     }
@@ -203,7 +205,6 @@
         container.innerHTML = '';
         const lines = val.split('\n');
         let currentGrid = null;
-
         lines.forEach(line => {
             const t = line.trim();
             if (!t) return;
@@ -215,19 +216,14 @@
                 currentGrid = document.createElement('div');
                 currentGrid.className = 'menu-grid';
                 container.appendChild(currentGrid);
-            } else {
+            } else if (currentGrid) {
                 const parts = t.split(/\s+/);
                 const price = parts.pop();
                 const name = parts.join(' ');
-                if (!isNaN(price) && currentGrid) {
+                if (!isNaN(price)) {
                     const card = document.createElement('div');
                     card.className = 'food-card';
-                    card.innerHTML = `
-                        <div class="food-img">${guessEmoji(name)}</div>
-                        <div class="food-name">${name}</div>
-                        <div class="food-price">$${price}</div>
-                        <button class="btn-add" onclick="addToCart('${name}', ${price})">加入購物車</button>
-                    `;
+                    card.innerHTML = `<div class="food-img">${guessEmoji(name)}</div><div class="food-name">${name}</div><div class="food-price">$${price}</div><button class="btn-add" onclick="addToCart('${name}', ${price})">加入購物車</button>`;
                     currentGrid.appendChild(card);
                 }
             }
@@ -247,96 +243,71 @@
             total += item.price;
             const div = document.createElement('div');
             div.style = "display:flex; justify-content:space-between; margin-bottom:10px; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0;";
-            div.innerHTML = `<span><b>${item.name}</b></span><span>$${item.price} <button onclick="removeFromCart(${idx})" style="border:none; background:none; color:red; cursor:pointer; font-size:1.2rem;">&times;</button></span>`;
+            div.innerHTML = `<span><b>${item.name}</b></span><span>$${item.price} <button onclick="removeFromCart(${idx})" style="border:none; background:none; color:red; cursor:pointer;">&times;</button></span>`;
             container.appendChild(div);
         });
         document.getElementById('cart-total').innerText = '$' + total;
     }
 
-    window.removeFromCart = function(idx) {
-        cart.splice(idx, 1);
-        renderCart();
-    }
+    window.removeFromCart = function(idx) { cart.splice(idx, 1); renderCart(); }
 
     window.submitOrder = function() {
         const name = document.getElementById('user-name').value;
         if (!name) return alert("請輸入您的姓名");
         if (cart.length === 0) return alert("購物車目前是空的");
-
         const order = { id: Date.now(), name, items: cart.map(i => i.name).join(', '), total: cart.reduce((s, i) => s + i.price, 0), status: 'unpaid' };
-        let orders = JSON.parse(localStorage.getItem('order_quick_v1') || '[]');
+        let orders = JSON.parse(localStorage.getItem('order_list') || '[]');
         orders.unshift(order);
-        localStorage.setItem('order_quick_v1', JSON.stringify(orders));
-        
+        localStorage.setItem('order_list', JSON.stringify(orders));
         alert("訂單送出成功！");
         cart = []; renderCart(); renderOrders();
     }
 
     window.renderOrders = function() {
         const list = document.getElementById('order-list');
-        const orders = JSON.parse(localStorage.getItem('order_quick_v1') || '[]');
-        list.innerHTML = orders.map((o, idx) => `
-            <tr>
-                <td style="font-weight:900;">${o.name}</td>
-                <td style="font-size:0.85rem; color:#64748b;">${o.items}</td>
-                <td style="font-weight:bold; color:var(--primary)">$${o.total}</td>
-                <td><span class="status-pill ${o.status}">${o.status==='paid'?'✅ 已付':'⏳ 未付'}</span></td>
-                <td class="boss-ctrl" style="${isBoss?'':'display:none'}">
-                    <button onclick="togglePaid(${idx})" style="padding:4px 8px; border-radius:6px; cursor:pointer;">切換</button>
-                    <button onclick="deleteOrder(${idx})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">×</button>
-                </td>
-            </tr>
-        `).join('');
+        const orders = JSON.parse(localStorage.getItem('order_list') || '[]');
+        list.innerHTML = orders.map((o, idx) => `<tr><td>${o.name}</td><td style="font-size:0.85rem; color:#64748b;">${o.items}</td><td style="font-weight:bold; color:var(--primary)">$${o.total}</td><td><span class="status-pill ${o.status}">${o.status==='paid'?'✅ 已付':'⏳ 未付'}</span></td><td class="boss-ctrl" style="${isBoss?'':'display:none'}"><button onclick="togglePaid(${idx})" style="padding:4px 8px; border-radius:6px; cursor:pointer;">切換</button><button onclick="deleteOrder(${idx})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">×</button></td></tr>`).join('');
     }
 
     window.togglePaid = function(idx) {
-        let orders = JSON.parse(localStorage.getItem('order_quick_v1'));
+        let orders = JSON.parse(localStorage.getItem('order_list'));
         orders[idx].status = orders[idx].status === 'paid' ? 'unpaid' : 'paid';
-        localStorage.setItem('order_quick_v1', JSON.stringify(orders));
+        localStorage.setItem('order_list', JSON.stringify(orders));
         renderOrders();
     }
 
     window.deleteOrder = function(idx) {
         if(!confirm("確定要刪除這筆訂單？")) return;
-        let orders = JSON.parse(localStorage.getItem('order_quick_v1'));
+        let orders = JSON.parse(localStorage.getItem('order_list'));
         orders.splice(idx, 1);
-        localStorage.setItem('order_quick_v1', JSON.stringify(orders));
+        localStorage.setItem('order_list', JSON.stringify(orders));
         renderOrders();
     }
 
     window.clearOrders = function() {
         if(!confirm("警告：將清空所有訂單！")) return;
-        localStorage.removeItem('order_quick_v1');
+        localStorage.removeItem('order_list');
         renderOrders();
     }
 
     window.exportExcel = function() {
-        const table = document.querySelector("table");
+        const table = document.getElementById("order-table");
         const wb = XLSX.utils.table_to_book(table);
         XLSX.writeFile(wb, `點餐清單_${new Date().toLocaleDateString()}.xlsx`);
     }
 
-    function guessEmoji(name) {
-        if(name.includes('飯')) return '🍛';
-        if(name.includes('麵')) return '🍜';
-        if(name.includes('飲') || name.includes('茶')) return '🥤';
-        if(name.includes('堡')) return '🍔';
-        if(name.includes('蛋')) return '🍳';
-        if(name.includes('排')) return '🍗';
-        if(name.includes('湯')) return '🥣';
-        return '🍱';
-    }
+    function toBase64(f) { return new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result); rd.onerror = e => j(e); }); }
+    function guessEmoji(n) { if(n.includes('飯')) return '🍛'; if(n.includes('麵')) return '🍜'; if(n.includes('飲') || n.includes('茶')) return '🥤'; if(n.includes('堡')) return '🍔'; if(n.includes('蛋')) return '🍳'; if(n.includes('排')) return '🍗'; if(n.includes('湯')) return '🥣'; return '🍱'; }
 
+    // 初始化
     if (isBoss) {
         document.getElementById('boss-panel').style.display = 'block';
         document.getElementById('role-badge').innerText = '團主模式';
         document.querySelectorAll('.boss-ctrl').forEach(el => el.style.display = 'table-cell');
     }
-    renderMenu(localStorage.getItem('menu_quick_v1'));
+    renderMenu(localStorage.getItem('menu_data'));
     renderOrders();
 </script>
 
 </body>
 </html>
-
-
