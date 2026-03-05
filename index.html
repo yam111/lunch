@@ -147,7 +147,11 @@
 <script type="module">
     import { GoogleGenerativeAI } from "@google/generative-ai";
 
-  // --- 1. Firebase 初始化 ---
+    // --- 0. 優先定義全域變數 (確保所有函數都讀得到) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const isBoss = urlParams.get('role') === 'boss'; // 確保這行在最前面
+
+    // --- 1. Firebase 初始化 ---
     const firebaseConfig = {
         apiKey: "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM",
         authDomain: "lunch-f0895.firebaseapp.com",
@@ -158,75 +162,12 @@
         appId: "1:942714581747:web:c9b888b08a740842fb7d86"
     };
 
-    // 刪除原本的 if 檢查判斷式，直接初始化
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- 4. AI OCR 功能 (這裡我幫你把模型改回 1.5 版，解決 limit: 0 的問題) ---
-    window.runAutoOCR = async function(input) {
-        const key = localStorage.getItem('GEMINI_KEY');
-        if (!key) { document.getElementById('key-modal').style.display = 'flex'; return; }
-        if (!input.files[0]) return;
-        document.getElementById('ai-status').style.display = 'block';
+    // ... 中間的其他代碼 (如 renderMenu, addToCart 等) ...
 
-        try {
-            const genAI = new GoogleGenerativeAI(key);
-            // 改用 gemini-1.5-flash，通常免費額度最穩，不會報 429 或 404
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-            const file = input.files[0];
-            const base64 = await toBase64(file);
-            const result = await model.generateContent([
-                { inlineData: { data: base64.split(',')[1], mimeType: file.type } }, 
-                "分析菜單提取品項與價格。格式：[分類] 下一行 品項 價格。只輸出文字內容。"
-            ]);
-            document.getElementById('menu-editor').value = result.response.text();
-        } catch (e) { alert("辨識失敗：" + e.message); }
-        finally { document.getElementById('ai-status').style.display = 'none'; }
-    };
-
-    // --- 5. Firebase 即時通訊邏輯 ---
-
-    // [團主] 發布菜單到 Firebase
-    window.publishMenu = function() {
-        const data = document.getElementById('menu-editor').value;
-        db.ref('system/menu').set(data).then(() => alert("菜單已發布！"));
-    };
-
-    // [全員] 監聽菜單變動
-    db.ref('system/menu').on('value', (snap) => {
-        renderMenu(snap.val());
-    });
-
-    // [全員] 監聽訂單變動
-    db.ref('orders').on('value', (snap) => {
-        const data = snap.val();
-        renderOrders(data);
-    });
-
-    // --- 6. 介面渲染功能 ---
-    function renderMenu(data) {
-        const container = document.getElementById('menu-container');
-        if (!data) return;
-        container.innerHTML = '';
-        const lines = data.split('\n');
-        let currentGrid = null;
-        lines.forEach(line => {
-            const t = line.trim();
-            if (!t) return;
-            if (t.startsWith('[')) {
-                const h = document.createElement('h3'); h.className = 'category-title'; h.innerText = t.replace(/[\[\]]/g, ''); container.appendChild(h);
-                currentGrid = document.createElement('div'); currentGrid.className = 'menu-grid'; container.appendChild(currentGrid);
-            } else if (currentGrid) {
-                const parts = t.split(/\s+/); const price = parts.pop(); const name = parts.join(' ');
-                if (!isNaN(price)) {
-                    const card = document.createElement('div'); card.className = 'food-card';
-                    card.innerHTML = `<div class="food-img">${guessEmoji(name)}</div><div style="font-weight:bold">${name}</div><div class="food-price">$${price}</div><button class="btn-add" onclick="addToCart('${name}', ${price})">加入</button>`;
-                    currentGrid.appendChild(card);
-                }
-            }
-        });
-    }
-
+    // --- 修正後的 renderOrders 函數 ---
     function renderOrders(ordersObj) {
         const list = document.getElementById('order-list');
         list.innerHTML = '';
@@ -248,7 +189,7 @@
                 <td style="font-size:0.8rem; color:#666">${o.items}</td>
                 <td style="font-weight:bold; color:var(--primary)">$${o.total}</td>
                 <td><span class="status-pill ${o.status}">${o.status==='paid'?'✅ 已付':'⏳ 未付'}</span></td>
-                <td class="boss-ctrl" style="${isBoss?'':'display:none'}">
+                <td class="boss-ctrl" style="${isBoss ? '' : 'display:none'}">
                     <button onclick="togglePaid('${key}', '${o.status}')">切換</button>
                     <button onclick="deleteOrder('${key}')" style="color:red">刪除</button>
                 </td>
@@ -261,86 +202,28 @@
         }
     }
 
-    // --- 7. 點餐與管理操作 ---
-    window.addToCart = function(name, price) {
-        cart.push({ name, price });
-        renderCart();
-    };
-
-    window.addManualRow = function() {
-        cart.push({ name: '', price: 0 });
-        renderCart();
-    };
-
-    function renderCart() {
-        const container = document.getElementById('cart-items');
-        container.innerHTML = '';
-        let total = 0;
-        cart.forEach((item, idx) => {
-            total += Number(item.price);
-            const div = document.createElement('div'); div.style = "display:flex; gap:5px; margin-bottom:8px;";
-            div.innerHTML = `
-                <input type="text" value="${item.name}" placeholder="品項" onchange="cart[${idx}].name=this.value" style="flex:2; padding:8px; border:1px solid #ddd; border-radius:5px;">
-                <input type="number" value="${item.price}" onchange="cart[${idx}].price=this.value; renderCart();" style="width:70px; padding:8px; border:1px solid #ddd; border-radius:5px;">
-                <button onclick="cart.splice(${idx},1); renderCart();" style="border:none; background:none; color:red; cursor:pointer;">✕</button>
-            `;
-            container.appendChild(div);
-        });
-        document.getElementById('cart-total').innerText = '$' + total;
-    }
-
-    window.submitOrder = function() {
-        const name = document.getElementById('user-name').value;
-        if (!name) return alert("請輸入姓名");
-        if (cart.length === 0) return alert("購物車是空的");
-
-        const order = {
-            name,
-            items: cart.filter(i => i.name).map(i => `${i.name}($${i.price})`).join(', '),
-            total: cart.reduce((s, i) => s + Number(i.price), 0),
-            status: 'unpaid',
-            timestamp: Date.now()
-        };
-
-        db.ref('orders').push(order).then(() => {
-            alert("訂單已同步至雲端！");
-            cart = []; renderCart();
-        });
-    };
-
-    // --- 8. 管理員專用函數 ---
-    window.togglePaid = function(key, currentStatus) {
-        const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
-        db.ref(`orders/${key}/status`).set(newStatus);
-    };
-
-    window.deleteOrder = function(key) {
-        if (confirm("確定刪除此訂單？")) db.ref(`orders/${key}`).remove();
-    };
-
-    window.clearOrders = function() {
-        if (confirm("⚠️ 注意：將清空資料庫所有訂單紀錄，確定嗎？")) db.ref('orders').remove();
-    };
-
-    window.exportExcel = function() {
-        const wb = XLSX.utils.table_to_book(document.querySelector("table"));
-        XLSX.writeFile(wb, "團購訂單統計.xlsx");
-    };
-
-    // --- 工具輔助 ---
-    function toBase64(f) { return new Promise((r, j) => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result); }); }
-    function guessEmoji(n) { if(n.includes('飯')) return '🍛'; if(n.includes('麵')) return '🍜'; if(n.includes('飲') || n.includes('水') || n.includes('茶')) return '🥤'; return '🍱'; }
-
-    // --- 權限初始化 ---
+    // --- 程式碼最後的初始化部分 ---
+    // 檢查團主模式
     if (isBoss) {
-        document.getElementById('boss-panel').style.display = 'block';
-        document.getElementById('role-badge').innerText = '團主模式';
+        const panel = document.getElementById('boss-panel');
+        if (panel) panel.style.display = 'block';
+        
+        const badge = document.getElementById('role-badge');
+        if (badge) badge.innerText = '團主管理模式';
+        
+        // 顯示表格管理欄位
         document.querySelectorAll('.boss-ctrl').forEach(e => e.style.display = 'table-cell');
     }
+
+    // 監聽 Firebase
+    db.ref('system/menu').on('value', (snap) => renderMenu(snap.val()));
+    db.ref('orders').on('value', (snap) => renderOrders(snap.val()));
+
 </script>
 
 </body>
 </html>
+
 
 
 
