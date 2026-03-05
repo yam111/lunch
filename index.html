@@ -920,26 +920,25 @@
             document.getElementById('bulletin-modal').style.display = "none"; 
         }); 
     }
+//AI辨識區塊
+window.startOCR = async function() {
+    if (!uploadedImageBase64) return;
+    const statusEl = document.getElementById('ocr-status');
+    const btn = document.getElementById('btn-ocr');
+    const menuInput = document.getElementById('parsed-menu-input');
+    
+    // 🔑 這裡換成你剛剛在 Google Apps Script 部署拿到的網址！
+    // API Key 已經安全地藏在 GAS 裡面了，前端完全看不見。
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1Ex5yzHQ3a-aG64iB6eQLMGsSoxoN3nCNLyvLsgWfjDkZMOZrDkgzenIQnzpzxxF_/exec"; 
 
-  // 👉 執行 AI 視覺辨識 (終極升級版)
-    window.startOCR = async function() {
-        if (!uploadedImageBase64) return;
-        const statusEl = document.getElementById('ocr-status');
-        const btn = document.getElementById('btn-ocr');
-        const menuInput = document.getElementById('parsed-menu-input');
-        
-        // 🔑 填入你剛剛申請的「全新」API Key
-        const GEMINI_API_KEY = "AIzaSyB7Lns4cSTCF2ZimQ3RRSAksse0z8hIl8Q"; 
+    statusEl.innerText = "✨ 召喚 AI 看菜單中，請稍候幾秒鐘...";
+    btn.disabled = true;
 
-        statusEl.innerText = "✨ 召喚 AI 看菜單中，請稍候幾秒鐘...";
-        btn.disabled = true;
+    try {
+        const base64Data = uploadedImageBase64.split(',')[1];
+        const mimeType = uploadedImageBase64.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
 
-        try {
-            const base64Data = uploadedImageBase64.split(',')[1];
-            const mimeType = uploadedImageBase64.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
-
-            // 讓 AI 幫忙自動分類的新咒語
-            const promptText = `這是一張餐廳菜單。請幫我辨識出所有的餐點品項和對應的價格，並幫忙「自動分類」（例如：飯類、麵類、湯類、小菜、飲料等）。
+        const promptText = `這是一張餐廳菜單。請幫我辨識出所有的餐點品項和對應的價格，並幫忙「自動分類」（例如：飯類、麵類、湯類、小菜、飲料等）。
 請嚴格按照以下格式輸出，不要有任何 Markdown 符號 (不要用 ** 或 #)：
 [分類名稱]
 品項名稱 價格
@@ -952,39 +951,37 @@
 [暖心湯品]
 貢丸湯 30`;
 
-            // 使用最穩定的 gemini-1.5-flash 模型
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [
-                            { text: promptText },
-                            { inline_data: { mime_type: mimeType, data: base64Data } }
-                        ]
-                    }]
-                })
-            });
+        // 將資料發送給你的 GAS 中繼站
+        const response = await fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            // GAS 處理 POST 請求時，通常建議用 text/plain 避免 CORS 預檢問題，但在內容放 JSON
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, 
+            body: JSON.stringify({
+                base64Data: base64Data,
+                mimeType: mimeType,
+                promptText: promptText
+            })
+        });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (data.candidates && data.candidates.length > 0) {
-                let aiText = data.candidates[0].content.parts[0].text;
-                menuInput.value = aiText.trim();
-                statusEl.innerText = "✅ AI 辨識完成！請確認格式是否正確。";
-            } else if (data.error) {
-                statusEl.innerText = "❌ API 拒絕連線，錯誤原因：" + data.error.message;
-                console.error("詳細錯誤:", data.error);
-            } else {
-                statusEl.innerText = "❌ 發生未知的錯誤，請按 F12 打開開發者工具查看 Console。";
-            }
-        } catch (err) {
-            console.error("呼叫 API 時發生錯誤:", err);
-            statusEl.innerText = "❌ 發生錯誤，請確認網路連線是否正常。";
-        } finally {
-            btn.disabled = false;
+        if (data.candidates && data.candidates.length > 0) {
+            let aiText = data.candidates[0].content.parts[0].text;
+            menuInput.value = aiText.trim();
+            statusEl.innerText = "✅ AI 辨識完成！請確認格式是否正確。";
+        } else if (data.error) {
+            statusEl.innerText = "❌ AI 解析失敗：" + data.error.message;
+            console.error("詳細錯誤:", data.error);
+        } else {
+            statusEl.innerText = "❌ 發生未知的錯誤，請按 F12 檢查 Console。";
         }
+    } catch (err) {
+        console.error("呼叫中繼站時發生錯誤:", err);
+        statusEl.innerText = "❌ 發生錯誤，請確認網路連線是否正常。";
+    } finally {
+        btn.disabled = false;
     }
+}
 
     window.toggleLock = function() { if(confirm(globalLocked ? "開放點餐？" : "停止收單？")) settingsRef.update({ isLocked: !globalLocked, lockTime: null }); }
 
@@ -1245,6 +1242,7 @@
 
 </body>
 </html>
+
 
 
 
