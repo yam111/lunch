@@ -159,7 +159,7 @@
 };
 
     // 檢查是否已填寫 Config
-    if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+    if (firebaseConfig.apiKey === "AIzaSyDRhEl_ovhh1FnNLcb335MsTybWQNyTmmM") {
         alert("⚠️ 尚未配置 Firebase Config！請編輯程式碼並填入您的 Firebase 設定。");
     }
 
@@ -187,7 +187,7 @@
 
         try {
             const genAI = new GoogleGenerativeAI(key);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
             const file = input.files[0];
             const base64 = await toBase64(file);
             const result = await model.generateContent([{ inlineData: { data: base64.split(',')[1], mimeType: file.type } }, "分析菜單提取品項與價格。格式：[分類] 下一行 品項 價格。"]);
@@ -353,4 +353,5 @@
 
 </body>
 </html>
+
 
