@@ -16,34 +16,52 @@
     
     <style>
         :root {
-            --primary: #007AFF; --primary-hover: #0056b3;
+            /* 換上活潑的新配色 */
+            --primary: #ff6b6b; --primary-hover: #ff5252;
+            --secondary: #4ecdc4; 
             --success: #34C759; --danger: #FF3B30; --warning: #FF9500;
-            --purple: #AF52DE;
-            --bg: #F5F5F7; --surface: #FFFFFF;
-            --text-main: #1D1D1F; --text-muted: #86868B;
-            --border: #E5E5EA; --input-bg: #F5F5F7;
-
-            --primary-soft: rgba(0, 122, 255, 0.1);
-            --success-soft: rgba(52, 199, 89, 0.1);
-            --danger-soft: rgba(255, 59, 48, 0.1);
-            --warning-soft: rgba(255, 149, 0, 0.1);
-            --gray-soft: rgba(142, 142, 147, 0.1);
+            --bg: #f9f9f9; --surface: #FFFFFF;
+            --text-main: #2d3436; --text-muted: #86868B;
+            --border: #E5E5EA;
+            --primary-soft: rgba(255, 107, 107, 0.1);
         }
 
         body { 
-            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif; 
+            font-family: 'Segoe UI', 'Noto Sans TC', Tahoma, Geneva, Verdana, sans-serif; 
             margin: 0; padding: 20px 10px; 
             background-color: var(--bg); color: var(--text-main); 
             min-height: 100vh; overflow-x: hidden;
-            background-image: url('https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2500&auto=format&fit=crop');
-            background-size: cover; background-position: center; background-attachment: fixed;
             -webkit-font-smoothing: antialiased;
         }
+        
+        /* 左右雙拼佈局 (左邊菜單，右邊購物車) */
+        .ordering-layout { display: flex; gap: 20px; align-items: flex-start; margin-top: 15px; }
+        .menu-side { flex: 3; min-width: 0; }
+        .cart-side { flex: 1.2; min-width: 300px; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 20px; height: fit-content; }
 
-        body::before {
-            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(248, 250, 252, 0.65); z-index: -1;
+        @media (max-width: 900px) {
+            .ordering-layout { flex-direction: column; }
+            .cart-side { width: 100%; box-sizing: border-box; position: static; }
         }
+
+        /* 網格菜單卡片樣式 */
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px;}
+        .food-card { background: white; border-radius: 15px; overflow: hidden; transition: transform 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; display: flex; flex-direction: column;}
+        .food-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .food-img { width: 100%; height: 120px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; }
+        .food-info { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;}
+        .food-name { font-weight: bold; margin-bottom: 5px; font-size: 1.05em; color: var(--text-main); }
+        .food-price { color: var(--primary); font-weight: 800; font-size: 1.1em; margin-bottom: 10px; }
+        .add-btn { width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--secondary); color: white; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: none; }
+        .add-btn:hover { background: #3dbdb4; transform: scale(1.02); }
+
+        /* 購物車表單樣式 */
+        .total-area { margin-top: 20px; padding-top: 15px; border-top: 2px dashed #eee; }
+        .checkout-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+        .checkout-btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,107,107,0.3); }
+        .cart-item-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; background: var(--bg); padding: 8px; border-radius: 10px; border: 1px solid #eee;}
+        .cart-item-row input { margin: 0; border: none; background: transparent; padding: 5px; font-size: 1em; }
+        .cart-item-row input:focus { box-shadow: none; background: white; border-radius: 6px;}
         
         .layout-wrapper { max-width: 1250px; margin: auto; display: flex; gap: 20px; align-items: flex-start; position: relative;}
         .main-content { flex: 1; width: 100%; transition: 0.3s; }
@@ -173,6 +191,27 @@
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
         #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
+    /* 👉 新增：點餐區塊的左右橫向排版魔法 */
+        .ordering-layout { display: flex; gap: 20px; align-items: flex-start; }
+        
+        /* 左側：點餐表單 (設定 sticky 讓它往下滑時會黏在頂部) */
+        .form-side { flex: 1; min-width: 280px; position: sticky; top: 20px; z-index: 10; background: var(--surface); }
+        
+        /* 右側：店家菜單 (設定獨立卷軸與最大高度) */
+        .menu-side { flex: 1.2; min-width: 280px; background: #F8FAFC; padding: 15px; border-radius: 16px; border: 1px solid #E2E8F0; max-height: 550px; overflow-y: auto; }
+        
+        /* 美化右側菜單的專屬卷軸 */
+        .menu-side::-webkit-scrollbar { width: 6px; }
+        .menu-side::-webkit-scrollbar-track { background: transparent; }
+        .menu-side::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        .menu-side::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* 手機版 (寬度小於 800px) 自動變回上下排列 */
+        @media (max-width: 800px) {
+            .ordering-layout { flex-direction: column; }
+            .form-side { position: static; width: 100%; box-sizing: border-box; }
+            .menu-side { width: 100%; box-sizing: border-box; max-height: 400px; }
+        }
     </style>
 </head>
 <body>
@@ -221,23 +260,46 @@
             <div class="stat-box box-unpaid"><div class="stat-title">剩餘待收 (含補收差額)</div><div class="stat-value">$<span id="total-unpaid">0</span></div></div>
         </div>
 
-        <div class="card">
-            <form id="order-form">
-                <input type="text" id="name" placeholder="您的姓名" required oninput="handleTyping()">
-                
-                <div id="order-items-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                    <div class="order-item-row">
-                        <input type="text" class="item-input" placeholder="餐點品項 (如: 肉燥飯)" required oninput="handleTyping()">
-                        <input type="number" class="price-input" placeholder="價格" required min="1" oninput="handleTyping()" style="width: 90px; flex: none;">
-                        <button type="button" class="btn-action-icon" onclick="addOrderItemRow()" style="background: var(--primary-soft); color: var(--primary);" title="新增下一樣餐點">➕</button>
+        <div class="card" style="padding: 20px;">
+           <div class="ordering-layout">
+            
+            <div class="menu-side" id="system-menu-wrapper">
+                <div id="system-menu-container">
+                    <div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--gray); font-weight: bold; border: 2px dashed #eee;">
+                        🍽️ 團主尚未發布今日菜單，請稍候...
                     </div>
                 </div>
+            </div>
 
-                <button type="submit" id="submit-btn" class="btn-submit">✅ 送出訂單</button>
-            </form>
-            <div class="quick-tags-area" id="quick-tags-container"></div>
+            <div class="cart-side">
+                <h2 style="margin-top:0; margin-bottom: 15px; font-size: 1.4em;">🛒 您的購物車</h2>
+                <form id="order-form">
+                    <input type="text" id="name" placeholder="👤 請輸入您的姓名" required oninput="handleTyping()" style="background: white; border: 2px solid #eee; margin-bottom: 15px;">
+                    
+                    <div id="order-items-container" style="display: flex; flex-direction: column; width: 100%;">
+                        <div class="cart-item-row">
+                            <input type="text" class="item-input" placeholder="餐點品項 (如: 肉燥飯)" required oninput="handleTyping(); updateCartTotal();">
+                            <input type="number" class="price-input" placeholder="價格" required min="1" oninput="handleTyping(); updateCartTotal();" style="width: 70px; flex: none; font-weight: bold; color: var(--primary);">
+                            <button type="button" class="btn-action-icon" onclick="this.parentElement.remove(); updateCartTotal();" style="background: rgba(255,59,48,0.1); color: var(--danger); font-size:1rem; padding: 5px 10px;">✖</button>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="addOrderItemRow()" style="width: 100%; background: #f1f5f9; color: var(--gray); border-radius: 8px; padding: 10px; margin-top: 5px; font-size: 0.9em; box-shadow: none;">➕ 手動新增其他品項</button>
+
+                    <div class="total-area">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: bold; color: var(--text-main);">總計：</span>
+                            <span id="cart-total-preview" style="font-weight: 900; font-size: 1.5rem; color: var(--primary);">$0</span>
+                        </div>
+                        <button type="submit" id="submit-btn" class="checkout-btn">送出訂單 🚀</button>
+                    </div>
+                </form>
+                
+                <div class="quick-tags-area" id="quick-tags-container" style="margin-top: 20px;"></div>
+            </div>
+            
         </div>
-
+            
         <div class="card">
             <h2 id="unpaid-title">📝 您的未付款訂單</h2>
             <div style="overflow-x:auto;">
@@ -521,62 +583,66 @@
         }
     }
 
-    // 👉 升級版的系統菜單標籤生成函數 (支援自動分類 + 摺疊收合 + 精簡版面)
+    // 👉 升級：即時計算購物車總額
+    window.updateCartTotal = function() {
+        let total = 0;
+        document.querySelectorAll('.price-input').forEach(input => {
+            let val = parseInt(input.value);
+            if(!isNaN(val)) total += val;
+        });
+        document.getElementById('cart-total-preview').innerText = '$' + total;
+    }
+
+    // 👉 覆寫新增品項邏輯，套用購物車樣式
+    window.addOrderItemRow = function(defaultItem = '', defaultPrice = '') {
+        const container = document.getElementById('order-items-container');
+        const row = document.createElement('div');
+        row.className = 'cart-item-row';
+        row.innerHTML = `
+            <input type="text" class="item-input" placeholder="新增品項 (如: 貢丸湯)" required oninput="handleTyping(); updateCartTotal();" value="${defaultItem}">
+            <input type="number" class="price-input" placeholder="價格" required min="1" oninput="handleTyping(); updateCartTotal();" value="${defaultPrice}" style="width: 70px; flex: none; font-weight: bold; color: var(--primary);">
+            <button type="button" class="btn-action-icon" onclick="this.parentElement.remove(); updateCartTotal();" style="background: rgba(255,59,48,0.1); color: var(--danger); font-size:1rem; padding: 5px 10px;">✖</button>
+        `;
+        container.appendChild(row);
+        if(!defaultItem) row.querySelector('.item-input').focus();
+        updateCartTotal();
+    }
+
+    // 👉 升級版的系統菜單標籤生成函數 (生成精美美食卡片)
     function renderSystemMenuTags(menuStr) {
         let container = document.getElementById('system-menu-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'system-menu-container';
-            container.style.marginTop = '15px';
-            container.style.borderTop = '2px dashed #CBD5E1';
-            container.style.paddingTop = '10px';
-            document.getElementById('quick-tags-container').insertAdjacentElement('afterend', container);
+        if (!container) return;
+        
+        if(!menuStr) {
+            container.innerHTML = '<div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--gray); font-weight: bold; border: 2px dashed #eee;">🍽️ 團主尚未發布今日菜單，請稍候...</div>';
+            return;
         }
-        
-        // 加入標題與提示操作的小字
-        container.innerHTML = '<h3 style="margin: 0 0 10px 0; color: var(--primary); font-size: 1.1em; display: flex; align-items: center; justify-content: space-between;"><span>📋 本日店家菜單</span><span style="font-size: 0.75em; color: var(--gray); font-weight: normal; background: #E2E8F0; padding: 2px 8px; border-radius: 10px;">點擊分類可收合 ↕️</span></h3>';
-        
-        if(!menuStr) return;
 
+        container.innerHTML = '';
         let lines = menuStr.split('\n');
-        let currentCategoryDiv = null;
+        let currentGrid = null;
 
         lines.forEach(line => {
             let text = line.trim();
             if (!text) return;
 
+            // 遇到 [分類名稱] 時，印出分類標題並建立新的 Grid
             if (text.startsWith('[') && text.endsWith(']')) {
                 let catName = text.substring(1, text.length - 1);
                 
-                // 🌟 改變魔法這裡開始：使用 details 標籤製作原生的「摺疊面板」
-                let catSection = document.createElement('details');
-                catSection.open = true; // 預設全部展開，覺得太長可以點擊收合
-                catSection.style.marginBottom = '6px'; // 縮小分類之間的垂直距離
-                catSection.style.background = '#F8FAFC'; // 換成淡淡的灰藍色背景
-                catSection.style.borderRadius = '8px';
-                catSection.style.border = '1px solid #E2E8F0';
+                let catTitle = document.createElement('h3');
+                catTitle.innerText = `🏷️ ${catName}`;
+                catTitle.style.color = 'var(--text-main)';
+                catTitle.style.marginTop = '25px';
+                catTitle.style.marginBottom = '15px';
+                catTitle.style.borderBottom = '3px solid var(--primary-soft)';
+                catTitle.style.display = 'inline-block';
                 
-                // 分類的標題按鈕
-                let catTitle = document.createElement('summary');
-                catTitle.innerText = `${catName}`;
-                catTitle.style.fontWeight = 'bold';
-                catTitle.style.color = '#334155';
-                catTitle.style.padding = '8px 12px'; // 縮小標題的上下空間
-                catTitle.style.cursor = 'pointer';
-                catTitle.style.userSelect = 'none';
-                catTitle.style.outline = 'none';
+                currentGrid = document.createElement('div');
+                currentGrid.className = 'menu-grid';
                 
-                // 放餐點按鈕的容器
-                let btnContainer = document.createElement('div');
-                btnContainer.className = 'quick-tags-area';
-                btnContainer.style.padding = '0 12px 10px 12px';
-                btnContainer.style.gap = '6px'; // 縮小按鈕之間的間隔
-                
-                catSection.appendChild(catTitle);
-                catSection.appendChild(btnContainer);
-                container.appendChild(catSection);
-                
-                currentCategoryDiv = btnContainer;
+                container.appendChild(catTitle);
+                container.appendChild(currentGrid);
             } else {
                 let parts = text.split(/\s+/);
                 if (parts.length >= 2) {
@@ -584,42 +650,66 @@
                     let item = parts.join(' ');
                     
                     if(!isNaN(price)) {
-                        let btn = document.createElement('button'); 
-                        btn.type = 'button'; 
-                        btn.className = 'quick-tag'; 
-                        // 🌟 讓餐點按鈕變小、變精簡
-                        btn.style.background = 'white'; 
-                        btn.style.borderColor = '#CBD5E1';
-                        btn.style.padding = '4px 10px'; 
-                        btn.style.fontSize = '0.9em';
-                        btn.innerText = `${item} $${price}`; // 拿掉括號，視覺更俐落
+                        if (!currentGrid) {
+                            currentGrid = document.createElement('div');
+                            currentGrid.className = 'menu-grid';
+                            container.appendChild(currentGrid);
+                        }
                         
-                        btn.onclick = () => { 
-                            let rows = document.querySelectorAll('.order-item-row');
+                        // 簡單的 AI Emoji 猜測魔法
+                        let emoji = "🍱";
+                        if(item.includes('麵')) emoji = "🍜";
+                        else if(item.includes('湯') || item.includes('羹')) emoji = "🥣";
+                        else if(item.includes('飲') || item.includes('茶') || item.includes('水') || item.includes('青')) emoji = "🥤";
+                        else if(item.includes('飯') || item.includes('丼')) emoji = "🍛";
+                        else if(item.includes('堡') || item.includes('三明治')) emoji = "🍔";
+                        else if(item.includes('菜') || item.includes('沙拉')) emoji = "🥗";
+                        else if(item.includes('肉') || item.includes('雞') || item.includes('排')) emoji = "🍗";
+
+                        // 建立卡片
+                        let card = document.createElement('div');
+                        card.className = 'food-card';
+                        card.innerHTML = `
+                            <div class="food-img">${emoji}</div>
+                            <div class="food-info">
+                                <div>
+                                    <div class="food-name">${item}</div>
+                                    <div class="food-price">$${price}</div>
+                                </div>
+                                <button class="add-btn" type="button">加入購物車</button>
+                            </div>
+                        `;
+                        
+                        // 點擊事件：加進購物車、觸發特效、更新總價
+                        card.querySelector('.add-btn').onclick = (e) => { 
+                            let rows = document.querySelectorAll('.cart-item-row');
                             let lastRow = rows[rows.length - 1];
                             let itemInput = lastRow.querySelector('.item-input');
                             let priceInput = lastRow.querySelector('.price-input');
                             
-                            if(itemInput.value !== "") {
+                            // 判斷最後一行是不是空的，不是的話就新增一行
+                            if(itemInput && itemInput.value !== "") {
                                 window.addOrderItemRow(item, price);
-                            } else {
+                            } else if(itemInput) {
                                 itemInput.value = item;
                                 priceInput.value = price;
+                            } else {
+                                window.addOrderItemRow(item, price);
                             }
                             window.handleTyping(); 
+                            updateCartTotal();
+                            
+                            // 加入成功特效
+                            let btn = e.target;
+                            let originalBg = btn.style.background;
+                            btn.style.background = 'var(--success)';
+                            btn.innerText = '✅ 已加入';
+                            setTimeout(() => {
+                                btn.style.background = originalBg;
+                                btn.innerText = '加入購物車';
+                            }, 800);
                         };
-                        
-                        if (!currentCategoryDiv) {
-                            let defaultSection = document.createElement('div');
-                            defaultSection.style.marginBottom = '8px';
-                            currentCategoryDiv = document.createElement('div');
-                            currentCategoryDiv.className = 'quick-tags-area';
-                            currentCategoryDiv.style.gap = '6px';
-                            defaultSection.appendChild(currentCategoryDiv);
-                            container.appendChild(defaultSection);
-                        }
-                        
-                        currentCategoryDiv.appendChild(btn);
+                        currentGrid.appendChild(card);
                     }
                 }
             }
@@ -1124,6 +1214,9 @@
 
 </body>
 </html>
+
+
+
 
 
 
