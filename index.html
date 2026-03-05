@@ -192,13 +192,13 @@
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
         #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
    
-       /* 👉 終極版：點餐區塊的橫向看板排版魔法 (含按鈕與防擠壓) */
+       /* 👉 外送平台風格：垂直瀑布流 + 吸頂標題 + 緊湊卡片 */
         .ordering-layout { display: flex; gap: 20px; align-items: flex-start; }
         
-        /* 1. 左側：點餐表單 */
+        /* 1. 左側：點餐表單 (固定不動) */
         .form-side { flex: 1; min-width: 280px; position: sticky; top: 20px; z-index: 10; background: var(--surface); }
         
-        /* 2. 右側：店家菜單 (改為相對定位，準備放左右按鈕) */
+        /* 2. 右側：菜單區塊 (改回單一垂直滾動) */
         .menu-side { 
             flex: 1.2; 
             min-width: 280px; 
@@ -206,87 +206,126 @@
             padding: 15px; 
             border-radius: 16px; 
             border: 1px solid #E2E8F0; 
-            position: relative; /* 🌟 為了放左右滑動按鈕 */
-            overflow: hidden !important; /* 🌟 外層不再捲動 */
+            max-height: 75vh; /* 限制整體高度，讓它內部可以滾動 */
+            overflow-y: auto !important; 
+            overflow-x: hidden !important; 
         }
 
-        /* 3. 內部容器：處理橫向滑動 */
+        /* 美化菜單的垂直卷軸 */
+        .menu-side::-webkit-scrollbar { width: 6px; }
+        .menu-side::-webkit-scrollbar-track { background: transparent; }
+        .menu-side::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        .menu-side::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* 3. 內部容器與分類包裝盒 */
         #system-menu-container {
             display: flex;
-            flex-direction: row;
-            gap: 20px;
-            height: 520px; /* 統一高度 */
-            align-items: stretch;
-            overflow-x: auto; /* 🌟 橫向捲軸移到這裡 */
-            overflow-y: hidden;
-            scroll-behavior: smooth; /* 滑動動畫 */
-            padding-bottom: 15px;
+            flex-direction: column; /* 改回由上往下排 */
+            gap: 25px;
         }
-
-        /* 4. 分類包裝盒 */
         .category-wrapper {
-            flex: 0 0 280px; 
-            min-width: 280px;
             display: flex;
             flex-direction: column; 
-            height: 100%; 
-        }
-        .category-wrapper h3 { flex-shrink: 0; margin-top: 0px !important; }
-
-        /* 5. 修正卡片被擠壓的問題 */
-        .menu-grid {
-            flex: 1; 
-            overflow-y: auto; 
-            padding-right: 8px; 
-            align-content: flex-start; 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-            grid-auto-rows: max-content; /* 🌟 關鍵解法：讓每一列的高度根據內容決定，不被壓縮 */
-            gap: 15px;
-            padding-bottom: 20px; 
-            margin-bottom: 0 !important;
         }
 
-        .food-card {
-            height: 100%;
-            min-height: 220px; /* 確保卡片有足夠高度 */
+      /* 4. 魔法：分類標題吸頂效果 (Sticky) */
+        .category-wrapper h3 { 
+            position: sticky; 
+            top: 35px; /* 🌟 往下移一點，避免被上面的導覽丸子擋住 */
+            background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 5;
+            padding: 10px 0;
+            margin: 0 0 10px 0 !important;
+            border-bottom: 2px solid var(--primary-soft);
         }
 
-        /* 👉 新增：左右滑動按鈕樣式 */
-        .scroll-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 45px;
-            height: 45px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 100;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        /* 👉 快速導覽丸子樣式 */
+        .category-pills {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.8;
-            transition: 0.2s;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            position: sticky;
+            top: -15px; /* 黏在最頂部 */
+            background: #F8FAFC; 
+            z-index: 20; /* 層級最高，才不會被菜單蓋住 */
+            border-bottom: 1px solid #E2E8F0;
+            scroll-behavior: smooth;
         }
-        .scroll-btn:hover { opacity: 1; transform: translateY(-50%) scale(1.1); background: var(--primary-hover); }
-        #scroll-left-btn { left: 5px; }
-        #scroll-right-btn { right: 5px; }
+        /* 隱藏丸子列的滾動條 */
+        .category-pills::-webkit-scrollbar { display: none; } 
+        .category-pills { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .pill-btn {
+            white-space: nowrap;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #CBD5E1;
+            border-radius: 20px;
+            font-weight: bold;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .pill-btn:hover { background: #F1F5F9; color: var(--text-main); transform: translateY(-1px); }
+        .pill-btn:active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* 5. 網格佈局：讓卡片填滿寬度 */
+        .menu-grid {
+            display: grid; 
+            /* 螢幕寬的話放兩排，窄的話放一排 */
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+            gap: 12px;
+            overflow: visible; /* 取消原本的內部滾動，統一由外層滾動 */
+        }
+
+        /* 6. 緊湊型卡片 (變身為橫向排列) */
+        .food-card {
+            display: flex; 
+            flex-direction: row; /* 照片在左，資訊在右 */
+            height: 85px; /* 高度縮小，節省空間 */
+            min-height: unset;
+        }
+        .food-img { 
+            width: 80px; 
+            height: 100%; 
+            font-size: 2.2rem; 
+            flex-shrink: 0;
+            border-right: 1px solid #f0f0f0;
+        }
+        .food-info { 
+            flex: 1; 
+            flex-direction: row; /* 讓文字跟按鈕水平並排 */
+            align-items: center; 
+            padding: 10px 15px; 
+            gap: 10px;
+        }
+        .food-info > div {
+            flex: 1; /* 品項跟價格佔據剩餘空間，把按鈕往右推 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .food-name { margin-bottom: 2px; font-size: 1em; line-height: 1.2;}
+        .food-price { margin-bottom: 0; font-size: 1.05em; }
         
-        /* 電腦版隱藏原生卷軸讓畫面更像 App，只留按鈕 */
-        #system-menu-container::-webkit-scrollbar { display: none; }
-        #system-menu-container { -ms-overflow-style: none; scrollbar-width: none; }
+        .add-btn { 
+            width: auto; /* 按鈕不要撐滿，只需包覆文字 */
+            padding: 8px 12px; 
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+
+        /* 舊版的按鈕隱藏掉，以防萬一 HTML 沒刪乾淨 */
+        .scroll-btn { display: none !important; }
 
         @media (max-width: 800px) {
-            .scroll-btn { display: none; } /* 手機版隱藏按鈕，用手滑就好 */
             .ordering-layout { flex-direction: column; }
             .form-side { position: static; width: 100%; box-sizing: border-box; }
-            .menu-side { width: 100%; box-sizing: border-box; max-height: 400px; overflow-x: auto !important; }
+            .menu-side { width: 100%; box-sizing: border-box; max-height: 50vh;}
         }
     </style>
 </head>
@@ -339,14 +378,16 @@
         <div class="card" style="padding: 20px;">
            <div class="ordering-layout">
             
-            <div class="menu-side" id="system-menu-wrapper">
-                <button id="scroll-left-btn" class="scroll-btn" onclick="scrollMenu(-1)" type="button">◀</button>
+           <div class="menu-side" id="system-menu-wrapper">
+                
+                <div id="category-pills-container" class="category-pills"></div>
                 
                 <div id="system-menu-container">
                     <div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--gray); font-weight: bold; border: 2px dashed #eee; width: 100%;">
                         🍽️ 團主尚未發布今日菜單，請稍候...
                     </div>
                 </div>
+            </div>
 
                 <button id="scroll-right-btn" class="scroll-btn" onclick="scrollMenu(1)" type="button">▶</button>
             </div>
@@ -695,17 +736,22 @@
         updateCartTotal();
     }
 
-    // 👉 升級版的系統菜單標籤生成函數 (生成精美美食卡片)
+    // 👉 升級版的系統菜單標籤生成函數 (生成精美美食卡片 + 分類丸子)
     function renderSystemMenuTags(menuStr) {
         let container = document.getElementById('system-menu-container');
+        let pillsContainer = document.getElementById('category-pills-container'); // 🌟 抓取丸子容器
+        
         if (!container) return;
         
         if(!menuStr) {
             container.innerHTML = '<div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--gray); font-weight: bold; border: 2px dashed #eee;">🍽️ 團主尚未發布今日菜單，請稍候...</div>';
+            if (pillsContainer) pillsContainer.innerHTML = ''; // 清空丸子
             return;
         }
 
         container.innerHTML = '';
+        if (pillsContainer) pillsContainer.innerHTML = ''; // 🌟 清空舊丸子
+        
         let lines = menuStr.split('\n');
         let currentGrid = null;
 
@@ -713,14 +759,16 @@
             let text = line.trim();
             if (!text) return;
 
-            // 遇到 [分類名稱] 時，印出分類標題並建立新的 Grid
+            // 遇到 [分類名稱] 時，印出分類標題並建立新的 Grid 和 丸子
             if (text.startsWith('[') && text.endsWith(']')) {
                 let catName = text.substring(1, text.length - 1);
+                let catId = `category-${catName}`; // 🌟 給這個分類一個專屬 ID
                 
                 let catTitle = document.createElement('h3');
                 catTitle.innerText = `🏷️ ${catName}`;
+                catTitle.id = catId; // 🌟 綁定 ID
                 catTitle.style.color = 'var(--text-main)';
-                catTitle.style.marginTop = '0px'; /* 變橫向了，頂部不用留白太多 */
+                catTitle.style.marginTop = '0px';
                 catTitle.style.marginBottom = '15px';
                 catTitle.style.borderBottom = '3px solid var(--primary-soft)';
                 catTitle.style.display = 'inline-block';
@@ -728,13 +776,33 @@
                 currentGrid = document.createElement('div');
                 currentGrid.className = 'menu-grid';
                 
-                /* 👉 新增：用 Wrapper 把標題和網格包起來，這樣才能橫向並排 */
                 let wrapper = document.createElement('div');
                 wrapper.className = 'category-wrapper';
                 wrapper.appendChild(catTitle);
                 wrapper.appendChild(currentGrid);
                 
                 container.appendChild(wrapper);
+
+                // 🌟 同時建立對應的「快速導覽丸子」
+                if (pillsContainer) {
+                    let pill = document.createElement('button');
+                    pill.className = 'pill-btn';
+                    pill.type = 'button';
+                    pill.innerText = catName;
+                    
+                    // 點擊丸子時，讓菜單區塊平滑滾動到該分類標題
+                    pill.onclick = () => {
+                        let target = document.getElementById(catId);
+                        let menuSide = document.querySelector('.menu-side');
+                        if (target && menuSide) {
+                            // 計算目標位置 (減去 50px 避免被頂部的丸子列擋住)
+                            let targetPos = target.offsetTop - 50; 
+                            menuSide.scrollTo({ top: targetPos, behavior: 'smooth' });
+                        }
+                    };
+                    pillsContainer.appendChild(pill);
+                }
+
             } else {
                 let parts = text.split(/\s+/);
                 if (parts.length >= 2) {
@@ -746,7 +814,6 @@
                             currentGrid = document.createElement('div');
                             currentGrid.className = 'menu-grid';
                             
-                            /* 👉 沒分類標題時，也要包裝起來維持排版 */
                             let wrapper = document.createElement('div');
                             wrapper.className = 'category-wrapper';
                             wrapper.appendChild(currentGrid);
@@ -784,7 +851,6 @@
                             let itemInput = lastRow.querySelector('.item-input');
                             let priceInput = lastRow.querySelector('.price-input');
                             
-                            // 判斷最後一行是不是空的，不是的話就新增一行
                             if(itemInput && itemInput.value !== "") {
                                 window.addOrderItemRow(item, price);
                             } else if(itemInput) {
@@ -796,7 +862,6 @@
                             window.handleTyping(); 
                             updateCartTotal();
                             
-                            // 加入成功特效
                             let btn = e.target;
                             let originalBg = btn.style.background;
                             btn.style.background = 'var(--success)';
@@ -1308,6 +1373,7 @@ window.startOCR = async function() {
 
 </body>
 </html>
+
 
 
 
