@@ -3,141 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI 智慧點餐系統 - 團購管理全功能版</title>
+    <title>AI 智慧點餐系統 - 快速辨識版</title>
 
-    <!-- 外部函式庫：Google Fonts, Firebase, XLSX, Tesseract AI -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+      }
+    }
+    </script>
 
     <style>
         :root {
-            --primary: #ff6b6b; --primary-hover: #ff5252;
-            --secondary: #4ecdc4; --success: #34C759;
-            --danger: #FF3B30; --warning: #FF9500;
-            --bg: #F0F2F5; --surface: #FFFFFF;
-            --text-main: #1D1D1F; --text-muted: #86868B;
-            --border: #E5E5EA; --primary-soft: rgba(255, 107, 107, 0.1);
+            --primary: #ff6b6b; --secondary: #4ecdc4;
+            --bg: #F8FAFC; --surface: #FFFFFF;
+            --text-main: #1e293b; --border: #E2E8F0;
         }
-
-        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-        body { 
-            font-family: 'Noto Sans TC', -apple-system, sans-serif; 
-            margin: 0; padding: 15px; background: var(--bg); color: var(--text-main); 
-        }
-
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text-main); }
         .container { max-width: 1200px; margin: auto; }
-
-        /* Header */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .badge-role { background: #333; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
-
-        /* 團主面板 */
-        #boss-panel { display: none; background: #2d3436; color: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .boss-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 768px) { .boss-grid { grid-template-columns: 1fr; } }
         
-        .upload-zone { border: 2px dashed #666; border-radius: 10px; padding: 20px; text-align: center; background: rgba(255,255,255,0.05); }
-        textarea { width: 100%; height: 150px; border-radius: 8px; border: none; padding: 12px; font-size: 0.95rem; font-family: monospace; }
-        #ocr-status { color: var(--secondary); font-weight: bold; margin-top: 10px; display: none; }
-
-        /* 雙欄版面 */
+        /* 團主後台 */
+        #boss-panel { display: none; background: #1e293b; color: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .boss-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; }
+        
+        .upload-zone { border: 2px dashed #475569; border-radius: 15px; padding: 40px; text-align: center; background: rgba(255,255,255,0.03); cursor: pointer; transition: 0.3s; position: relative; }
+        .upload-zone:hover { border-color: var(--secondary); background: rgba(255,255,255,0.08); }
+        .upload-zone input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        
+        textarea { width: 100%; height: 250px; border-radius: 12px; border: none; padding: 15px; font-family: monospace; font-size: 1rem; background: #f1f5f9; color: #1e293b; }
+        
+        /* 佈局 */
         .layout { display: flex; gap: 20px; align-items: flex-start; }
         .menu-side { flex: 2; }
-        .cart-side { flex: 1; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 20px; }
+        .cart-side { flex: 1; background: white; border-radius: 20px; padding: 25px; position: sticky; top: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         @media (max-width: 900px) { .layout { flex-direction: column; } .cart-side { width: 100%; position: static; } }
 
-        /* 菜單卡片 */
-        .category-title { border-left: 5px solid var(--primary); padding-left: 12px; margin: 25px 0 15px; font-size: 1.3rem; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        .food-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; transition: 0.3s; cursor: default; }
-        .food-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .food-img { height: 100px; background: #f8fafc; display: flex; align-items: center; justify-content: center; font-size: 3rem; }
-        .food-info { padding: 12px; text-align: center; }
-        .food-name { font-weight: bold; margin-bottom: 5px; height: 2.4em; overflow: hidden; }
-        .food-price { color: var(--primary); font-weight: 800; font-size: 1.1rem; margin-bottom: 10px; }
-        .btn-add { width: 100%; background: var(--secondary); color: white; border: none; border-radius: 6px; padding: 8px; font-weight: bold; cursor: pointer; }
-
-        /* 購物車 */
-        .cart-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; background: #f8fafc; padding: 8px; border-radius: 8px; }
-        .cart-row input { border: 1px solid #ddd; padding: 6px; border-radius: 5px; outline: none; }
-        .btn-remove { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; }
-
-        /* 訂單表格 */
-        .order-card { background: white; border-radius: 16px; padding: 20px; margin-top: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { text-align: left; padding: 15px; border-bottom: 1px solid #eee; }
-        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-        .unpaid { background: #fff4e6; color: #d9480f; }
-        .paid { background: #ebfbee; color: #2b8a3e; }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-p { background: var(--primary); color: white; }
-        .btn-s { background: var(--secondary); color: white; }
+        /* 菜單展示 */
+        .category-title { border-left: 6px solid var(--primary); padding-left: 15px; margin: 30px 0 15px; font-size: 1.5rem; font-weight: 900; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 18px; }
+        .food-card { background: white; border-radius: 18px; text-align: center; padding: 20px; border: 1px solid var(--border); transition: 0.3s; }
+        .food-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.08); }
+        .food-img { font-size: 3.5rem; margin-bottom: 15px; }
+        .food-name { font-weight: bold; font-size: 1.1rem; height: 2.5em; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .food-price { color: var(--primary); font-weight: 900; font-size: 1.3rem; margin: 10px 0; }
+        .btn-add { background: var(--secondary); color: white; border: none; width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+        
+        /* 訂單明細 */
+        .order-card { background: white; border-radius: 20px; padding: 25px; margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 15px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+        .status-pill { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .unpaid { background: #fef3c7; color: #92400e; }
+        .paid { background: #dcfce7; color: #166534; }
+        
+        #ai-status { color: var(--secondary); font-weight: bold; display: none; margin-top: 15px; font-size: 1.1rem; }
+        .loading-dots:after { content: ' .'; animation: dots 1.5s steps(5, end) infinite; }
+        @keyframes dots { 0%, 20% { color: rgba(0,0,0,0); text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 40% { color: var(--secondary); text-shadow: .2em 0 0 rgba(0,0,0,0), .4em 0 0 rgba(0,0,0,0); } 60% { text-shadow: .2em 0 0 var(--secondary), .4em 0 0 rgba(0,0,0,0); } 80%, 100% { text-shadow: .2em 0 0 var(--secondary), .4em 0 0 var(--secondary); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>🍴 智慧點餐系統</h1>
-        <div id="role-badge" class="badge-role">一般顧客模式</div>
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h1 style="font-weight: 900; color: #334155;">🍴 AI 快速點餐 <span style="font-weight: 400; font-size: 1rem; color: #94a3b8;">Gemini 2.5 Flash Inside</span></h1>
+        <div id="role-badge" style="background: #334155; color: white; padding: 6px 16px; border-radius: 30px; font-size: 0.9rem;">顧客模式</div>
     </header>
 
-    <!-- 團主面板 (只有 role=boss 會顯示) -->
+    <!-- 團主管理後台 -->
     <div id="boss-panel">
-        <h2 style="margin-top:0">👨‍🍳 團主管理後台</h2>
+        <h2 style="margin-top: 0;">👨‍🍳 團主後台</h2>
         <div class="boss-grid">
             <div class="upload-zone">
-                <p>📸 AI 辨識菜單照片</p>
-                <input type="file" id="ocr-upload" accept="image/*" onchange="handleOCR(this)">
-                <div id="ocr-status">正在啟動 AI 辨識引擎... <span id="ocr-pct">0%</span></div>
-                <p style="font-size:0.8rem; color:#aaa; margin-top:10px;">支援繁體中文/英文，圖片清晰辨識度更高</p>
+                <p style="font-size: 1.3rem; font-weight: 700;">📸 拍一張菜單</p>
+                <p style="color: #94a3b8;">上傳後 AI 將自動分析品項與價格</p>
+                <input type="file" id="menu-file" accept="image/*" onchange="runAutoOCR(this)">
+                <div id="ai-status">AI 正在努力看菜單中<span class="loading-dots"></span></div>
             </div>
             <div>
-                <p>📝 編輯菜單內容 (格式: 品項 價格)</p>
-                <textarea id="menu-editor" placeholder="例如：
-[主食]
-牛肉麵 150
-滷肉飯 45
-
-[飲料]
-紅茶 30"></textarea>
-                <div class="btn-group">
-                    <button class="btn btn-s" onclick="publishMenu()">發布菜單</button>
-                    <button class="btn" style="background:#555; color:white;" onclick="exportExcel()">匯出 Excel</button>
-                    <button class="btn" style="background:var(--danger); color:white;" onclick="clearAllOrders()">清空訂單</button>
+                <p style="font-weight: bold;">📝 菜單資料 (可手動調整)</p>
+                <textarea id="menu-editor" placeholder="[類別]\n餐點名稱 價格"></textarea>
+                <div style="margin-top: 15px; display: flex; gap: 12px;">
+                    <button onclick="publishMenu()" style="flex: 2; padding: 15px; background: var(--secondary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 900; font-size: 1.1rem;">🚀 發布正式菜單</button>
+                    <button onclick="exportExcel()" style="padding: 15px; background: #475569; color: white; border: none; border-radius: 12px; cursor: pointer;">匯出 Excel</button>
+                    <button onclick="clearOrders()" style="padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer;">清空</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="layout">
-        <!-- 左側：菜單 -->
         <div class="menu-side">
-            <div id="menu-container">
-                <div style="text-align:center; padding: 50px; background:white; border-radius:16px; color:#aaa;">
-                    🍽️ 尚未發布菜單，請稍候或切換團主模式發布。
-                </div>
+            <div id="menu-container" style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); min-height: 300px;">
+                <p style="text-align: center; color: #cbd5e1; margin-top: 100px;">🍽️ 尚未發布菜單，請通知團主。</p>
             </div>
 
-            <!-- 全體訂單表格 -->
             <div class="order-card">
-                <h2 style="margin-top:0">📝 訂單追蹤清單</h2>
-                <div class="table-container">
+                <h2 style="margin: 0 0 15px 0;">📝 今日訂購統計</h2>
+                <div style="overflow-x: auto;">
                     <table>
                         <thead>
-                            <tr>
-                                <th>姓名</th>
-                                <th>內容</th>
-                                <th>總額</th>
-                                <th>狀態</th>
-                                <th class="boss-only" style="display:none">管理</th>
-                            </tr>
+                            <tr><th>姓名</th><th>餐點</th><th>金額</th><th>狀態</th><th class="boss-ctrl" style="display:none">管理</th></tr>
                         </thead>
                         <tbody id="order-list"></tbody>
                     </table>
@@ -145,270 +114,226 @@
             </div>
         </div>
 
-        <!-- 右側：購物車 -->
         <div class="cart-side">
-            <h2 style="margin-top:0">🛒 您的購物車</h2>
-            <input type="text" id="cust-name" placeholder="👤 請輸入您的姓名" style="width:100%; padding:12px; margin-bottom:15px; border:2px solid var(--border); border-radius:8px;">
-            
+            <h2 style="margin-top: 0; color: var(--primary);">🛒 點餐區</h2>
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">👤 您的稱呼：</label>
+                <input type="text" id="user-name" placeholder="請輸入姓名" style="width:100%; padding:15px; border:2px solid #e2e8f0; border-radius:12px; margin-top:8px; font-size:1.1rem; outline: none;">
+            </div>
             <div id="cart-items"></div>
-            
-            <button onclick="addCartRow()" style="width:100%; background:none; border:1px dashed #ccc; padding:10px; border-radius:8px; cursor:pointer; margin-top:10px; color:#666;">+ 手動新增其他項</button>
-
-            <div style="margin-top:20px; padding-top:15px; border-top:2px dashed #eee;">
-                <div style="display:flex; justify-content:space-between; font-weight:900; font-size:1.4rem;">
-                    <span>總計：</span>
-                    <span id="cart-total" style="color:var(--primary)">$0</span>
+            <div style="margin-top: 30px; border-top: 3px dashed #f1f5f9; padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.8rem; font-weight: 900;">
+                    <span>總額：</span><span id="cart-total" style="color: var(--primary);">$0</span>
                 </div>
-                <button class="btn btn-p" style="width:100%; margin-top:15px; font-size:1.1rem; padding:15px;" onclick="submitOrder()">送出訂單 🚀</button>
+                <button onclick="submitOrder()" style="width: 100%; padding: 20px; background: var(--primary); color: white; border: none; border-radius: 15px; margin-top: 20px; font-size: 1.25rem; font-weight: 900; cursor: pointer; box-shadow: 0 8px 20px rgba(255,107,107,0.2);">確認送出 🚀</button>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    // --- 1. 初始化設定 ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const isBoss = urlParams.get('role') === 'boss';
-    
-    // Firebase 配置 (請根據需要填寫，若不填寫則自動使用瀏覽器本地儲存)
-    const firebaseConfig = { databaseURL: "" };
-    let db = null;
-    if (firebaseConfig.databaseURL) {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
-    }
+<script type="module">
+    import { GoogleGenerativeAI } from "@google/generative-ai";
 
-    document.addEventListener('DOMContentLoaded', () => {
-        if (isBoss) {
-            document.getElementById('boss-panel').style.display = 'block';
-            document.getElementById('role-badge').innerText = '團主管理員模式';
-            document.querySelectorAll('.boss-only').forEach(el => el.style.display = 'table-cell');
+    // ==========================================
+    // 🔑 請在此貼上您的 Gemini API Key 
+    // ==========================================
+    const INTERNAL_GEMINI_KEY = "在此貼上你的金鑰"; 
+
+    // --- 自動 OCR 辨識 ---
+    window.runAutoOCR = async function(input) {
+        if (!INTERNAL_GEMINI_KEY || INTERNAL_GEMINI_KEY.includes("在此")) {
+            return alert("❌ 程式碼中尚未設定 API Key，請先在 script 標籤中設定。");
         }
-        loadMenu();
-        loadOrders();
-        addCartRow(); // 預設一行
-    });
+        if (!input.files[0]) return;
 
-    // --- 2. AI 辨識功能 (OCR) ---
-    async function handleOCR(input) {
-        if (!input.files || !input.files[0]) return;
-        const statusEl = document.getElementById('ocr-status');
-        const pctEl = document.getElementById('ocr-pct');
-        statusEl.style.display = 'block';
+        const status = document.getElementById('ai-status');
+        const editor = document.getElementById('menu-editor');
+        status.style.display = 'block';
 
         try {
-            const worker = await Tesseract.createWorker('zho_tra+eng');
-            const { data: { text } } = await worker.recognize(input.files[0], {
-                onProgress: m => { if(m.status === 'recognizing') pctEl.innerText = Math.round(m.progress * 100) + '%' }
-            });
+            const file = input.files[0];
+            const base64Data = await toBase64(file);
+            
+            const genAI = new GoogleGenerativeAI(INTERNAL_GEMINI_KEY);
+            // 使用 Gemini 2.5 Flash
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-            // 智慧解析：尋找品項與數字
-            const lines = text.split('\n');
-            let result = "[AI 辨識結果]\n";
-            lines.forEach(line => {
-                const match = line.match(/(.+?)(\d+)\s*$/); // 尋找結尾是數字的行
-                if (match) {
-                    const name = match[1].trim().replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
-                    const price = match[2];
-                    if (name.length > 1) result += `${name} ${price}\n`;
-                }
-            });
-            document.getElementById('menu-editor').value = result;
-            alert("辨識完成，請微調格式後發布！");
-            await worker.terminate();
-        } catch (e) {
-            alert("辨識出錯，請確保圖片文字清晰。");
+            const prompt = `分析這張菜單圖片，提取所有品項與價格。
+            規則：
+            1. 偵測到的分類放在中括號內，如 [主食]。
+            2. 品項與價格放同一行，中間用空格隔開，如：牛肉麵 150。
+            3. 只輸出清單文字，不要有任何解釋。`;
+
+            const imageParts = [{ inlineData: { data: base64Data.split(',')[1], mimeType: file.type } }];
+            const result = await model.generateContent([prompt, ...imageParts]);
+            const response = await result.response;
+            editor.value = response.text();
+            alert("AI 辨識完成！");
+        } catch (error) {
+            console.error(error);
+            alert("辨識失敗：" + error.message);
         } finally {
-            statusEl.style.display = 'none';
+            status.style.display = 'none';
         }
     }
 
-    // --- 3. 菜單管理 ---
-    function publishMenu() {
-        const raw = document.getElementById('menu-editor').value;
-        if (db) db.ref('system/menu').set(raw);
-        else localStorage.setItem('localMenu', raw);
-        loadMenu();
-        alert("菜單已更新！");
+    function toBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
     }
 
-    function loadMenu() {
-        const handle = (val) => {
-            if (!val) return;
-            const container = document.getElementById('menu-container');
-            container.innerHTML = '';
-            const lines = val.split('\n');
-            let currentGrid = null;
+    // --- 核心點餐系統邏輯 ---
+    const isBoss = new URLSearchParams(window.location.search).get('role') === 'boss';
+    let cart = [];
 
-            lines.forEach(line => {
-                const t = line.trim();
-                if (!t) return;
-                if (t.startsWith('[')) {
-                    const title = document.createElement('h3');
-                    title.className = 'category-title';
-                    title.innerText = t.replace(/[\[\]]/g, '');
-                    container.appendChild(title);
-                    currentGrid = document.createElement('div');
-                    currentGrid.className = 'menu-grid';
-                    container.appendChild(currentGrid);
-                } else {
-                    const parts = t.split(/\s+/);
-                    const price = parts.pop();
-                    const name = parts.join(' ');
-                    if (!isNaN(price) && currentGrid) {
-                        const card = document.createElement('div');
-                        card.className = 'food-card';
-                        card.innerHTML = `
-                            <div class="food-img">${guessEmoji(name)}</div>
-                            <div class="food-info">
-                                <div class="food-name">${name}</div>
-                                <div class="food-price">$${price}</div>
-                                <button class="btn-add" onclick="quickAdd('${name}', ${price})">加入購物車</button>
-                            </div>
-                        `;
-                        currentGrid.appendChild(card);
-                    }
+    window.publishMenu = function() {
+        const text = document.getElementById('menu-editor').value;
+        localStorage.setItem('menu_quick_v1', text);
+        renderMenu(text);
+        alert("菜單已成功發布！");
+    }
+
+    function renderMenu(val) {
+        const container = document.getElementById('menu-container');
+        if (!val) return;
+        container.innerHTML = '';
+        const lines = val.split('\n');
+        let currentGrid = null;
+
+        lines.forEach(line => {
+            const t = line.trim();
+            if (!t) return;
+            if (t.startsWith('[')) {
+                const title = document.createElement('h3');
+                title.className = 'category-title';
+                title.innerText = t.replace(/[\[\]]/g, '');
+                container.appendChild(title);
+                currentGrid = document.createElement('div');
+                currentGrid.className = 'menu-grid';
+                container.appendChild(currentGrid);
+            } else {
+                const parts = t.split(/\s+/);
+                const price = parts.pop();
+                const name = parts.join(' ');
+                if (!isNaN(price) && currentGrid) {
+                    const card = document.createElement('div');
+                    card.className = 'food-card';
+                    card.innerHTML = `
+                        <div class="food-img">${guessEmoji(name)}</div>
+                        <div class="food-name">${name}</div>
+                        <div class="food-price">$${price}</div>
+                        <button class="btn-add" onclick="addToCart('${name}', ${price})">加入購物車</button>
+                    `;
+                    currentGrid.appendChild(card);
                 }
-            });
-        };
-        if (db) db.ref('system/menu').on('value', snap => handle(snap.val()));
-        else handle(localStorage.getItem('localMenu'));
+            }
+        });
     }
 
-    // --- 4. 購物車邏輯 ---
-    function addCartRow(name = '', price = '') {
+    window.addToCart = function(name, price) {
+        cart.push({ name, price });
+        renderCart();
+    }
+
+    function renderCart() {
         const container = document.getElementById('cart-items');
-        const div = document.createElement('div');
-        div.className = 'cart-row';
-        div.innerHTML = `
-            <input type="text" class="i-name" placeholder="品項" value="${name}" style="flex:2">
-            <input type="number" class="i-price" placeholder="價格" value="${price}" style="flex:1" oninput="calcTotal()">
-            <button class="btn-remove" onclick="this.parentElement.remove(); calcTotal();">&times;</button>
-        `;
-        container.appendChild(div);
-        calcTotal();
-    }
-
-    function quickAdd(name, price) {
-        const rows = document.querySelectorAll('.cart-row');
-        const lastRow = rows[rows.length - 1];
-        if (lastRow && lastRow.querySelector('.i-name').value === '') {
-            lastRow.querySelector('.i-name').value = name;
-            lastRow.querySelector('.i-price').value = price;
-        } else {
-            addCartRow(name, price);
-        }
-        calcTotal();
-    }
-
-    function calcTotal() {
+        container.innerHTML = '';
         let total = 0;
-        document.querySelectorAll('.i-price').forEach(i => total += (parseInt(i.value) || 0));
+        cart.forEach((item, idx) => {
+            total += item.price;
+            const div = document.createElement('div');
+            div.style = "display:flex; justify-content:space-between; margin-bottom:10px; background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #e2e8f0;";
+            div.innerHTML = `<span><b>${item.name}</b></span><span>$${item.price} <button onclick="removeFromCart(${idx})" style="border:none; background:none; color:red; cursor:pointer; font-size:1.2rem;">&times;</button></span>`;
+            container.appendChild(div);
+        });
         document.getElementById('cart-total').innerText = '$' + total;
     }
 
-    // --- 5. 訂單處理 ---
-    function submitOrder() {
-        const name = document.getElementById('cust-name').value;
-        if (!name) return alert("請輸入姓名！");
+    window.removeFromCart = function(idx) {
+        cart.splice(idx, 1);
+        renderCart();
+    }
+
+    window.submitOrder = function() {
+        const name = document.getElementById('user-name').value;
+        if (!name) return alert("請輸入您的姓名");
+        if (cart.length === 0) return alert("購物車目前是空的");
+
+        const order = { id: Date.now(), name, items: cart.map(i => i.name).join(', '), total: cart.reduce((s, i) => s + i.price, 0), status: 'unpaid' };
+        let orders = JSON.parse(localStorage.getItem('order_quick_v1') || '[]');
+        orders.unshift(order);
+        localStorage.setItem('order_quick_v1', JSON.stringify(orders));
         
-        let items = [];
-        let total = 0;
-        document.querySelectorAll('.cart-row').forEach(row => {
-            const iname = row.querySelector('.i-name').value;
-            const iprice = parseInt(row.querySelector('.i-price').value);
-            if (iname && iprice) {
-                items.push(`${iname}($${iprice})`);
-                total += iprice;
-            }
-        });
-
-        if (items.length === 0) return alert("購物車是空的！");
-
-        const data = { name, items: items.join(', '), total, status: 'unpaid', time: Date.now() };
-        if (db) db.ref('orders').push(data);
-        else {
-            let local = JSON.parse(localStorage.getItem('localOrders') || '[]');
-            local.push(data);
-            localStorage.setItem('localOrders', JSON.stringify(local));
-            loadOrders();
-        }
-        alert("訂單已送出！");
-        document.getElementById('cart-items').innerHTML = '';
-        addCartRow();
+        alert("訂單送出成功！");
+        cart = []; renderCart(); renderOrders();
     }
 
-    function loadOrders() {
-        const render = (data) => {
-            const list = document.getElementById('order-list');
-            list.innerHTML = '';
-            if (!data) return;
-            Object.keys(data).forEach(key => {
-                const o = data[key];
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="font-weight:bold">${o.name}</td>
-                    <td style="font-size:0.85rem; color:#666">${o.items}</td>
-                    <td style="color:var(--primary); font-weight:800">$${o.total}</td>
-                    <td><span class="status-pill ${o.status}">${o.status === 'paid' ? '✅ 已付' : '⏳ 未付'}</span></td>
-                    <td class="boss-only" style="${isBoss ? '' : 'display:none'}">
-                        <button class="btn btn-s" style="padding:4px 8px; font-size:0.75rem" onclick="toggleStatus('${key}', '${o.status}')">切換狀態</button>
-                        <button class="btn" style="background:var(--danger); color:white; padding:4px 8px; font-size:0.75rem" onclick="delOrder('${key}')">刪除</button>
-                    </td>
-                `;
-                list.appendChild(tr);
-            });
-        };
-        if (db) db.ref('orders').on('value', snap => render(snap.val()));
-        else render(JSON.parse(localStorage.getItem('localOrders') || '[]'));
+    window.renderOrders = function() {
+        const list = document.getElementById('order-list');
+        const orders = JSON.parse(localStorage.getItem('order_quick_v1') || '[]');
+        list.innerHTML = orders.map((o, idx) => `
+            <tr>
+                <td style="font-weight:900;">${o.name}</td>
+                <td style="font-size:0.85rem; color:#64748b;">${o.items}</td>
+                <td style="font-weight:bold; color:var(--primary)">$${o.total}</td>
+                <td><span class="status-pill ${o.status}">${o.status==='paid'?'✅ 已付':'⏳ 未付'}</span></td>
+                <td class="boss-ctrl" style="${isBoss?'':'display:none'}">
+                    <button onclick="togglePaid(${idx})" style="padding:4px 8px; border-radius:6px; cursor:pointer;">切換</button>
+                    <button onclick="deleteOrder(${idx})" style="color:red; background:none; border:none; cursor:pointer; font-weight:bold;">×</button>
+                </td>
+            </tr>
+        `).join('');
     }
 
-    // --- 6. 團主控制功能 ---
-    window.toggleStatus = function(id, cur) {
-        const next = cur === 'paid' ? 'unpaid' : 'paid';
-        if (db) db.ref(`orders/${id}/status`).set(next);
-        else {
-            let local = JSON.parse(localStorage.getItem('localOrders'));
-            local[id].status = next;
-            localStorage.setItem('localOrders', JSON.stringify(local));
-            loadOrders();
-        }
-    };
+    window.togglePaid = function(idx) {
+        let orders = JSON.parse(localStorage.getItem('order_quick_v1'));
+        orders[idx].status = orders[idx].status === 'paid' ? 'unpaid' : 'paid';
+        localStorage.setItem('order_quick_v1', JSON.stringify(orders));
+        renderOrders();
+    }
 
-    window.delOrder = function(id) {
-        if (!confirm("確定刪除此訂單？")) return;
-        if (db) db.ref(`orders/${id}`).remove();
-        else {
-            let local = JSON.parse(localStorage.getItem('localOrders'));
-            local.splice(id, 1);
-            localStorage.setItem('localOrders', JSON.stringify(local));
-            loadOrders();
-        }
-    };
+    window.deleteOrder = function(idx) {
+        if(!confirm("確定要刪除這筆訂單？")) return;
+        let orders = JSON.parse(localStorage.getItem('order_quick_v1'));
+        orders.splice(idx, 1);
+        localStorage.setItem('order_quick_v1', JSON.stringify(orders));
+        renderOrders();
+    }
 
-    window.clearAllOrders = function() {
-        if (confirm("確定清空所有訂單資料？")) {
-            if (db) db.ref('orders').remove();
-            else localStorage.removeItem('localOrders');
-            loadOrders();
-        }
-    };
+    window.clearOrders = function() {
+        if(!confirm("警告：將清空所有訂單！")) return;
+        localStorage.removeItem('order_quick_v1');
+        renderOrders();
+    }
 
-    function exportExcel() {
+    window.exportExcel = function() {
         const table = document.querySelector("table");
         const wb = XLSX.utils.table_to_book(table);
-        XLSX.writeFile(wb, `訂單明細_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.writeFile(wb, `點餐清單_${new Date().toLocaleDateString()}.xlsx`);
     }
 
-    function guessEmoji(n) {
-        if (n.includes('飯')) return '🍛';
-        if (n.includes('麵')) return '🍜';
-        if (n.includes('堡')) return '🍔';
-        if (n.includes('茶') || n.includes('飲') || n.includes('水')) return '🥤';
-        if (n.includes('咖啡')) return '☕';
-        if (n.includes('湯')) return '🥣';
+    function guessEmoji(name) {
+        if(name.includes('飯')) return '🍛';
+        if(name.includes('麵')) return '🍜';
+        if(name.includes('飲') || name.includes('茶')) return '🥤';
+        if(name.includes('堡')) return '🍔';
+        if(name.includes('蛋')) return '🍳';
+        if(name.includes('排')) return '🍗';
+        if(name.includes('湯')) return '🥣';
         return '🍱';
     }
+
+    if (isBoss) {
+        document.getElementById('boss-panel').style.display = 'block';
+        document.getElementById('role-badge').innerText = '團主模式';
+        document.querySelectorAll('.boss-ctrl').forEach(el => el.style.display = 'table-cell');
+    }
+    renderMenu(localStorage.getItem('menu_quick_v1'));
+    renderOrders();
 </script>
 
 </body>
