@@ -191,47 +191,80 @@
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         .broadcast-icon { font-size: 120px; margin-bottom: 20px; animation: shake 1s infinite;}
         #countdown-banner { display: none; background: linear-gradient(135deg, #FF453A 0%, #FF9F0A 100%); color: white; text-align: center; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-weight: 900; font-size: 1.2em; animation: pulse 2s infinite; box-shadow: 0 4px 15px rgba(255, 69, 58, 0.4);}
-    /* 👉 新增：點餐區塊的左右橫向排版魔法 */
+   
+        /* 👉 終極版：點餐區塊的橫向看板排版魔法 */
         .ordering-layout { display: flex; gap: 20px; align-items: flex-start; }
         
-        /* 左側：點餐表單 (設定 sticky 讓它往下滑時會黏在頂部) */
+        /* 1. 左側：點餐表單 (設定 sticky 讓它往下滑時會黏在頂部) */
         .form-side { flex: 1; min-width: 280px; position: sticky; top: 20px; z-index: 10; background: var(--surface); }
         
-        /* 右側：店家菜單 (設定獨立卷軸與最大高度) */
-        .menu-side { flex: 1.2; min-width: 280px; background: #F8FAFC; padding: 15px; border-radius: 16px; border: 1px solid #E2E8F0; max-height: 550px; overflow-y: auto; }
-        
-        /* 美化右側菜單的專屬卷軸 */
-        .menu-side::-webkit-scrollbar { width: 6px; }
+        /* 2. 右側：店家菜單 (隱藏上下卷軸，只保留最底部的左右滑動) */
+        .menu-side { 
+            flex: 1.2; 
+            min-width: 280px; 
+            background: #F8FAFC; 
+            padding: 15px; 
+            padding-bottom: 5px; /* 留一點空間給底部的橫向卷軸 */
+            border-radius: 16px; 
+            border: 1px solid #E2E8F0; 
+            overflow-x: auto !important; 
+            overflow-y: hidden !important; 
+        }
+
+        /* 美化最底部的橫向卷軸 */
+        .menu-side::-webkit-scrollbar { height: 8px; }
         .menu-side::-webkit-scrollbar-track { background: transparent; }
         .menu-side::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
         .menu-side::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* 3. 內部容器：讓它撐滿高度，橫向排列分類 */
+        #system-menu-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            height: 520px; /* 統一整體菜單的最大高度 */
+            align-items: stretch;
+        }
+
+        /* 4. 分類包裝盒：變成直向的彈性盒子，限制最大高度 */
+        .category-wrapper {
+            flex: 0 0 280px; /* 固定每個分類寬度為 280px */
+            min-width: 280px;
+            display: flex;
+            flex-direction: column; /* 讓標題和餐點上下排列 */
+            height: 100%; 
+        }
+
+        /* 確保分類標題不會被壓縮 */
+        .category-wrapper h3 {
+            flex-shrink: 0; 
+            margin-top: 0px !important;
+        }
+
+        /* 5. 魔法在這裡：讓每個分類的「網格」自己擁有獨立的上下卷軸！ */
+        .menu-grid {
+            flex: 1; /* 自動填滿剩餘高度 */
+            overflow-y: auto; /* 內容過多時，只在這個分類內上下捲動 */
+            padding-right: 8px; /* 預留一點空間給垂直卷軸 */
+            align-content: flex-start; /* 餐點少時往上靠齊 */
+            margin-bottom: 0 !important;
+            /* 將原本網格設定補回來 */
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 15px;
+        }
+
+        /* 美化各分類的垂直卷軸 */
+        .menu-grid::-webkit-scrollbar { width: 5px; }
+        .menu-grid::-webkit-scrollbar-track { background: transparent; }
+        .menu-grid::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 5px; }
+        .menu-grid::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
 
         /* 手機版 (寬度小於 800px) 自動變回上下排列 */
         @media (max-width: 800px) {
             .ordering-layout { flex-direction: column; }
             .form-side { position: static; width: 100%; box-sizing: border-box; }
             .menu-side { width: 100%; box-sizing: border-box; max-height: 400px; }
-        }
-                    /* 👉 新增：讓菜單容器變成橫向卷軸 */
-        #system-menu-container {
-            display: flex;
-            flex-direction: row;
-            gap: 20px;
-            overflow-x: auto;
-            padding-bottom: 15px;
-            align-items: flex-start; /* 讓分類高度各自獨立，不會被硬拉長 */
-        }
-        
-        /* 美化專屬滾動條 */
-        #system-menu-container::-webkit-scrollbar { height: 8px; }
-        #system-menu-container::-webkit-scrollbar-track { background: transparent; }
-        #system-menu-container::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-        #system-menu-container::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-        
-        /* 👉 新增：每個分類的包裝盒，確保並排時不會被擠壓 */
-        .category-wrapper {
-            flex: 0 0 280px; /* 固定每個分類寬度 */
-            min-width: 280px;
         }
     </style>
 </head>
@@ -1242,6 +1275,7 @@ window.startOCR = async function() {
 
 </body>
 </html>
+
 
 
 
