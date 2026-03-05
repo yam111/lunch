@@ -165,7 +165,7 @@
             const file = input.files[0];
             const base64Data = await toBase64(file);
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const prompt = `分析這張菜單圖片，提取所有品項與價格。規則：
             1. 分類放在中括號內，如 [主食]。
@@ -311,5 +311,6 @@
 
 </body>
 </html>
+
 
 
