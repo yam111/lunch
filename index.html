@@ -212,6 +212,27 @@
             .form-side { position: static; width: 100%; box-sizing: border-box; }
             .menu-side { width: 100%; box-sizing: border-box; max-height: 400px; }
         }
+                    /* 👉 新增：讓菜單容器變成橫向卷軸 */
+        #system-menu-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            align-items: flex-start; /* 讓分類高度各自獨立，不會被硬拉長 */
+        }
+        
+        /* 美化專屬滾動條 */
+        #system-menu-container::-webkit-scrollbar { height: 8px; }
+        #system-menu-container::-webkit-scrollbar-track { background: transparent; }
+        #system-menu-container::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        #system-menu-container::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+        
+        /* 👉 新增：每個分類的包裝盒，確保並排時不會被擠壓 */
+        .category-wrapper {
+            flex: 0 0 280px; /* 固定每個分類寬度 */
+            min-width: 280px;
+        }
     </style>
 </head>
 <body>
@@ -633,7 +654,7 @@
                 let catTitle = document.createElement('h3');
                 catTitle.innerText = `🏷️ ${catName}`;
                 catTitle.style.color = 'var(--text-main)';
-                catTitle.style.marginTop = '25px';
+                catTitle.style.marginTop = '0px'; /* 變橫向了，頂部不用留白太多 */
                 catTitle.style.marginBottom = '15px';
                 catTitle.style.borderBottom = '3px solid var(--primary-soft)';
                 catTitle.style.display = 'inline-block';
@@ -641,8 +662,13 @@
                 currentGrid = document.createElement('div');
                 currentGrid.className = 'menu-grid';
                 
-                container.appendChild(catTitle);
-                container.appendChild(currentGrid);
+                /* 👉 新增：用 Wrapper 把標題和網格包起來，這樣才能橫向並排 */
+                let wrapper = document.createElement('div');
+                wrapper.className = 'category-wrapper';
+                wrapper.appendChild(catTitle);
+                wrapper.appendChild(currentGrid);
+                
+                container.appendChild(wrapper);
             } else {
                 let parts = text.split(/\s+/);
                 if (parts.length >= 2) {
@@ -653,7 +679,12 @@
                         if (!currentGrid) {
                             currentGrid = document.createElement('div');
                             currentGrid.className = 'menu-grid';
-                            container.appendChild(currentGrid);
+                            
+                            /* 👉 沒分類標題時，也要包裝起來維持排版 */
+                            let wrapper = document.createElement('div');
+                            wrapper.className = 'category-wrapper';
+                            wrapper.appendChild(currentGrid);
+                            container.appendChild(wrapper);
                         }
                         
                         // 簡單的 AI Emoji 猜測魔法
@@ -1214,6 +1245,7 @@
 
 </body>
 </html>
+
 
 
 
