@@ -282,50 +282,54 @@
             overflow: visible; /* 取消原本的內部滾動，統一由外層滾動 */
         }
 
-        /* 6. 緊湊型卡片 (變身為橫向排列) */
+        /* 6. 緊湊型卡片 (修正字體被擠壓斷行的問題) */
         .food-card {
             display: flex; 
             flex-direction: row; /* 照片在左，資訊在右 */
-            height: 85px; /* 高度縮小，節省空間 */
-            min-height: unset;
+            height: auto; 
+            min-height: 110px; /* 稍微加高一點點讓按鈕放得下 */
         }
         .food-img { 
-            width: 80px; 
-            height: 100%; 
-            font-size: 2.2rem; 
+            width: 90px; 
+            height: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem; 
             flex-shrink: 0;
+            background: #f8fafc;
             border-right: 1px solid #f0f0f0;
         }
         .food-info { 
+            display: flex;
+            flex-direction: column; /* 🌟 關鍵修正：內部改回上下排列 */
+            justify-content: space-between;
             flex: 1; 
-            flex-direction: row; /* 讓文字跟按鈕水平並排 */
-            align-items: center; 
-            padding: 10px 15px; 
-            gap: 10px;
+            padding: 10px 12px; 
+            min-width: 0; /* 🌟 關鍵修正：防止文字撐爆容器 */
         }
         .food-info > div {
-            flex: 1; /* 品項跟價格佔據剩餘空間，把按鈕往右推 */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            display: block;
         }
-        .food-name { margin-bottom: 2px; font-size: 1em; line-height: 1.2;}
-        .food-price { margin-bottom: 0; font-size: 1.05em; }
+        .food-name { 
+            margin-bottom: 4px; 
+            font-size: 1.05em; 
+            font-weight: bold; 
+            line-height: 1.3;
+            white-space: normal; /* 確保正常換行，不會在一個字中間斷掉 */
+            word-break: keep-all; 
+        }
+        .food-price { 
+            margin-bottom: 8px; 
+            font-size: 1.05em; 
+            color: var(--primary);
+            font-weight: 800;
+        }
         
         .add-btn { 
-            width: auto; /* 按鈕不要撐滿，只需包覆文字 */
-            padding: 8px 12px; 
+            width: 100%; /* 讓按鈕在下方填滿，不跟文字搶橫向空間 */
+            padding: 8px; 
             font-size: 0.9em;
-            flex-shrink: 0;
-        }
-
-        /* 舊版的按鈕隱藏掉，以防萬一 HTML 沒刪乾淨 */
-        .scroll-btn { display: none !important; }
-
-        @media (max-width: 800px) {
-            .ordering-layout { flex-direction: column; }
-            .form-side { position: static; width: 100%; box-sizing: border-box; }
-            .menu-side { width: 100%; box-sizing: border-box; max-height: 50vh;}
         }
     </style>
 </head>
@@ -795,8 +799,8 @@
                         let target = document.getElementById(catId);
                         let menuSide = document.querySelector('.menu-side');
                         if (target && menuSide) {
-                            // 計算目標位置 (減去 50px 避免被頂部的丸子列擋住)
-                            let targetPos = target.offsetTop - 50; 
+                            // 🌟 修正：抓取「整個分類外框」的頂部位置，這樣定位才會完全準確
+                            let targetPos = target.parentElement.offsetTop - 55; 
                             menuSide.scrollTo({ top: targetPos, behavior: 'smooth' });
                         }
                     };
@@ -1373,6 +1377,7 @@ window.startOCR = async function() {
 
 </body>
 </html>
+
 
 
 
