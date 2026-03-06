@@ -52,7 +52,7 @@
         .btn-broadcast { background: var(--warning); color: white; animation: pulse 2s infinite; font-size: 1em;}
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(0,0,0,0); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
 
-        /* 👉 購物車圖示按鈕 (右上角) */
+        /* 👉 購物車圖示按鈕 */
         .cart-toggle-btn {
             position: relative; background: white; border: 2px solid #E2E8F0; border-radius: 50%;
             width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;
@@ -68,12 +68,11 @@
         .card { background: var(--surface); border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); padding: 25px; margin-bottom: 25px; }
         .bulletin { background: #FEF9C3; border-left: 5px solid #FACC15; position: relative; padding: 20px;}
         .bulletin-content { color: #854D0E; font-size: 1.05em; line-height: 1.6; }
-        .bulletin-content img { max-width: 100%; border-radius: 12px; margin-top: 15px; display: block;}
         .bulletin-content a { background: #FDE047; padding: 4px 10px; border-radius: 8px; color: #A16207; text-decoration: none; font-weight: bold; margin-top: 5px; display: inline-block;}
         .btn-edit-small { position: absolute; top: 15px; right: 15px; background: white; color: #CA8A04; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 6px 10px; font-size: 0.85em;}
 
-        /* 👉 團主高質感極簡統計區 (象牙白/灰) */
-        .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none; margin-bottom: 20px; flex-wrap: wrap;}
+        /* 👉 團主統計區 */
+        .stats { display: none; gap: 15px; padding: 0; background: transparent; box-shadow: none; margin-bottom: 15px; flex-wrap: wrap;}
         .stat-box { 
             flex: 1; padding: 15px 20px; border-radius: 16px; color: var(--text-main); 
             background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%); 
@@ -84,35 +83,44 @@
         .stat-value { font-size: 1.6em; font-weight: 900; color: #1c1c1e; }
 
         /* 👉 菜單區塊佈局 */
+        .ordering-layout { display: flex; gap: 25px; align-items: flex-start; flex-direction: row !important; flex-wrap: nowrap !important; width: 100%; }
         .menu-side { 
-            width: 100%; background: transparent; border: none; padding: 0;
-            overflow: visible; position: relative;
+            flex: 1 1 65%; min-width: 0; background: #F8FAFC; padding: 15px; border-radius: 16px; 
+            border: 1px solid #E2E8F0; height: calc(100vh - 120px); max-height: 800px;
+            overflow-y: auto !important; overflow-x: hidden !important; position: relative;
         }
+        .menu-side::-webkit-scrollbar { width: 6px; }
+        .menu-side::-webkit-scrollbar-track { background: transparent; }
+        .menu-side::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        .menu-side::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
-        /* 導覽丸子與吸頂標題 */
+        /* 🌟 導覽丸子與吸頂標題 (包含發亮狀態) */
         .category-pills {
-            position: sticky; top: 85px; background: rgba(249,249,249,0.95); backdrop-filter: blur(8px); z-index: 30; 
-            padding: 10px 0; margin: 0 0 15px 0; border-bottom: 1px solid #E2E8F0;
-            display: flex; gap: 8px; overflow-x: auto; scroll-behavior: smooth;
+            position: sticky; top: -15px; background: #F8FAFC; z-index: 30; 
+            padding: 10px 0; margin: 0 0 15px 0; border-bottom: 2px solid #E2E8F0;
+            display: flex; gap: 10px; overflow-x: auto; scroll-behavior: smooth;
         }
         .category-pills::-webkit-scrollbar { display: none; } 
+        .category-pills { -ms-overflow-style: none; scrollbar-width: none; }
         
         .pill-btn {
             white-space: nowrap; padding: 8px 16px; background: white; border: 1px solid #CBD5E1;
-            border-radius: 20px; font-weight: bold; color: var(--text-muted); cursor: pointer; box-shadow: none;
+            border-radius: 20px; font-weight: bold; color: var(--text-muted); cursor: pointer; transition: all 0.2s; box-shadow: none;
         }
         .pill-btn:hover { background: #F1F5F9; color: var(--text-main); }
+        .pill-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); } /* 滑動跟隨發亮 */
 
         .category-wrapper h3 { 
-            position: sticky; top: 135px; background: rgba(249,249,249,0.95); backdrop-filter: blur(8px); 
-            z-index: 5; padding: 10px 0; margin: 0 0 10px 0 !important; color: var(--text-main); font-size: 1.2em;
+            position: sticky; top: 45px; background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(5px); z-index: 5; padding: 10px 0;
+            margin: 0 0 10px 0 !important; border-bottom: 2px solid var(--primary-soft);
         }
 
         #system-menu-container { display: flex; flex-direction: column; gap: 20px; }
         .category-wrapper { display: flex; flex-direction: column; }
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
 
-        /* 👉 UberEats 風格極簡卡片 (純文字與價格) */
+        /* 👉 極簡卡片 */
         .food-card { 
             display: flex; flex-direction: column; justify-content: center; 
             padding: 18px 20px; background: white; border-radius: 12px; border: 1px solid #E2E8F0; 
@@ -124,11 +132,10 @@
         .food-name { font-size: 1.1em; font-weight: bold; color: var(--text-main); margin-bottom: 6px; line-height: 1.3;}
         .food-price { font-size: 1em; color: var(--text-muted); font-weight: 500;}
         
-        /* 點擊卡片時的閃爍特效 */
         @keyframes flashSuccess { 0% { background-color: white; } 50% { background-color: #e6ffed; } 100% { background-color: white; } }
         .flash-active { animation: flashSuccess 0.4s ease-out; }
 
-        /* 👉 滑出式購物車 Drawer */
+        /* 👉 滑出式購物車 */
         .cart-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.4); z-index: 3999; opacity: 0; visibility: hidden; transition: 0.3s;
@@ -152,7 +159,6 @@
         .cart-body { padding: 25px; flex: 1; overflow-y: auto; }
         .cart-footer { padding: 20px 25px; border-top: 1px solid #eee; background: white; }
 
-        /* 購物車內部表單樣式 */
         input { padding: 14px 16px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 1em; background: #F8FAFC; outline: none; transition: 0.2s; font-family: inherit; width: 100%; box-sizing: border-box; margin-bottom: 15px;}
         input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(255,107,107,0.1); }
         
@@ -166,14 +172,10 @@
         .checkout-btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255,107,107,0.3); }
         .checkout-btn:disabled { background: #CBD5E1; cursor: not-allowed; transform: none; box-shadow: none;}
 
-        .quick-tags-area { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px;}
-        .quick-tag { background: white; color: var(--text-main); border: 1px solid #CBD5E1; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; box-shadow: none;}
-
-        /* 👉 團主總覽區塊 (在購物車內) */
         .admin-drawer-summary { margin-top: 30px; border-top: 2px dashed #E2E8F0; padding-top: 20px; }
         .admin-summary-item { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; font-size: 0.95em; color: var(--text-main); }
 
-        /* 👉 懸浮右下角的線上人數工具列 */
+        /* 👉 懸浮人數工具列 */
         .floating-online-widget {
             position: fixed; bottom: 25px; right: 25px; background: white; border-radius: 30px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.15); width: 60px; height: 60px; overflow: hidden; 
@@ -183,7 +185,6 @@
         .widget-icon { width: 60px; height: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--text-muted); cursor: default; }
         .widget-content-area { flex: 1; padding: 0 15px 15px 15px; overflow-y: auto; opacity: 0; transition: opacity 0.2s; }
         .floating-online-widget:hover .widget-content-area { opacity: 1; transition-delay: 0.1s; }
-        
         .online-user-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05);}
         .user-avatar { width: 30px; height: 30px; background: #F1F5F9; color: var(--text-muted); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 0.9em; flex-shrink: 0;}
         .user-info { display: flex; flex-direction: column; width: 100%; overflow: hidden;}
@@ -214,15 +215,18 @@
         .broadcast-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(16, 185, 129, 0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; animation: slideDown 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;}
         @keyframes slideDown { 0% { transform: translateY(-100%); } 100% { transform: translateY(0); } }
         #countdown-banner { display: none; background: #FFF7ED; color: #B45309; border: 1px solid #FEF08A; text-align: center; padding: 10px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; animation: pulse 2s infinite; box-shadow: none;}
+
+        @media (max-width: 900px) {
+            .ordering-layout { flex-direction: column !important; }
+            .menu-side { width: 100%; box-sizing: border-box; height: 70vh; flex: none; }
+        }
     </style>
 </head>
 <body>
 
 <div class="layout-wrapper">
     <div class="main-content">
-        <div id="countdown-banner">
-            ⏳ 距離結單還剩：<span id="timer-display">00:00</span>
-        </div>
+        <div id="countdown-banner">⏳ 距離結單還剩：<span id="timer-display">00:00</span></div>
 
         <div class="flex header-area">
             <h1>🍱 今天吃甚麼
@@ -255,23 +259,25 @@
             <button class="btn-edit-small admin-only" onclick="openBulletinEditor()">✏️ 編輯</button>
         </div>
 
-        <div class="flex stats" id="admin-stats">
-            <div class="stat-box"><div class="stat-title">總金額 (應付)</div><div class="stat-value" id="total-price">0</div></div>
-            <div class="stat-box"><div class="stat-title">已收現金</div><div class="stat-value" id="total-paid">0</div></div>
-            <div class="stat-box"><div class="stat-title">剩餘待收</div><div class="stat-value" style="color: var(--danger);" id="total-unpaid">0</div></div>
-        </div>
-
-        <div class="menu-side" id="system-menu-wrapper">
-            <div id="category-pills-container" class="category-pills"></div>
-            
-            <div id="system-menu-container">
-                <div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--text-muted); font-weight: bold; border: 2px dashed #eee;">
-                    🍽️ 團主尚未發布今日菜單，請稍候...
+        <div class="ordering-layout">
+            <div class="menu-side" id="system-menu-wrapper">
+                <div id="category-pills-container" class="category-pills"></div>
+                
+                <div id="system-menu-container">
+                    <div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--text-muted); font-weight: bold; border: 2px dashed #eee;">
+                        🍽️ 團主尚未發布今日菜單，請稍候...
+                    </div>
                 </div>
             </div>
         </div>
             
         <div class="card" style="margin-top: 30px;">
+            <div class="flex stats" id="admin-stats">
+                <div class="stat-box"><div class="stat-title">總金額 (應付)</div><div class="stat-value" id="total-price">0</div></div>
+                <div class="stat-box"><div class="stat-title">已收現金</div><div class="stat-value" id="total-paid">0</div></div>
+                <div class="stat-box"><div class="stat-title">剩餘待收</div><div class="stat-value" style="color: var(--danger);" id="total-unpaid">0</div></div>
+            </div>
+
             <h2 id="unpaid-title">📝 您的未付款訂單</h2>
             <div style="overflow-x:auto;">
                 <table id="unpaid-table">
@@ -305,15 +311,9 @@
             <input type="text" id="name" placeholder="👤 請輸入您的姓名" required oninput="handleTyping()" style="background: white; border: 2px solid #E2E8F0;">
             
             <div id="order-items-container" style="display: flex; flex-direction: column; width: 100%;">
-                <div class="cart-item-row">
-                    <input type="text" class="item-input" placeholder="餐點品項" required oninput="handleTyping(); updateCartTotal();" style="margin-bottom:0;">
-                    <input type="number" class="price-input" placeholder="$" required min="1" oninput="handleTyping(); updateCartTotal();" style="width: 60px; flex: none; font-weight: bold; margin-bottom:0;">
-                    <button type="button" class="btn-action-icon" onclick="this.parentElement.remove(); updateCartTotal();">✖</button>
                 </div>
-            </div>
             
             <button type="button" onclick="addOrderItemRow()" style="width: 100%; background: white; color: var(--text-main); border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px; margin-top: 10px; font-size: 0.9em; box-shadow: none;">➕ 手動新增品項</button>
-            <div class="quick-tags-area" id="quick-tags-container"></div>
 
             <div id="admin-drawer-summary" class="admin-only admin-drawer-summary">
                 <h3 style="margin-top:0; font-size: 1.1em; color: var(--text-main); margin-bottom: 15px;">👑 團主總覽 (已送出)</h3>
@@ -348,7 +348,7 @@
         <div class="modal-body">
             <div class="editor-group"><label>📢 公告內容：</label><textarea id="bulletin-text-input"></textarea></div>
             <div class="editor-group"><label>🔗 店家或菜單連結：</label><input type="url" id="bulletin-link-input"></div>
-            <div class="editor-group"><label>🖼️ 匯入菜單圖片：</label>
+            <div class="editor-group"><label>🖼️ 匯入菜單圖片 (辨識用，不對外顯示)：</label>
                 <input type="file" id="bulletin-file-input" accept="image/*">
                 <div id="image-preview-container" class="preview-container"><img id="image-preview" src=""><button class="btn-remove-img" onclick="clearImage()">✕</button></div>
             </div>
@@ -430,10 +430,15 @@
         if (urlParams.get('role') === 'boss' || localStorage.getItem('lunchAdminToken') === 'boss') {
             isAdmin = true; localStorage.setItem('lunchAdminToken', 'boss'); window.history.replaceState({}, document.title, window.location.pathname);
         }
-        updateAdminUI(); renderQuickTags(); initPresence();
+        
+        // 確保初始狀態下購物車有一行輸入框
+        if (document.querySelectorAll('.cart-item-row').length === 0) {
+            window.addOrderItemRow();
+        }
+        
+        updateAdminUI(); initPresence();
     });
 
-    // 👉 購物車滑出開關
     window.toggleCart = function() {
         const drawer = document.getElementById('cart-drawer');
         const overlay = document.getElementById('cart-overlay');
@@ -526,6 +531,7 @@
     }
 
     window.updateCartTotal = function() {
+        // 🌟 防呆：空購物車會自動生出一行
         if (document.querySelectorAll('.cart-item-row').length === 0) { window.addOrderItemRow(); }
         let total = 0; let itemCount = 0;
         document.querySelectorAll('.cart-item-row').forEach(row => {
@@ -535,7 +541,7 @@
             if(!isNaN(pr)) total += pr;
         });
         document.getElementById('cart-total-preview').innerText = '$' + total;
-        document.getElementById('cart-badge').innerText = itemCount; // 🌟 更新右上角徽章
+        document.getElementById('cart-badge').innerText = itemCount; 
     }
 
     function renderSystemMenuTags(menuStr) {
@@ -544,7 +550,7 @@
         if (!container) return;
         
         if(!menuStr) {
-            container.innerHTML = '<div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--text-muted); font-weight: bold; border: 1px solid #E2E8F0;">🍽️ 團主尚未發布今日菜單，請稍候...</div>';
+            container.innerHTML = '<div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--text-muted); font-weight: bold; border: 1px dashed #E2E8F0;">🍽️ 團主尚未發布今日菜單，請稍候...</div>';
             if (pillsContainer) pillsContainer.innerHTML = ''; return;
         }
 
@@ -562,13 +568,28 @@
 
                 if (pillsContainer) {
                     let pill = document.createElement('button'); pill.className = 'pill-btn'; pill.type = 'button'; pill.innerText = catName;
+                    pill.dataset.target = catId; // 🌟 綁定對應 ID 供 Scroll Spy 追蹤
+                    
                     pill.onclick = () => {
-                        let target = document.getElementById(catId); let menuSide = document.querySelector('.menu-side');
+                        let target = document.getElementById(catId); 
+                        let menuSide = document.querySelector('.menu-side');
                         if (target && menuSide) {
-                            let targetPos = target.getBoundingClientRect().top - menuSide.getBoundingClientRect().top + menuSide.scrollTop - 70; 
+                            // 🌟 告訴系統：現在是程式自動滾動，不要觸發 Scroll Spy
+                            window.isAutoScrolling = true; 
+                            
+                            // 先手動點亮這個丸子
+                            document.querySelectorAll('.pill-btn').forEach(p => p.classList.remove('active'));
+                            pill.classList.add('active');
+
+                            // 自動扣除上方分類列的高度，避免標題被遮住
+                            let targetPos = target.offsetTop - document.querySelector('.category-pills').offsetHeight;
                             menuSide.scrollTo({ top: targetPos, behavior: 'smooth' });
+                            
+                            // 大約 800ms 滾動結束後，再恢復監聽
+                            setTimeout(() => { window.isAutoScrolling = false; }, 800);
                         }
-                    }; pillsContainer.appendChild(pill);
+                    };
+                    pillsContainer.appendChild(pill);
                 }
             } else {
                 let parts = text.split(/\s+/);
@@ -581,28 +602,22 @@
                             wrapper.appendChild(currentGrid); container.appendChild(wrapper);
                         }
 
-                        // 🌟 極簡文字卡片
                         let card = document.createElement('div');
                         card.className = 'food-card';
-                        card.innerHTML = `
-                            <div class="food-name">${item}</div>
-                            <div class="food-price">$${price}</div>
-                        `;
+                        card.innerHTML = `<div class="food-name">${item}</div><div class="food-price">$${price}</div>`;
                         
-                        // 🌟 點擊整張卡片觸發加入購物車
                         card.onclick = (e) => { 
                             let rows = document.querySelectorAll('.cart-item-row');
                             let lastRow = rows.length > 0 ? rows[rows.length - 1] : null;
                             let itemInput = lastRow ? lastRow.querySelector('.item-input') : null;
                             let priceInput = lastRow ? lastRow.querySelector('.price-input') : null;
                             
+                            // 點擊直接覆蓋或新增欄位
                             if(itemInput && itemInput.value !== "") { window.addOrderItemRow(item, price); } 
                             else if(itemInput) { itemInput.value = item; priceInput.value = price; } 
                             else { window.addOrderItemRow(item, price); }
                             
                             window.handleTyping(); updateCartTotal();
-                            
-                            // 閃爍特效
                             card.classList.add('flash-active');
                             setTimeout(() => card.classList.remove('flash-active'), 400);
                         };
@@ -611,7 +626,49 @@
                 }
             }
         });
+
+        // 🌟 菜單渲染完畢後，觸發一次滾動事件來預設點亮第一個分類丸子
+        setTimeout(() => {
+            let menuSide = document.querySelector('.menu-side');
+            if(menuSide) menuSide.dispatchEvent(new Event('scroll'));
+        }, 100);
     }
+
+    // 🌟 終極外送平台魔法：偵測菜單滑動，自動點亮對應的分類丸子 (Scroll Spy)
+    document.querySelector('.menu-side').addEventListener('scroll', function() {
+        
+        // 🌟 補上這行：如果是點擊丸子造成的自動滾動，就暫停偵測，避免閃爍！
+        if (window.isAutoScrolling) return;
+        
+        const headers = this.querySelectorAll('.category-wrapper h3');
+        const pills = document.querySelectorAll('.pill-btn');
+        if(headers.length === 0 || pills.length === 0) return;
+
+        let currentActiveId = headers[0].id; 
+        const containerTop = this.getBoundingClientRect().top;
+        
+        // 偵測線設為分類列的高度再加 10px，這樣一滑到標題下方就會立刻變色
+        const offset = document.querySelector('.category-pills').offsetHeight + 10;
+
+        headers.forEach(header => {
+            // 如果這個標題已經滾動到偵測線以上，就把 active 權交給它
+            if (header.getBoundingClientRect().top - containerTop <= offset) {
+                currentActiveId = header.id;
+            }
+        });
+
+        pills.forEach(pill => {
+            if (pill.dataset.target === currentActiveId) {
+                if (!pill.classList.contains('active')) {
+                    pill.classList.add('active');
+                    // 讓上方標籤列自動滑動，把亮起的丸子保持在視線中間
+                    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            } else {
+                pill.classList.remove('active');
+            }
+        });
+    });
 
     settingsRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
@@ -623,7 +680,6 @@
 
         let displayHtml = bText.replace(/\n/g, '<br>');
         if (bLink) displayHtml += `<br><a href="${bLink}" target="_blank">👉 查看店家菜單</a>`;
-        if (uploadedImageBase64) displayHtml += `<br><img src="${uploadedImageBase64}">`;
         document.getElementById('bulletin-text').innerHTML = displayHtml;
 
         const submitBtn = document.getElementById('submit-btn'); const inputs = document.querySelectorAll('#order-form input'); const lockBtn = document.getElementById('btn-lock');
@@ -654,32 +710,6 @@
     function showBroadcast() { bellSound.currentTime = 0; bellSound.play().catch(e => console.log(e)); document.getElementById('broadcast-screen').style.display = 'flex'; }
     window.triggerBroadcast = function() { if(confirm("發送廣播通知全體？")) settingsRef.update({ broadcastTime: Date.now() }); }
 
-    function renderQuickTags() {
-        let favs = JSON.parse(localStorage.getItem('myFavOrders') || '[]');
-        let container = document.getElementById('quick-tags-container'); container.innerHTML = '';
-        if(favs.length > 0) {
-            favs.forEach(f => {
-                let btn = document.createElement('button'); btn.type = 'button'; btn.className = 'quick-tag'; btn.innerText = `⚡ ${f.item}`;
-                btn.onclick = () => { 
-                    document.getElementById('order-items-container').innerHTML = `
-                        <div class="cart-item-row">
-                            <input type="text" class="item-input" placeholder="餐點品項" required oninput="handleTyping(); updateCartTotal();" value="${f.item}" style="margin-bottom:0;">
-                            <input type="number" class="price-input" placeholder="$" required min="1" oninput="handleTyping(); updateCartTotal();" value="${f.price}" style="width: 60px; flex: none; font-weight: bold; margin-bottom:0;">
-                            <button type="button" class="btn-action-icon" onclick="this.parentElement.remove(); updateCartTotal();">✖</button>
-                        </div>`;
-                    handleTyping(); updateCartTotal();
-                };
-                container.appendChild(btn);
-            });
-        }
-    }
-    
-    function saveToQuickTags(item, price) {
-        let favs = JSON.parse(localStorage.getItem('myFavOrders') || '[]');
-        favs = favs.filter(f => f.item !== item); favs.unshift({ item: item, price: price });
-        if(favs.length > 3) favs.pop(); localStorage.setItem('myFavOrders', JSON.stringify(favs)); renderQuickTags();
-    }
-
     window.toggleAdmin = function() {
         if (isAdmin) { 
             if(confirm("確定要關閉團主模式嗎？")) { isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateMyStatus('browsing'); updateAdminUI(); render(); } 
@@ -692,8 +722,9 @@
         document.getElementById('admin-stats').style.display = isAdmin ? "flex" : "none";
         document.getElementById('unpaid-title').innerHTML = isAdmin ? "📝 所有未付款區" : "📝 您的未付款訂單";
         document.getElementById('paid-title').innerHTML = isAdmin ? "✅ 所有已付款區" : "✅ 您的已付款訂單";
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? "inline-block" : "none");
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? "block" : "none"); 
         document.querySelectorAll('.admin-only-th').forEach(th => th.style.display = isAdmin ? "table-cell" : "none");
+        document.querySelectorAll('.header-area .admin-only').forEach(el => el.style.display = isAdmin ? "inline-block" : "none");
     }
 
     document.getElementById('bulletin-file-input').addEventListener('change', function(e) {
@@ -779,7 +810,7 @@
         let total = 0, actualCollectedCash = 0, unpaidTotal = 0; 
         let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
         
-        let adminDrawerListHTML = ''; // 🌟 購物車內的團主總覽
+        let adminDrawerListHTML = ''; 
         let adminDrawerTotal = 0;
 
         orders.forEach(order => {
@@ -790,7 +821,6 @@
                 else { actualCollectedCash += order.price; }
             } else { unpaidTotal += order.price; }
 
-            // 🌟 組合團主在購物車抽屜裡看到的總覽清單
             if (isAdmin) {
                 adminDrawerTotal += order.price;
                 adminDrawerListHTML += `
@@ -839,7 +869,6 @@
         
         document.getElementById('total-price').innerText = total; document.getElementById('total-paid').innerText = actualCollectedCash; document.getElementById('total-unpaid').innerText = unpaidTotal;
         
-        // 🌟 渲染團主在購物車內的總覽
         if (isAdmin) {
             document.getElementById('admin-drawer-list').innerHTML = adminDrawerListHTML || '<div style="color:var(--text-muted); font-size:0.9em;">尚無人點餐</div>';
             document.getElementById('admin-drawer-total').innerText = adminDrawerTotal;
@@ -862,16 +891,16 @@
         if(confirm(`👉 確認送出訂單：\n\n👤 ${inputName}\n🍱 ${combinedItem}\n💰 總價：$${totalPrice}`)) {
             let myNames = JSON.parse(localStorage.getItem('myLunchNames') || '[]');
             if (!myNames.includes(inputName)) { myNames.push(inputName); localStorage.setItem('myLunchNames', JSON.stringify(myNames)); }
-            saveToQuickTags(combinedItem, totalPrice); updateMyStatus('done');
+            updateMyStatus('done');
             ordersRef.push({ name: inputName, item: combinedItem, price: totalPrice, isPaid: false, paidAmount: 0, change: 0, changeGiven: false }).then(() => { 
-                document.getElementById('order-items-container').innerHTML = `
-                    <div class="cart-item-row">
-                        <input type="text" class="item-input" placeholder="餐點品項" required oninput="handleTyping(); updateCartTotal();" style="margin-bottom:0;">
-                        <input type="number" class="price-input" placeholder="$" required min="1" oninput="handleTyping(); updateCartTotal();" style="width: 60px; flex: none; font-weight: bold; margin-bottom:0;">
-                        <button type="button" class="btn-action-icon" onclick="this.parentElement.remove(); updateCartTotal();">✖</button>
-                    </div>`;
-                updateCartTotal();
-                toggleCart(); // 🌟 送出後自動關閉購物車
+                document.getElementById('order-items-container').innerHTML = ''; // 清空準備重建
+                
+                // 🌟 先把徽章強制歸零，再塞入空白行，這樣數字才不會算錯！
+                document.getElementById('cart-badge').innerText = '0';
+                document.getElementById('cart-total-preview').innerText = '$0';
+                
+                window.addOrderItemRow(); // 生出新的一行空白
+                toggleCart(); // 關閉購物車
             });
         }
     });
