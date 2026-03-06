@@ -544,6 +544,11 @@
     }
 
     window.updateCartTotal = function() {
+        // 🌟 你的超棒防呆機制：如果發現購物車被刪到一行都不剩，立刻補回一行空白的
+        if (document.querySelectorAll('.cart-item-row').length === 0) {
+            window.addOrderItemRow(); 
+        }
+
         let total = 0;
         document.querySelectorAll('.price-input').forEach(input => {
             let val = parseInt(input.value);
@@ -551,7 +556,6 @@
         });
         document.getElementById('cart-total-preview').innerText = '$' + total;
     }
-
     function renderSystemMenuTags(menuStr) {
         let container = document.getElementById('system-menu-container');
         let pillsContainer = document.getElementById('category-pills-container');
@@ -648,11 +652,12 @@
                             </div>
                         `;
                         
-                        card.querySelector('.add-btn').onclick = (e) => { 
+             card.querySelector('.add-btn').onclick = (e) => { 
                             let rows = document.querySelectorAll('.cart-item-row');
-                            let lastRow = rows[rows.length - 1];
-                            let itemInput = lastRow.querySelector('.item-input');
-                            let priceInput = lastRow.querySelector('.price-input');
+                            // 🌟 加上安全檢查：確定有列數才去抓輸入框，如果是全空就回傳 null
+                            let lastRow = rows.length > 0 ? rows[rows.length - 1] : null;
+                            let itemInput = lastRow ? lastRow.querySelector('.item-input') : null;
+                            let priceInput = lastRow ? lastRow.querySelector('.price-input') : null;
                             
                             if(itemInput && itemInput.value !== "") {
                                 window.addOrderItemRow(item, price);
@@ -660,6 +665,7 @@
                                 itemInput.value = item;
                                 priceInput.value = price;
                             } else {
+                                // 🌟 如果購物車被刪到全空，就直接新增一行！
                                 window.addOrderItemRow(item, price);
                             }
                             window.handleTyping(); 
@@ -1041,7 +1047,8 @@
                         <input type="number" class="price-input" placeholder="價格" required min="1" oninput="handleTyping(); updateCartTotal();" style="width: 70px; flex: none; font-weight: bold; color: var(--primary);">
                         <button type="button" class="btn-action-icon" onclick="this.parentElement.remove(); updateCartTotal();" style="background: rgba(255,59,48,0.1); color: var(--danger); font-size:1rem; padding: 5px 10px;">✖</button>
                     </div>`;
-                document.querySelector('.item-input').focus(); 
+                document.querySelector('.item-input').focus();
+                updateCartTotal(); // 🌟 新增這行：送出後強制讓總價歸零
             });
         }
     });
@@ -1128,3 +1135,4 @@
 
 </body>
 </html>
+
