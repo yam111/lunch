@@ -953,8 +953,17 @@
             total += order.price; 
             
             if (order.isPaid) {
-                if (order.change > 0 && !order.changeGiven) { actualCollectedCash += order.paidAmount; } else { actualCollectedCash += order.price; }
-            } else { unpaidTotal += order.price; }
+                if (order.change > 0 && !order.changeGiven) { 
+                    actualCollectedCash += order.paidAmount; // 還沒找零，錢全在手上
+                } else if (order.change < 0) {
+                    actualCollectedCash += order.paidAmount; // 產生補收，手上只有他原本付的錢
+                    unpaidTotal += Math.abs(order.change);   // 🌟 關鍵修復：把欠的差額加回「待收總額」
+                } else { 
+                    actualCollectedCash += order.price; // 剛好付清或已找零
+                }
+            } else { 
+                unpaidTotal += order.price; // 尚未結帳，整筆都是待收
+            }
 
             if (!isAdmin && !myNames.includes(order.name)) return; 
             
@@ -1137,5 +1146,6 @@
 
 </body>
 </html>
+
 
 
