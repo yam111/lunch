@@ -941,7 +941,10 @@
     window.markChangeGiven = function(id) { db.ref('lunch-orders/' + id).update({ changeGiven: true }); }
     window.settleBalance = function(id, targetPrice) {
         chaChingSound.currentTime = 0; chaChingSound.play().catch(e => console.log(e));
-        db.ref('lunch-orders/' + id).update({ paidAmount: targetPrice });
+        db.ref('lunch-orders/' + id).update({ 
+            paidAmount: targetPrice,
+            change: 0   // 🌟 關鍵修復：補收完成後，必須把差額也同步歸零！
+        });
     }
 
     function render() {
@@ -1146,6 +1149,7 @@
 
 </body>
 </html>
+
 
 
 
