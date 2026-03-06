@@ -823,6 +823,8 @@
         document.getElementById('image-preview-container').style.display = 'none';
         document.getElementById('ocr-section').style.display = 'none';
         document.getElementById('ocr-status').innerText = "";
+        // 🌟 關鍵修復：把隱藏的菜單文字也徹底清空，才不會再次被存進去！
+        document.getElementById('parsed-menu-input').value = "";
     }
     
     window.openBulletinEditor = function() {
@@ -1135,4 +1137,5 @@
 
 </body>
 </html>
+
 
