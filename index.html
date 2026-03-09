@@ -346,13 +346,19 @@
     <div class="modal-content">
         <div class="modal-header">📝 編輯公佈欄</div>
         <div class="modal-body">
-           <div class="editor-group">
+            <div class="editor-group"><label>📢 公告內容：</label><textarea id="bulletin-text-input"></textarea></div>
+            <div class="editor-group"><label>🔗 店家或菜單連結：</label><input type="url" id="bulletin-link-input"></div>
+            
+            <div class="editor-group">
                 <label>🖼️ 匯入菜單圖片：</label>
-                <label style="color:var(--primary); cursor:pointer;"><input type="checkbox" id="show-image-check" checked> 顯示圖片給顧客看</label>
-                
-                <input type="file" id="bulletin-file-input" accept="image/*" style="margin-top:8px;">
+                <label style="color:var(--primary); cursor:pointer; display:flex; align-items:center; margin-bottom: 10px; font-weight: bold;">
+                    <input type="checkbox" id="show-image-check" style="width: auto; padding: 0; margin: 0 8px 0 0;" checked> 
+                    顯示圖片給顧客看
+                </label>
+                <input type="file" id="bulletin-file-input" accept="image/*">
                 <div id="image-preview-container" class="preview-container"><img id="image-preview" src=""><button class="btn-remove-img" onclick="clearImage()">✕</button></div>
             </div>
+            
             <div class="editor-group" id="ocr-section" style="display: none; background: #F8FAFC; padding: 15px; border-radius: 12px; border: 1px dashed #CBD5E1;">
                 <button type="button" id="btn-ocr" onclick="startOCR()" style="background: var(--text-main); color: white; width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🔍 自動辨識菜單文字</button>
                 <p id="ocr-status" style="font-size: 0.9em; color: var(--warning); font-weight: bold; margin: 5px 0;"></p>
@@ -766,24 +772,38 @@
         document.getElementById('ocr-status').innerText = ""; document.getElementById('parsed-menu-input').value = "";
     }
     
-    window.openBulletinEditor = function() {
+   window.openBulletinEditor = function() {
         document.getElementById('bulletin-text-input').value = bText; 
         document.getElementById('bulletin-link-input').value = bLink; 
         document.getElementById('parsed-menu-input').value = currentMenuText;
-        // 👇 加上這行，打開視窗時同步目前的開關狀態
-        document.getElementById('show-image-check').checked = showBulletinImage;
-        if (uploadedImageBase64) { document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'inline-block'; document.getElementById('ocr-section').style.display = 'block'; } 
-        else { document.getElementById('image-preview-container').style.display = 'none'; document.getElementById('ocr-section').style.display = 'none'; }
-        document.getElementById('bulletin-file-input').value = ""; document.getElementById('ocr-status').innerText = ""; document.getElementById('bulletin-modal').style.display = "flex";
+        
+        // 🌟 防當機機制：確保有抓到 checkbox 才設定狀態
+        let checkEl = document.getElementById('show-image-check');
+        if (checkEl) checkEl.checked = showBulletinImage; 
+
+        if (uploadedImageBase64) { 
+            document.getElementById('image-preview').src = uploadedImageBase64; 
+            document.getElementById('image-preview-container').style.display = 'inline-block'; 
+            document.getElementById('ocr-section').style.display = 'block'; 
+        } else { 
+            document.getElementById('image-preview-container').style.display = 'none'; 
+            document.getElementById('ocr-section').style.display = 'none'; 
+        }
+        document.getElementById('bulletin-file-input').value = ""; 
+        document.getElementById('ocr-status').innerText = ""; 
+        document.getElementById('bulletin-modal').style.display = "flex";
     }
     
     window.saveBulletin = function() { 
+        let checkEl = document.getElementById('show-image-check');
+        let isShow = checkEl ? checkEl.checked : true;
+
         settingsRef.update({ 
             bulletinText: document.getElementById('bulletin-text-input').value, 
             bulletinLink: document.getElementById('bulletin-link-input').value, 
             bulletinImage: uploadedImageBase64, 
             menuText: document.getElementById('parsed-menu-input').value,
-            showBulletinImage: document.getElementById('show-image-check').checked // 👇 加上這行存入資料庫
+            showBulletinImage: isShow // 🌟 儲存開關狀態
         }).then(() => { 
             document.getElementById('bulletin-modal').style.display = "none"; 
         }); 
@@ -974,5 +994,6 @@
 
 </body>
 </html>
+
 
 
