@@ -346,10 +346,11 @@
     <div class="modal-content">
         <div class="modal-header">📝 編輯公佈欄</div>
         <div class="modal-body">
-            <div class="editor-group"><label>📢 公告內容：</label><textarea id="bulletin-text-input"></textarea></div>
-            <div class="editor-group"><label>🔗 店家或菜單連結：</label><input type="url" id="bulletin-link-input"></div>
-            <div class="editor-group"><label>🖼️ 匯入菜單圖片 (辨識用，不對外顯示)：</label>
-                <input type="file" id="bulletin-file-input" accept="image/*">
+           <div class="editor-group">
+                <label>🖼️ 匯入菜單圖片：</label>
+                <label style="color:var(--primary); cursor:pointer;"><input type="checkbox" id="show-image-check" checked> 顯示圖片給顧客看</label>
+                
+                <input type="file" id="bulletin-file-input" accept="image/*" style="margin-top:8px;">
                 <div id="image-preview-container" class="preview-container"><img id="image-preview" src=""><button class="btn-remove-img" onclick="clearImage()">✕</button></div>
             </div>
             <div class="editor-group" id="ocr-section" style="display: none; background: #F8FAFC; padding: 15px; border-radius: 12px; border: 1px dashed #CBD5E1;">
@@ -414,6 +415,7 @@
 
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
+    let showBulletinImage = true;
     let currentMenuText = "";
     let myPresenceRef = null;
     let myCurrentStatus = 'browsing'; 
@@ -678,10 +680,17 @@
 
         if (data.broadcastTime && data.broadcastTime > lastBroadcastTime) { lastBroadcastTime = data.broadcastTime; if(Date.now() - data.broadcastTime < 60000) showBroadcast(); }
 
+        showBulletinImage = data.showBulletinImage !== false; // 預設為 true
+
         let displayHtml = bText.replace(/\n/g, '<br>');
         if (bLink) displayHtml += `<br><a href="${bLink}" target="_blank">👉 查看店家菜單</a>`;
+        
+        // 🌟 關鍵邏輯：如果有圖片，且「是團主」或「設定為公開」，才顯示圖片
+        if (uploadedImageBase64 && (isAdmin || showBulletinImage)) {
+            displayHtml += `<br><img src="${uploadedImageBase64}">`;
+        }
+        
         document.getElementById('bulletin-text').innerHTML = displayHtml;
-
         const submitBtn = document.getElementById('submit-btn'); const inputs = document.querySelectorAll('#order-form input'); const lockBtn = document.getElementById('btn-lock');
         if (globalLocked) { submitBtn.innerText = "🚫 今日已結單"; submitBtn.disabled = true; inputs.forEach(input => input.disabled = true); lockBtn.innerText = "🟢 開放收單"; lockBtn.style.background = "var(--success)"; } 
         else { submitBtn.innerText = "送出訂單"; submitBtn.disabled = false; inputs.forEach(input => input.disabled = false); lockBtn.innerText = "🛑 停止收單"; lockBtn.style.background = "var(--danger)"; }
@@ -758,14 +767,26 @@
     }
     
     window.openBulletinEditor = function() {
-        document.getElementById('bulletin-text-input').value = bText; document.getElementById('bulletin-link-input').value = bLink; document.getElementById('parsed-menu-input').value = currentMenuText;
+        document.getElementById('bulletin-text-input').value = bText; 
+        document.getElementById('bulletin-link-input').value = bLink; 
+        document.getElementById('parsed-menu-input').value = currentMenuText;
+        // 👇 加上這行，打開視窗時同步目前的開關狀態
+        document.getElementById('show-image-check').checked = showBulletinImage;
         if (uploadedImageBase64) { document.getElementById('image-preview').src = uploadedImageBase64; document.getElementById('image-preview-container').style.display = 'inline-block'; document.getElementById('ocr-section').style.display = 'block'; } 
         else { document.getElementById('image-preview-container').style.display = 'none'; document.getElementById('ocr-section').style.display = 'none'; }
         document.getElementById('bulletin-file-input').value = ""; document.getElementById('ocr-status').innerText = ""; document.getElementById('bulletin-modal').style.display = "flex";
     }
     
     window.saveBulletin = function() { 
-        settingsRef.update({ bulletinText: document.getElementById('bulletin-text-input').value, bulletinLink: document.getElementById('bulletin-link-input').value, bulletinImage: uploadedImageBase64, menuText: document.getElementById('parsed-menu-input').value }).then(() => { document.getElementById('bulletin-modal').style.display = "none"; }); 
+        settingsRef.update({ 
+            bulletinText: document.getElementById('bulletin-text-input').value, 
+            bulletinLink: document.getElementById('bulletin-link-input').value, 
+            bulletinImage: uploadedImageBase64, 
+            menuText: document.getElementById('parsed-menu-input').value,
+            showBulletinImage: document.getElementById('show-image-check').checked // 👇 加上這行存入資料庫
+        }).then(() => { 
+            document.getElementById('bulletin-modal').style.display = "none"; 
+        }); 
     }
 
     window.startOCR = async function() {
@@ -953,4 +974,5 @@
 
 </body>
 </html>
+
 
