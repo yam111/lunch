@@ -710,6 +710,13 @@
     function showBroadcast() { bellSound.currentTime = 0; bellSound.play().catch(e => console.log(e)); document.getElementById('broadcast-screen').style.display = 'flex'; }
     window.triggerBroadcast = function() { if(confirm("發送廣播通知全體？")) settingsRef.update({ broadcastTime: Date.now() }); }
 
+    // 🌟 補回這段：控制停止/開放收單的開關
+    window.toggleLock = function() { 
+        if(confirm(globalLocked ? "確定要開放點餐嗎？" : "確定要停止收單嗎？")) { 
+            settingsRef.update({ isLocked: !globalLocked, lockTime: null }); 
+        } 
+    }
+    
     window.toggleAdmin = function() {
         if (isAdmin) { 
             if(confirm("確定要關閉團主模式嗎？")) { isAdmin = false; localStorage.removeItem('lunchAdminToken'); updateMyStatus('browsing'); updateAdminUI(); render(); } 
@@ -946,3 +953,4 @@
 
 </body>
 </html>
+
