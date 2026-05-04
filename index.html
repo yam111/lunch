@@ -259,18 +259,8 @@
             <button class="btn-edit-small admin-only" onclick="openBulletinEditor()">✏️ 編輯</button>
         </div>
 
-        <div class="ordering-layout">
-            <div class="menu-side" id="system-menu-wrapper">
-                <div id="category-pills-container" class="category-pills"></div>
-                
-                <div id="system-menu-container">
-                    <div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--text-muted); font-weight: bold; border: 2px dashed #eee;">
-                        🍽️ 團主尚未發布今日菜單，請稍候...
-                    </div>
-                </div>
-            </div>
-        </div>
-            
+
+
         <div class="card" style="margin-top: 30px;">
             <div class="flex stats" id="admin-stats">
                 <div class="stat-box"><div class="stat-title">總金額 (應付)</div><div class="stat-value" id="total-price">0</div></div>
@@ -359,10 +349,6 @@
                 <div id="image-preview-container" class="preview-container"><img id="image-preview" src=""><button class="btn-remove-img" onclick="clearImage()">✕</button></div>
             </div>
             
-            <div class="editor-group">
-                <label>📋 菜單文字（手動輸入）：</label>
-                <textarea id="parsed-menu-input" placeholder="例如：&#10;排骨飯 100&#10;雞腿便當 110" style="height: 150px;"></textarea>
-            </div>
         </div>
         <div class="modal-footer">
             <button class="btn-modal-cancel" onclick="document.getElementById('bulletin-modal').style.display='none'">取消</button>
@@ -421,7 +407,6 @@
     let orders = []; let isAdmin = false; let globalLocked = false; let lastBroadcastTime = 0;
     let bText = ""; let bLink = ""; let uploadedImageBase64 = "";
     let showBulletinImage = true;
-    let currentMenuText = "";
     let myPresenceRef = null;
     let myCurrentStatus = 'browsing'; 
     let editingOrderId = null; 
@@ -551,137 +536,11 @@
         document.getElementById('cart-badge').innerText = itemCount; 
     }
 
-    function renderSystemMenuTags(menuStr) {
-        let container = document.getElementById('system-menu-container');
-        let pillsContainer = document.getElementById('category-pills-container');
-        if (!container) return;
-        
-        if(!menuStr) {
-            container.innerHTML = '<div style="text-align:center; padding: 60px 20px; background: white; border-radius: 15px; color: var(--text-muted); font-weight: bold; border: 1px dashed #E2E8F0;">🍽️ 團主尚未發布今日菜單，請稍候...</div>';
-            if (pillsContainer) pillsContainer.innerHTML = ''; return;
-        }
-
-        container.innerHTML = ''; if (pillsContainer) pillsContainer.innerHTML = ''; 
-        let lines = menuStr.split('\n'); let currentGrid = null;
-
-        lines.forEach(line => {
-            let text = line.trim(); if (!text) return;
-            if (text.startsWith('[') && text.endsWith(']')) {
-                let catName = text.substring(1, text.length - 1); let catId = `category-${catName}`; 
-                let catTitle = document.createElement('h3'); catTitle.innerText = `${catName}`; catTitle.id = catId; 
-                currentGrid = document.createElement('div'); currentGrid.className = 'menu-grid';
-                let wrapper = document.createElement('div'); wrapper.className = 'category-wrapper';
-                wrapper.appendChild(catTitle); wrapper.appendChild(currentGrid); container.appendChild(wrapper);
-
-                if (pillsContainer) {
-                    let pill = document.createElement('button'); pill.className = 'pill-btn'; pill.type = 'button'; pill.innerText = catName;
-                    pill.dataset.target = catId; // 🌟 綁定對應 ID 供 Scroll Spy 追蹤
-                    
-                    pill.onclick = () => {
-                        let target = document.getElementById(catId); 
-                        let menuSide = document.querySelector('.menu-side');
-                        if (target && menuSide) {
-                            // 🌟 告訴系統：現在是程式自動滾動，不要觸發 Scroll Spy
-                            window.isAutoScrolling = true; 
-                            
-                            // 先手動點亮這個丸子
-                            document.querySelectorAll('.pill-btn').forEach(p => p.classList.remove('active'));
-                            pill.classList.add('active');
-
-                            // 自動扣除上方分類列的高度，避免標題被遮住
-                            let targetPos = target.offsetTop - document.querySelector('.category-pills').offsetHeight;
-                            menuSide.scrollTo({ top: targetPos, behavior: 'smooth' });
-                            
-                            // 大約 800ms 滾動結束後，再恢復監聽
-                            setTimeout(() => { window.isAutoScrolling = false; }, 800);
-                        }
-                    };
-                    pillsContainer.appendChild(pill);
-                }
-            } else {
-                let parts = text.split(/\s+/);
-                if (parts.length >= 2) {
-                    let price = parts.pop(); let item = parts.join(' ');
-                    if(!isNaN(price)) {
-                        if (!currentGrid) {
-                            currentGrid = document.createElement('div'); currentGrid.className = 'menu-grid';
-                            let wrapper = document.createElement('div'); wrapper.className = 'category-wrapper';
-                            wrapper.appendChild(currentGrid); container.appendChild(wrapper);
-                        }
-
-                        let card = document.createElement('div');
-                        card.className = 'food-card';
-                        card.innerHTML = `<div class="food-name">${item}</div><div class="food-price">$${price}</div>`;
-                        
-                        card.onclick = (e) => { 
-                            let rows = document.querySelectorAll('.cart-item-row');
-                            let lastRow = rows.length > 0 ? rows[rows.length - 1] : null;
-                            let itemInput = lastRow ? lastRow.querySelector('.item-input') : null;
-                            let priceInput = lastRow ? lastRow.querySelector('.price-input') : null;
-                            
-                            // 點擊直接覆蓋或新增欄位
-                            if(itemInput && itemInput.value !== "") { window.addOrderItemRow(item, price); } 
-                            else if(itemInput) { itemInput.value = item; priceInput.value = price; } 
-                            else { window.addOrderItemRow(item, price); }
-                            
-                            window.handleTyping(); updateCartTotal();
-                            card.classList.add('flash-active');
-                            setTimeout(() => card.classList.remove('flash-active'), 400);
-                        };
-                        currentGrid.appendChild(card);
-                    }
-                }
-            }
-        });
-
-        // 🌟 菜單渲染完畢後，觸發一次滾動事件來預設點亮第一個分類丸子
-        setTimeout(() => {
-            let menuSide = document.querySelector('.menu-side');
-            if(menuSide) menuSide.dispatchEvent(new Event('scroll'));
-        }, 100);
-    }
-
-    // 🌟 終極外送平台魔法：偵測菜單滑動，自動點亮對應的分類丸子 (Scroll Spy)
-    document.querySelector('.menu-side').addEventListener('scroll', function() {
-        
-        // 🌟 補上這行：如果是點擊丸子造成的自動滾動，就暫停偵測，避免閃爍！
-        if (window.isAutoScrolling) return;
-        
-        const headers = this.querySelectorAll('.category-wrapper h3');
-        const pills = document.querySelectorAll('.pill-btn');
-        if(headers.length === 0 || pills.length === 0) return;
-
-        let currentActiveId = headers[0].id; 
-        const containerTop = this.getBoundingClientRect().top;
-        
-        // 偵測線設為分類列的高度再加 10px，這樣一滑到標題下方就會立刻變色
-        const offset = document.querySelector('.category-pills').offsetHeight + 10;
-
-        headers.forEach(header => {
-            // 如果這個標題已經滾動到偵測線以上，就把 active 權交給它
-            if (header.getBoundingClientRect().top - containerTop <= offset) {
-                currentActiveId = header.id;
-            }
-        });
-
-        pills.forEach(pill => {
-            if (pill.dataset.target === currentActiveId) {
-                if (!pill.classList.contains('active')) {
-                    pill.classList.add('active');
-                    // 讓上方標籤列自動滑動，把亮起的丸子保持在視線中間
-                    pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                }
-            } else {
-                pill.classList.remove('active');
-            }
-        });
-    });
-
     settingsRef.on('value', (snapshot) => {
         const data = snapshot.val() || {};
         globalLocked = data.isLocked || false; globalLockTime = data.lockTime || 0; 
         bText = data.bulletinText || "📢 歡迎點餐！"; bLink = data.bulletinLink || ""; 
-        uploadedImageBase64 = data.bulletinImage || ""; currentMenuText = data.menuText || "";
+        uploadedImageBase64 = data.bulletinImage || "";
 
         if (data.broadcastTime && data.broadcastTime > lastBroadcastTime) { lastBroadcastTime = data.broadcastTime; if(Date.now() - data.broadcastTime < 60000) showBroadcast(); }
 
@@ -700,7 +559,7 @@
         if (globalLocked) { submitBtn.innerText = "🚫 今日已結單"; submitBtn.disabled = true; inputs.forEach(input => input.disabled = true); lockBtn.innerText = "🟢 開放收單"; lockBtn.style.background = "var(--success)"; } 
         else { submitBtn.innerText = "送出訂單"; submitBtn.disabled = false; inputs.forEach(input => input.disabled = false); lockBtn.innerText = "🛑 停止收單"; lockBtn.style.background = "var(--danger)"; }
         
-        updateCountdownUI(); if(!editingOrderId) render(); renderSystemMenuTags(currentMenuText);
+        updateCountdownUI(); if(!editingOrderId) render();
     });
 
     function updateCountdownUI() {
@@ -770,10 +629,9 @@
     }
     
    window.openBulletinEditor = function() {
-        document.getElementById('bulletin-text-input').value = bText; 
-        document.getElementById('bulletin-link-input').value = bLink; 
-        document.getElementById('parsed-menu-input').value = currentMenuText;
-        
+        document.getElementById('bulletin-text-input').value = bText;
+        document.getElementById('bulletin-link-input').value = bLink;
+
         // 🌟 防當機機制：確保有抓到 checkbox 才設定狀態
         let checkEl = document.getElementById('show-image-check');
         if (checkEl) checkEl.checked = showBulletinImage; 
@@ -795,9 +653,8 @@
         settingsRef.update({ 
             bulletinText: document.getElementById('bulletin-text-input').value, 
             bulletinLink: document.getElementById('bulletin-link-input').value, 
-            bulletinImage: uploadedImageBase64, 
-            menuText: document.getElementById('parsed-menu-input').value,
-            showBulletinImage: isShow // 🌟 儲存開關狀態
+            bulletinImage: uploadedImageBase64,
+            showBulletinImage: isShow
         }).then(() => { 
             document.getElementById('bulletin-modal').style.display = "none"; 
         }); 
