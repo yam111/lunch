@@ -359,9 +359,8 @@
                 <div id="image-preview-container" class="preview-container"><img id="image-preview" src=""><button class="btn-remove-img" onclick="clearImage()">✕</button></div>
             </div>
             
-            <div class="editor-group" id="ocr-section" style="display: none; background: #F8FAFC; padding: 15px; border-radius: 12px; border: 1px dashed #CBD5E1;">
-                <button type="button" id="btn-ocr" onclick="startOCR()" style="background: var(--text-main); color: white; width: 100%; margin-bottom: 10px; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🔍 自動辨識菜單文字</button>
-                <p id="ocr-status" style="font-size: 0.9em; color: var(--warning); font-weight: bold; margin: 5px 0;"></p>
+            <div class="editor-group">
+                <label>📋 菜單文字（手動輸入）：</label>
                 <textarea id="parsed-menu-input" placeholder="例如：&#10;排骨飯 100&#10;雞腿便當 110" style="height: 150px;"></textarea>
             </div>
         </div>
@@ -761,15 +760,13 @@
                 uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.8);
                 document.getElementById('image-preview').src = uploadedImageBase64; 
                 document.getElementById('image-preview-container').style.display = 'inline-block';
-                document.getElementById('ocr-section').style.display = 'block';
             }; img.src = event.target.result;
         }; reader.readAsDataURL(file);
     });
     
-    window.clearImage = function() { 
-        uploadedImageBase64 = ""; document.getElementById('bulletin-file-input').value = ""; 
-        document.getElementById('image-preview-container').style.display = 'none'; document.getElementById('ocr-section').style.display = 'none';
-        document.getElementById('ocr-status').innerText = ""; document.getElementById('parsed-menu-input').value = "";
+    window.clearImage = function() {
+        uploadedImageBase64 = ""; document.getElementById('bulletin-file-input').value = "";
+        document.getElementById('image-preview-container').style.display = 'none';
     }
     
    window.openBulletinEditor = function() {
@@ -781,16 +778,13 @@
         let checkEl = document.getElementById('show-image-check');
         if (checkEl) checkEl.checked = showBulletinImage; 
 
-        if (uploadedImageBase64) { 
-            document.getElementById('image-preview').src = uploadedImageBase64; 
-            document.getElementById('image-preview-container').style.display = 'inline-block'; 
-            document.getElementById('ocr-section').style.display = 'block'; 
-        } else { 
-            document.getElementById('image-preview-container').style.display = 'none'; 
-            document.getElementById('ocr-section').style.display = 'none'; 
+        if (uploadedImageBase64) {
+            document.getElementById('image-preview').src = uploadedImageBase64;
+            document.getElementById('image-preview-container').style.display = 'inline-block';
+        } else {
+            document.getElementById('image-preview-container').style.display = 'none';
         }
-        document.getElementById('bulletin-file-input').value = ""; 
-        document.getElementById('ocr-status').innerText = ""; 
+        document.getElementById('bulletin-file-input').value = "";
         document.getElementById('bulletin-modal').style.display = "flex";
     }
     
@@ -807,23 +801,6 @@
         }).then(() => { 
             document.getElementById('bulletin-modal').style.display = "none"; 
         }); 
-    }
-
-    window.startOCR = async function() {
-        if (!uploadedImageBase64) return;
-        const statusEl = document.getElementById('ocr-status'); const btn = document.getElementById('btn-ocr'); const menuInput = document.getElementById('parsed-menu-input');
-        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx1Ex5yzHQ3a-aG64iB6eQLMGsSoxoN3nCNLyvLsgWfjDkZMOZrDkgzenIQnzpzxxF_/exec"; 
-        statusEl.innerText = "✨ 召喚 AI 看菜單中..."; btn.disabled = true;
-
-        try {
-            const base64Data = uploadedImageBase64.split(',')[1]; const mimeType = uploadedImageBase64.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/)[0];
-            const promptText = `這是一張餐廳菜單。請幫我辨識出所有的餐點品項和對應的價格，並幫忙「自動分類」。\n請嚴格按照以下格式輸出，不要有任何 Markdown 符號：\n[分類名稱]\n品項名稱 價格\n\n範例：\n[美味便當]\n排骨飯 100`;
-            const response = await fetch(GAS_WEB_APP_URL, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ base64Data: base64Data, mimeType: mimeType, promptText: promptText }) });
-            const data = await response.json();
-            if (data.candidates && data.candidates.length > 0) { menuInput.value = data.candidates[0].content.parts[0].text.trim(); statusEl.innerText = "✅ AI 辨識完成！"; } 
-            else if (data.error) { statusEl.innerText = "❌ 解析失敗：" + (data.message || data.error.message); } 
-            else { statusEl.innerText = "❌ 未知錯誤。"; }
-        } catch (err) { statusEl.innerText = "❌ 發生連線錯誤。"; } finally { btn.disabled = false; }
     }
 
     window.showSummary = function() {
